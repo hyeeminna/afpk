@@ -76,6 +76,7 @@ export default function DiagnosisPage() {
 
   // Step 3 Chat State
   const [inputMessage, setInputMessage] = useState("");
+  const [isAiTyping, setIsAiTyping] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "1",
@@ -119,30 +120,75 @@ export default function DiagnosisPage() {
     },
   ]);
 
-  const handleSendMessage = () => {
-    if (!inputMessage.trim()) return;
+  const handleSendMessage = async () => {
+    if (!inputMessage.trim() || isAiTyping) return;
+
+    const currentTimeStr = new Date().toLocaleTimeString("ko-KR", {
+      hour: "numeric",
+      minute: "2-digit",
+    });
 
     const userMsg: ChatMessage = {
       id: Date.now().toString(),
       sender: "user",
-      time: "오후 2:18",
-      text: inputMessage,
+      time: currentTimeStr,
+      text: inputMessage.trim(),
     };
 
-    setMessages((prev) => [...prev, userMsg]);
-    const currentInput = inputMessage;
+    const newMessages = [...messages, userMsg];
+    setMessages(newMessages);
+    const queryText = inputMessage.trim();
     setInputMessage("");
+    setIsAiTyping(true);
 
-    // Simulate Gemini Response
-    setTimeout(() => {
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: newMessages.map((m) => ({
+            sender: m.sender,
+            text: m.text,
+          })),
+          userContext: {
+            assets: `총자산: ${totalAsset}원, 총부채: ${totalDebt}원, 월소득: ${monthlyIncome}원, 월지출: ${monthlyExpense}원, 비상자금: ${emergencyFund}원`,
+            goal: `목표: ${goalName} (${goalAmount}원, 목표시점: ${goalDate})`,
+            concern: userConcern || "은퇴 후 생활비 및 연금 절세 전략",
+          },
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("답변을 생성하지 못했습니다.");
+      }
+
+      const data = await res.json();
       const geminiMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
         sender: "gemini",
-        time: "오후 2:18",
-        text: `'${currentInput}'에 대한 Gemini의 분석 결과입니다. 현재 저축률 34.5% 기준에서 분기별 포트폴리오 리밸런싱을 진행하면 연간 약 120만 원의 절세 효과와 추가 수익률 개선을 기대할 수 있습니다.`,
+        time: new Date().toLocaleTimeString("ko-KR", {
+          hour: "numeric",
+          minute: "2-digit",
+        }),
+        text: data.text || "분석이 완료되었습니다.",
+        details: data.details,
       };
       setMessages((prev) => [...prev, geminiMsg]);
-    }, 700);
+    } catch (err: any) {
+      console.error("Gemini 상담 에러:", err);
+      const errorMsg: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        sender: "gemini",
+        time: new Date().toLocaleTimeString("ko-KR", {
+          hour: "numeric",
+          minute: "2-digit",
+        }),
+        text: "일시적인 오류로 AI 재무상담 응답을 불러오지 못했습니다. 잠시 후 다시 질문해 주세요.",
+      };
+      setMessages((prev) => [...prev, errorMsg]);
+    } finally {
+      setIsAiTyping(false);
+    }
   };
 
   return (
@@ -1361,6 +1407,27 @@ export default function DiagnosisPage() {
                         )}
                       </div>
                     ))}
+
+                    {isAiTyping && (
+                      <div className="flex items-start gap-3 max-w-[95%] animate-pulse">
+                        <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center text-white text-sm font-bold shadow-sm flex-shrink-0">
+                          ✦
+                        </div>
+                        <div className="space-y-1">
+                          <span className="text-xs font-bold text-slate-800 dark:text-white">
+                            Gemini 재무주치의
+                          </span>
+                          <div className="p-3.5 rounded-2xl rounded-tl-none bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60 text-xs text-slate-600 dark:text-slate-300 flex items-center gap-2">
+                            <span className="inline-block w-2 h-2 rounded-full bg-blue-600 animate-bounce" />
+                            <span className="inline-block w-2 h-2 rounded-full bg-blue-600 animate-bounce [animation-delay:0.2s]" />
+                            <span className="inline-block w-2 h-2 rounded-full bg-blue-600 animate-bounce [animation-delay:0.4s]" />
+                            <span className="ml-1 text-[11px] font-medium text-slate-500">
+                              고객님의 재무 데이터와 세법 시나리오를 분석하고 있습니다...
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Input Box */}
@@ -1376,17 +1443,23 @@ export default function DiagnosisPage() {
                     <input
                       type="text"
                       value={inputMessage}
+                      disabled={isAiTyping}
                       onChange={(e) => setInputMessage(e.target.value)}
                       onKeyDown={(e) => {
                         if (e.key === "Enter") handleSendMessage();
                       }}
-                      placeholder="궁금한 내용을 입력하세요. (예: 대출 상환 전략, 세금 절세 방법 등)"
-                      className="flex-1 bg-white dark:bg-slate-800 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder={
+                        isAiTyping
+                          ? "Gemini가 분석 답변을 작성 중입니다..."
+                          : "궁금한 내용을 입력하세요. (예: 대출 상환 전략, 세금 절세 방법 등)"
+                      }
+                      className="flex-1 bg-white dark:bg-slate-800 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60"
                     />
                     <button
                       type="button"
                       onClick={handleSendMessage}
-                      className="w-9 h-9 rounded-xl bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center transition-all shadow active:scale-95 flex-shrink-0"
+                      disabled={isAiTyping || !inputMessage.trim()}
+                      className="w-9 h-9 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white flex items-center justify-center transition-all shadow active:scale-95 flex-shrink-0 cursor-pointer disabled:cursor-not-allowed"
                     >
                       <span className="material-symbols-outlined text-[18px]">
                         send
