@@ -1,0 +1,451 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><meta content="web_standard" name="shell-type"><title>머니체크 | MoneyCheck - 스마트 금융 건강검진</title><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;family=JetBrains+Mono:wght@600&amp;display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><style>@layer base { html, body { margin: 0; padding: 0; } body { overscroll-behavior: none; } main > :first-child { margin-top: 0 !important; } main > :last-child { margin-bottom: 0 !important; } } ::-webkit-scrollbar { display: none; }
+/* Dark Mode Comprehensive Overrides */
+html.dark body { background-color: #0B1120; color: #F1F5F9; }
+html.dark header { background-color: rgba(11, 17, 32, 0.9) !important; border-bottom: 1px solid #1E293B; box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
+html.dark main { background-color: #0B1120; color: #F1F5F9; }
+html.dark .text-on-surface { color: #F1F5F9 !important; }
+html.dark .text-on-surface-variant { color: #94A3B8 !important; }
+html.dark .text-outline { color: #64748B !important; }
+html.dark .bg-surface { background-color: #0B1120 !important; }
+html.dark .bg-surface-container-lowest { background-color: #1E293B !important; border: 1px solid #334155; }
+html.dark .bg-surface-container-low { background-color: #131D31 !important; border: 1px solid #1E293B; }
+html.dark .bg-surface-container { background-color: #162238 !important; border: 1px solid #293548; }
+html.dark .bg-surface-container-high { background-color: #1E293B !important; }
+html.dark .bg-surface-container-highest { background-color: #334155 !important; }
+html.dark footer { background-color: #080D1A !important; border-top: 1px solid #1E293B; }
+html.dark .border-slate-800 { border-color: #1E293B !important; }
+html.dark #income-input { color: #F8FAFC !important; }
+</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "error-container": "#ffdad6", "tertiary-fixed": "#ffddb8", "surface-bright": "#faf8ff", "on-primary": "#ffffff", "primary-container": "#1e40af", "on-secondary-fixed-variant": "#003ea8", "primary-fixed": "#dde1ff", "on-primary-container": "#a8b8ff", "surface-container-lowest": "#ffffff", "on-tertiary-fixed-variant": "#653e00", "on-error-container": "#93000a", "error": "#ba1a1a", "inverse-primary": "#b8c4ff", "on-tertiary-fixed": "#2a1700", "on-surface": "#131b2e", "inverse-on-surface": "#eef0ff", "secondary-fixed": "#dbe1ff", "on-tertiary": "#ffffff", "background": "#faf8ff", "secondary-fixed-dim": "#b4c5ff", "surface-container-high": "#e2e7ff", "surface": "#faf8ff", "tertiary-fixed-dim": "#ffb95f", "on-secondary-fixed": "#00174b", "surface-container-low": "#f2f3ff", "on-secondary": "#ffffff", "tertiary": "#4c2e00", "on-background": "#131b2e", "on-primary-fixed": "#001453", "on-tertiary-container": "#ffa929", "secondary": "#0051d5", "on-surface-variant": "#444653", "outline-variant": "#c4c5d5", "on-error": "#ffffff", "on-secondary-container": "#fefcff", "surface-container-highest": "#dae2fd", "surface-container": "#eaedff", "secondary-container": "#316bf3", "surface-dim": "#d2d9f4", "on-primary-fixed-variant": "#173bab", "surface-variant": "#dae2fd", "inverse-surface": "#283044", "tertiary-container": "#6b4200", "primary-fixed-dim": "#b8c4ff", "primary": "#00288e", "outline": "#757684", "surface-tint": "#3755c3" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-xl": "2.5rem", "space-sm": "0.5rem", "margin-mobile": "1.25rem", "space-xs": "0.25rem", "space-2xl": "4rem", "space-md": "1rem", "gutter-mobile": "1rem", "space-lg": "1.5rem", "gutter": "1.5rem", "margin": "3rem" }, "fontFamily": { "headline-lg-mobile": [ "Plus Jakarta Sans" ], "headline-lg": [ "Plus Jakarta Sans" ], "display-hero": [ "Plus Jakarta Sans" ], "headline-md": [ "Plus Jakarta Sans" ], "headline-sm": [ "Plus Jakarta Sans" ], "body-lg": [ "Plus Jakarta Sans" ], "body-md": [ "Plus Jakarta Sans" ], "display-hero-mobile": [ "Plus Jakarta Sans" ], "label-numeric": [ "JetBrains Mono" ], "body-sm": [ "Plus Jakarta Sans" ], "label-caps": [ "Plus Jakarta Sans" ] }, "fontSize": { "headline-lg-mobile": [ "28px", { "lineHeight": "38px", "letterSpacing": "-0.015em", "fontWeight": "700" } ], "headline-lg": [ "36px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700" } ], "display-hero": [ "56px", { "lineHeight": "68px", "letterSpacing": "-0.025em", "fontWeight": "800" } ], "headline-md": [ "24px", { "lineHeight": "34px", "letterSpacing": "-0.015em", "fontWeight": "700" } ], "headline-sm": [ "20px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" } ], "body-lg": [ "18px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "400" } ], "body-md": [ "16px", { "lineHeight": "26px", "letterSpacing": "-0.005em", "fontWeight": "400" } ], "display-hero-mobile": [ "36px", { "lineHeight": "46px", "letterSpacing": "-0.02em", "fontWeight": "800" } ], "label-numeric": [ "15px", { "lineHeight": "20px", "letterSpacing": "-0.02em", "fontWeight": "600" } ], "body-sm": [ "14px", { "lineHeight": "22px", "letterSpacing": "0em", "fontWeight": "400" } ], "label-caps": [ "12px", { "lineHeight": "16px", "letterSpacing": "0.06em", "fontWeight": "700" } ] } } } };</script></head><body class="bg-surface text-on-surface font-body-md text-body-md antialiased selection:bg-primary-fixed selection:text-on-primary-fixed transition-colors duration-200"><header class="fixed top-0 left-0 w-full z-50 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(19,27,46,0.04)]"><div class="h-20 max-w-7xl mx-auto px-margin-mobile md:px-margin flex items-center justify-between gap-gutter"><div class="flex items-center gap-space-md"><a class="flex items-center gap-space-sm group" data-path="landing-home" href="#"><div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-on-primary transition-transform duration-200 group-hover:scale-105 shadow-[0_4px_12px_rgba(0,40,142,0.2)]"><span class="material-symbols-outlined text-[24px]">account_balance_wallet</span></div><div class="flex flex-col leading-none"><span class="font-headline-sm text-headline-sm text-primary tracking-tight font-bold">머니체크</span><span class="font-label-caps text-label-caps text-on-surface-variant font-semibold tracking-wider uppercase mt-1">MoneyCheck</span></div></a></div><nav class="hidden lg:flex items-center gap-space-lg" data-active-classes="text-primary font-bold"><a aria-current="page" class="transition-colors py-space-xs text-primary font-bold" data-path="landing-home" href="#">서비스 소개</a><a class="text-on-surface-variant hover:text-on-surface transition-colors py-space-xs font-body-sm text-body-sm" data-path="financial-check" href="#">자가진단 안내</a><a class="text-on-surface-variant hover:text-on-surface transition-colors py-space-xs font-body-sm text-body-sm" data-path="faq-support" href="#">고객지원</a></nav><div class="flex items-center gap-space-sm sm:gap-space-md"><div class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-label-caps text-label-caps font-bold shadow-[inset_0_1px_0_rgba(255,255,255,0.4)]"><span class="material-symbols-outlined text-[16px] text-tertiary-container">bolt</span><span>3초 만에 빠른 진단</span></div><!-- Dark Mode Toggle Button --><button aria-label="다크 모드 전환" class="relative inline-flex items-center justify-between w-14 h-8 px-1 rounded-full bg-surface-container-high hover:bg-surface-container-highest border border-outline-variant/40 dark:border-slate-700 transition-colors duration-200 cursor-pointer shadow-inner focus:outline-none focus:ring-2 focus:ring-primary" id="theme-toggle" type="button"><span class="material-symbols-outlined text-[15px] text-amber-500 select-none">light_mode</span><span class="material-symbols-outlined text-[15px] text-slate-400 select-none">dark_mode</span><span class="absolute left-1 top-1 w-6 h-6 rounded-full bg-white dark:bg-slate-800 shadow-md transform transition-transform duration-200 flex items-center justify-center pointer-events-none" id="theme-toggle-knob"><span class="material-symbols-outlined text-[14px] text-primary dark:text-amber-300" id="theme-toggle-icon">light_mode</span></span></button><div class="flex items-center gap-2"></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="w-full pt-20 bg-surface min-h-[calc(100vh-20rem)]"><div class="flex flex-col w-full">
+<!-- Top Ambient Glow Field -->
+<div class="relative w-full overflow-hidden">
+<div class="absolute -top-40 right-1/4 w-96 h-96 bg-primary-fixed/40 dark:bg-primary-container/20 rounded-full blur-3xl pointer-events-none -z-10"></div>
+<div class="absolute top-20 left-10 w-80 h-80 bg-tertiary-fixed/30 dark:bg-tertiary-container/20 rounded-full blur-2xl pointer-events-none -z-10"></div>
+<!-- Hero Section with Overlapping Visual Dynamics -->
+<div class="max-w-7xl mx-auto px-margin-mobile md:px-margin pt-8 md:pt-14 pb-12">
+<!-- Dynamic live diagnostic count -->
+<div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container-high dark:bg-slate-800 text-primary mb-6 shadow-sm border border-transparent dark:border-slate-700">
+<span class="inline-block w-2 h-2 rounded-full bg-secondary-container animate-pulse"></span>
+<span class="font-label-caps text-label-caps uppercase tracking-wider text-on-surface-variant">Live Audit</span>
+<span class="font-label-numeric text-label-numeric font-bold text-primary dark:text-secondary-fixed">124,892명</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">진행 완료</span>
+</div>
+<!-- Main Asymmetric Split Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+<!-- Left Column: Typography & Authority -->
+<div class="lg:col-span-6 flex flex-col justify-center pt-2">
+<div class="flex items-center gap-3 mb-4">
+<span class="px-2.5 py-1 rounded bg-secondary-fixed dark:bg-slate-800 text-on-secondary-fixed dark:text-secondary-fixed-dim font-label-caps text-label-caps font-bold">2026 대한민국 금융 트렌드</span>
+
+</div>
+<h1 class="font-display-hero text-headline-lg md:text-display-hero text-on-surface tracking-tight leading-tight md:leading-[1.18] mb-6 font-extrabold">
+            나의 재무 상태,<br>
+            지금 이대로 <span class="text-secondary dark:text-secondary-fixed-dim inline-block underline decoration-tertiary-fixed dark:decoration-tertiary-container decoration-8 underline-offset-4">괜찮을까?</span>
+</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-xl mb-8 leading-relaxed">
+            통장을 스쳐 지나가는 월급, 불투명한 노후와 내 집 마련. 지금 내 금융 밸런스를 3초 만에 점검해보세요. 전문가가 엄선한 오늘의&nbsp;<span style="letter-spacing: normal; caret-color: rgb(71, 85, 105); color: rgb(71, 85, 105); font-family: Pretendard, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, sans-serif; text-align: center; background-color: rgb(248, 250, 252);">재무 꿀팁과 금융 상식도 확인해보세요 :)</span></p>
+<!-- Core Metrics Micro-strip -->
+
+<!-- Trust Badges with Micro-avatars -->
+
+</div>
+<!-- Right Column: Interactive Diagnostic Simulation Card Layer -->
+<div class="lg:col-span-6 relative mt-4 lg:mt-0">
+<!-- Outer Shadowed Interactive Container -->
+<div class="rounded-2xl bg-surface-container-lowest shadow-xl p-6 md:p-8 relative z-10">
+<div class="flex items-center justify-between pb-6">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-lg bg-primary flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined text-[18px]">query_stats</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">실시간 재무 밸런스 점검</h3>
+</div>
+<span class="px-2.5 py-1 rounded-full bg-error-container text-on-error-container font-label-caps text-label-caps font-bold">진단 무료</span>
+</div>
+<!-- Side-by-side / Layered Diagnostic Preview Card -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+<!-- Left Mini-card: Visual comparison meter -->
+<div class="p-4 rounded-xl bg-surface-container-low flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between mb-2">
+<span class="font-label-caps text-label-caps text-on-surface-variant font-bold uppercase">내 또래 비교 분석</span>
+<span class="text-xs px-2 py-0.5 rounded-full bg-surface-container dark:bg-slate-700 text-primary dark:text-primary-fixed font-bold">30대 직장인</span>
+</div>
+<p class="font-headline-sm text-headline-sm text-on-surface font-bold mb-1">상위 &nbsp;? &nbsp;%</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant text-xs">평균 순자산 및 저축률 대비 나의 위치</p>
+</div>
+<!-- Custom Inline Gauge SVG -->
+<div class="my-4 flex items-center justify-center">
+<div class="relative w-32 h-20 flex items-center justify-center overflow-hidden">
+<svg class="w-32 h-32 absolute top-0" viewBox="0 0 100 100">
+<!-- Background Arc -->
+<path class="text-surface-container-highest dark:text-slate-700" d="M 15 80 A 40 40 0 0 1 85 80" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="10"></path>
+<!-- Active Comparison Fill -->
+<path class="text-secondary dark:text-secondary-container" d="M 15 80 A 40 40 0 0 1 65 42" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="10"></path>
+</svg>
+<div class="absolute bottom-1 flex flex-col items-center">
+<span class="font-label-numeric text-label-numeric font-bold text-secondary dark:text-secondary-fixed-dim text-sm">안정권</span>
+<span class="text-[10px] text-outline">저축률 42%</span>
+</div>
+</div>
+</div>
+<div class="space-y-1.5 pt-2">
+<div class="flex justify-between text-xs font-body-sm text-body-sm text-on-surface-variant">
+<span>또래 평균 저축액</span>
+<span class="font-label-numeric text-on-surface font-semibold">120만 원/월</span>
+</div>
+<div class="w-full bg-surface-container-highest dark:bg-slate-700 h-2 rounded-full overflow-hidden">
+<div class="bg-primary dark:bg-secondary h-full rounded-full" style="width: 77%;"></div>
+</div>
+</div>
+</div>
+<!-- Right Mini-card: Quick Diagnostic Action & Inputs -->
+<div class="p-4 rounded-xl bg-surface-container-high/60 dark:bg-slate-800/80 flex flex-col justify-between">
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant font-bold uppercase">간편 진단 조건 선택</span>
+<div class="mt-3 space-y-3">
+<div>
+<label class="block text-xs font-body-sm text-on-surface-variant mb-1 font-semibold">월 가처분 소득 (세후)</label>
+<div class="flex items-center bg-surface-container-lowest px-3 py-2 rounded-lg shadow-sm">
+<span class="text-outline text-xs font-label-numeric mr-1 font-bold">₩</span>
+<input class="w-full font-label-numeric text-label-numeric font-bold bg-transparent text-on-surface focus:outline-none" id="income-input" type="text" value="3,800,000" placeholder=" 3,000,000 (예시)">
+<span class="text-outline text-xs">원</span>
+</div>
+</div>
+<div>
+<label class="block text-xs font-body-sm text-on-surface-variant mb-1 font-semibold">주요 관심 재무 목표</label>
+<div class="grid grid-cols-2 gap-1.5">
+<button class="px-2 py-1.5 text-xs rounded bg-primary text-on-primary font-semibold text-center shadow-sm" type="button">내 집 마련</button>
+<button class="px-2 py-1.5 text-xs rounded bg-surface-container-lowest text-on-surface font-semibold text-center hover:bg-surface-container" type="button">대출 상환</button>
+<button class="px-2 py-1.5 text-xs rounded bg-surface-container-lowest text-on-surface font-semibold text-center hover:bg-surface-container" type="button">조기 은퇴</button>
+<button class="px-2 py-1.5 text-xs rounded bg-surface-container-lowest text-on-surface font-semibold text-center hover:bg-surface-container" type="button">시드머니 1억</button>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-4 pt-3 flex items-center justify-between text-xs text-on-surface-variant">
+<span class="inline-flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-secondary dark:text-secondary-fixed-dim">verified_user</span>
+                    신용점수 무영향
+                  </span>
+<span class="font-label-numeric text-primary dark:text-secondary-fixed-dim font-semibold">100% 암호화</span>
+</div>
+</div>
+</div>
+<!-- Google Authentication & Fast SignCTA Group -->
+<div class="space-y-3 pt-2">
+<a class="w-full py-4 px-6 rounded-xl bg-primary text-on-primary hover:bg-primary-container font-headline-sm text-headline-sm text-center flex items-center justify-center gap-2 shadow-lg transition-transform duration-150 active:scale-[0.99] font-bold" data-path="financial-check-start" href="#">
+<span>3초 무료 재무 점검 시작하기</span>
+<span class="material-symbols-outlined text-[22px]">arrow_forward</span>
+</a>
+<div class="relative flex py-2 items-center">
+<div class="flex-grow bg-surface-container-high dark:bg-slate-700 h-[1px]"></div>
+<span class="flex-shrink mx-4 text-xs font-body-sm text-on-surface-variant">원클릭 간편 연동</span>
+<div class="flex-grow bg-surface-container-high dark:bg-slate-700 h-[1px]"></div>
+</div>
+<!-- Google Authentication Actions Duo -->
+<div class="grid grid-cols-2 gap-3">
+<a class="flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg bg-surface-container-lowest hover:bg-surface-container-low text-on-surface font-body-sm text-body-sm font-semibold shadow-sm transition-all duration-150" data-path="google-sign-in" href="#">
+<svg aria-hidden="true" class="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24">
+<path d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3.03h3.88c2.27-2.09 3.66-5.17 3.66-9.12z" fill="#4285F4"></path>
+<path d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.03c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.13C3.26 21.36 7.33 24 12 24z" fill="#34A853"></path>
+<path d="M5.28 14.29c-.25-.72-.38-1.49-.38-2.29s.13-1.57.38-2.29V6.57H1.25C.45 8.15 0 9.99 0 12s.45 3.85 1.25 5.43l4.03-3.14z" fill="#FBBC05"></path>
+<path d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.57l4.03 3.14c.95-2.83 3.6-4.96 6.72-4.96z" fill="#EA4335"></path>
+</svg>
+<span>Google Sign In</span>
+</a>
+<a class="flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-primary dark:text-secondary-fixed-dim font-body-sm text-body-sm font-bold shadow-sm transition-all duration-150" data-path="google-sign-up" href="#">
+<svg aria-hidden="true" class="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24">
+<path d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3.03h3.88c2.27-2.09 3.66-5.17 3.66-9.12z" fill="#4285F4"></path>
+<path d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.03c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.13C3.26 21.36 7.33 24 12 24z" fill="#34A853"></path>
+<path d="M5.28 14.29c-.25-.72-.38-1.49-.38-2.29s.13-1.57.38-2.29V6.57H1.25C.45 8.15 0 9.99 0 12s.45 3.85 1.25 5.43l4.03-3.14z" fill="#FBBC05"></path>
+<path d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.57l4.03 3.14c.95-2.83 3.6-4.96 6.72-4.96z" fill="#EA4335"></path>
+</svg>
+<span>Google Sign Up</span>
+</a>
+</div>
+</div>
+</div>
+<!-- Decorative Backdrop Card for Asymmetric Layering -->
+<div class="hidden sm:block absolute -bottom-5 -right-5 w-full h-full rounded-2xl bg-secondary-fixed/50 dark:bg-slate-700/40 -z-0 pointer-events-none transform rotate-1"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Social Proof & Trust Strip -->
+
+<!-- Lower Half: '오늘의 재무꿀팁 & 놓치기 쉬운 금융 상식' Curated Grid -->
+<section class="max-w-7xl mx-auto px-margin-mobile md:px-margin py-12 md:py-16 w-full">
+<!-- Section Header -->
+<div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+<div>
+<div class="flex items-center gap-2 mb-2">
+<span class="w-2 h-4 bg-primary dark:bg-secondary rounded-full"></span>
+<span class="font-label-caps text-label-caps text-primary dark:text-secondary-fixed-dim font-bold tracking-widest uppercase">Curated Finance Feed</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface font-bold tracking-tight">
+          오늘의 재무꿀팁 &amp; 놓치기 쉬운 금융 상식
+        </h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">
+          전문 자산관리사가 매일 아침 엄선한 실전 절세·투자·지출 통제 가이드
+        </p>
+</div>
+<div class="flex items-center gap-2">
+<button aria-label="이전 꿀팁" class="w-9 h-9 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface flex items-center justify-center transition-colors shadow-sm" id="tip-prev">
+
+</button>
+
+</div>
+</div>
+<!-- Category Pills Filter Bar -->
+<div class="flex items-center gap-2 overflow-x-auto pb-4 mb-8 scrollbar-none">
+<button class="px-4 py-2 rounded-full bg-primary text-on-primary font-body-sm text-body-sm font-bold shadow-sm whitespace-nowrap transition-transform active:scale-95">
+        #전체
+      </button>
+<button class="px-4 py-2 rounded-full bg-surface-container-low hover:bg-surface-container-high text-on-surface font-body-sm text-body-sm font-semibold whitespace-nowrap transition-colors">
+        #직장인 절세
+      </button>
+<button class="px-4 py-2 rounded-full bg-surface-container-low hover:bg-surface-container-high text-on-surface font-body-sm text-body-sm font-semibold whitespace-nowrap transition-colors">
+        #사회초년생
+      </button>
+<button class="px-4 py-2 rounded-full bg-surface-container-low hover:bg-surface-container-high text-on-surface font-body-sm text-body-sm font-semibold whitespace-nowrap transition-colors">
+        #통장 쪼개기
+      </button>
+<button class="px-4 py-2 rounded-full bg-surface-container-low hover:bg-surface-container-high text-on-surface font-body-sm text-body-sm font-semibold whitespace-nowrap transition-colors">
+        #대출 금리 인하
+      </button>
+</div>
+<!-- Editorial Cards Grid (3 Columns) -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<!-- Card 1: 직장인 절세 -->
+<article class="rounded-2xl bg-surface-container-lowest shadow-md hover:shadow-xl transition-all duration-200 flex flex-col justify-between overflow-hidden group">
+<div class="relative h-48 w-full overflow-hidden bg-surface-container">
+<img class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" data-alt="A clean modern workspace with a laptop open to a tax calculation dashboard, accompanied by neat financial ledgers, a warm ceramic coffee mug, and natural sunlight casting soft shadows across a minimalist desk." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAg_55EBIXyPanGgWD6mBolwUrAuTwgLI4HchjEftqLBdp0pyzF2ZHXBBwSib8A-VaDZDuBfBZsXkVYXd5OSiYFCJBrZ2kYWC3VAroM3769JKEjuheL7SSs2sZm-kFAR0beUcVR6hJNqgdPH0VEzwhUZcNsX89b_L67GMCHjVzCv1i6ZN182aRfOF71gBMckKDAWfMO2kSyDVyX3N26VqR0QYNmuQL7ZW2PaMn3fmL7">
+<div class="absolute top-3 left-3 flex gap-2">
+<span class="px-2.5 py-1 rounded-full bg-primary text-on-primary font-label-caps text-label-caps font-bold">직장인 절세</span>
+
+</div>
+<button aria-label="북마크 저장" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-surface-bright/80 backdrop-blur-sm text-on-surface flex items-center justify-center hover:text-primary transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[18px]">bookmark_border</span>
+</button>
+</div>
+<div class="p-6 flex flex-col flex-grow justify-between">
+<div>
+<div class="flex items-center gap-2 text-outline font-body-sm text-body-sm text-xs mb-2">
+<span class="material-symbols-outlined text-[14px]">schedule</span>
+<span>3분 완독</span>
+<span>•</span>
+<span>조회수 1.8만회</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold mb-2 group-hover:text-primary transition-colors leading-snug">
+              연말정산 50만 원 더 돌려받는 체크카드 vs 신용카드 황금 비율
+            </h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2 leading-relaxed">
+              총급여 25% 초과분부터 적용되는 소득공제율의 비밀. 상반기 소비 패턴에 맞춘 카드 교체 공식을 지금 확인해보세요.
+            </p>
+</div>
+<div class="pt-6 mt-4 flex items-center justify-between bg-surface-container-low/40 -mx-6 -mb-6 px-6 py-4">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-primary-fixed text-primary font-bold text-xs flex items-center justify-center">택</div>
+<span class="font-body-sm text-body-sm font-semibold text-on-surface text-xs">세무사 김민석 감수</span>
+</div>
+<a class="inline-flex items-center gap-1 text-primary dark:text-secondary-fixed-dim hover:text-primary-container font-headline-sm text-body-sm font-bold" data-path="article-tax-strategy" href="#">
+<span>읽기</span>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</a>
+</div>
+</div>
+</article>
+<!-- Card 2: 통장 쪼개기 -->
+<article class="rounded-2xl bg-surface-container-lowest shadow-md hover:shadow-xl transition-all duration-200 flex flex-col justify-between overflow-hidden group">
+<div class="relative h-48 w-full overflow-hidden bg-surface-container">
+<img class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" data-alt="Four glass containers neatly labeled with colored fiscal tokens on an architect desk, symbolizing account partitioning with aesthetic soft lighting and geometric layout." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBWF2KkTQWZDzAo6Zc1zdfHRvbIMyeqcDYyEmVCvfODb2Kr_Sp0YTBN4D4YZ07PJ9lkmh9mQvmdoKPURx0rouTs7wZ3vxMKJmShDfgUo5Kk9jSoilgz8LZjo5e2EkcnoSV08a_R2jZu_qyzrQLPqZCFsWoaLbZrZhXDpIcfocHKYax1ZzOS-_V5BC5_-NahlYhLA-waQfBYI1-8a3H3nP5_Zjkgv28oQAX6Gc0RWRp8">
+<div class="absolute top-3 left-3 flex gap-2">
+<span class="px-2.5 py-1 rounded-full bg-secondary text-on-secondary font-label-caps text-label-caps font-bold">통장 쪼개기</span>
+
+</div>
+<button aria-label="북마크 저장" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-surface-bright/80 backdrop-blur-sm text-on-surface flex items-center justify-center hover:text-primary transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[18px]">bookmark_border</span>
+</button>
+</div>
+<div class="p-6 flex flex-col flex-grow justify-between">
+<div>
+<div class="flex items-center gap-2 text-outline font-body-sm text-body-sm text-xs mb-2">
+<span class="material-symbols-outlined text-[14px]">schedule</span>
+<span>4분 완독</span>
+<span>•</span>
+<span>조회수 3.2만회</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold mb-2 group-hover:text-primary transition-colors leading-snug">
+              월급날 당일 끝내는 4계좌 시스템: 급여·소비·예비·투자 분리법
+            </h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2 leading-relaxed">
+              의지력에 기대지 않고 잔고가 저절로 쌓이게 만드는 자동 이체 자동화 루틴. 비상금 풀 6개월치 채우는 실전 노하우.
+            </p>
+</div>
+<div class="pt-6 mt-4 flex items-center justify-between bg-surface-container-low/40 -mx-6 -mb-6 px-6 py-4">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-tertiary-fixed text-tertiary font-bold text-xs flex items-center justify-center">자</div>
+<span class="font-body-sm text-body-sm font-semibold text-on-surface text-xs">머니체크 리서치팀</span>
+</div>
+<a class="inline-flex items-center gap-1 text-primary dark:text-secondary-fixed-dim hover:text-primary-container font-headline-sm text-body-sm font-bold" data-path="article-account-split" href="#">
+<span>읽기</span>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</a>
+</div>
+</div>
+</article>
+<!-- Card 3: 대출 금리 인하 -->
+<article class="rounded-2xl bg-surface-container-lowest shadow-md hover:shadow-xl transition-all duration-200 flex flex-col justify-between overflow-hidden group">
+<div class="relative h-48 w-full overflow-hidden bg-surface-container">
+<img class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" data-alt="A smartphone showing descending interest rate graphs with modern blue financial UI icons, sitting beside a sleek architectural model of a modern apartment building in soft studio light." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAgzbMdbzvJW1GhfMw0UmE8A2-Nj5yvdGyb1gUZjEx88-Y9wnHAOQ-bYOzRWYvw-Y-j4RXZti_tzIVbpWZXLFL7PCK0wVmsTl_rbGNpjiVnMUaauflKTIuBHF4YCJKptgjIYjLTgE4vfjxymlfeIFctNAa73poZkDEczYv1iLDWRhouCn8-stkRhFD0K9220G35Xvgug6GXnG_ubGPTGUTRwmR0nCCKgd0jHENNjB8V">
+<div class="absolute top-3 left-3 flex gap-2">
+<span class="px-2.5 py-1 rounded-full bg-tertiary-container text-on-primary font-label-caps text-label-caps font-bold">금리 인하 팁</span>
+
+</div>
+<button aria-label="북마크 저장" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-surface-bright/80 backdrop-blur-sm text-on-surface flex items-center justify-center hover:text-primary transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[18px]">bookmark_border</span>
+</button>
+</div>
+<div class="p-6 flex flex-col flex-grow justify-between">
+<div>
+<div class="flex items-center gap-2 text-outline font-body-sm text-body-sm text-xs mb-2">
+<span class="material-symbols-outlined text-[14px]">schedule</span>
+<span>2분 완독</span>
+<span>•</span>
+<span>조회수 2.5만회</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold mb-2 group-hover:text-primary transition-colors leading-snug">
+              클릭 세 번으로 신용대출 금리 1.2% 내린 직장인 승진자 후기
+            </h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2 leading-relaxed">
+              승진, 연봉 인상, 부채 상환 시 은행에 당당하게 요구할 수 있는 '금리인하요구권' 서류 준비와 거절 피하는 팁.
+            </p>
+</div>
+<div class="pt-6 mt-4 flex items-center justify-between bg-surface-container-low/40 -mx-6 -mb-6 px-6 py-4">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-secondary-fixed text-primary font-bold text-xs flex items-center justify-center">은</div>
+<span class="font-body-sm text-body-sm font-semibold text-on-surface text-xs">전 시중은행 여신심사역</span>
+</div>
+<a class="inline-flex items-center gap-1 text-primary dark:text-secondary-fixed-dim hover:text-primary-container font-headline-sm text-body-sm font-bold" data-path="article-interest-reduction" href="#">
+<span>읽기</span>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</a>
+</div>
+</div>
+</article>
+</div>
+<!-- Editorial Subscribe & Google Fast Access Card -->
+<div class="mt-12 rounded-2xl bg-surface-container p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-md">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-xl bg-primary flex items-center justify-center text-on-primary flex-shrink-0 shadow-md">
+<span class="material-symbols-outlined text-[28px]">mark_email_read</span>
+</div>
+<div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface font-bold">매주 월요일 아침, 1급 금융 리포트를 메일함으로</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">구글 계정으로 1초 만에 무료 뉴스레터를 구독하고 놓친 환급금을 챙기세요.</p>
+</div>
+</div>
+<div class="flex items-center gap-3 w-full md:w-auto">
+<a class="flex-1 md:flex-initial inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-surface-container-lowest hover:bg-surface-container-low text-on-surface font-body-sm text-body-sm font-bold shadow-sm transition-all whitespace-nowrap" data-path="google-sign-in" href="#">
+<svg aria-hidden="true" class="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24">
+<path d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3.03h3.88c2.27-2.09 3.66-5.17 3.66-9.12z" fill="#4285F4"></path>
+<path d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.03c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.13C3.26 21.36 7.33 24 12 24z" fill="#34A853"></path>
+<path d="M5.28 14.29c-.25-.72-.38-1.49-.38-2.29s.13-1.57.38-2.29V6.57H1.25C.45 8.15 0 9.99 0 12s.45 3.85 1.25 5.43l4.03-3.14z" fill="#FBBC05"></path>
+<path d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.57l4.03 3.14c.95-2.83 3.6-4.96 6.72-4.96z" fill="#EA4335"></path>
+</svg>
+<span>Google 간편 구독하기</span>
+</a>
+</div>
+</div>
+</section>
+<!-- Interactive Client-side Script -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Dark Mode Toggle Logic
+      const themeToggleBtn = document.getElementById('theme-toggle');
+      const knob = document.getElementById('theme-toggle-knob');
+      const toggleIcon = document.getElementById('theme-toggle-icon');
+
+      function updateThemeUI(isDark) {
+        if (isDark) {
+          document.documentElement.classList.add('dark');
+          if (knob) knob.classList.add('translate-x-6');
+          if (toggleIcon) {
+            toggleIcon.innerText = 'dark_mode';
+            toggleIcon.classList.remove('text-primary');
+            toggleIcon.classList.add('text-amber-300');
+          }
+        } else {
+          document.documentElement.classList.remove('dark');
+          if (knob) knob.classList.remove('translate-x-6');
+          if (toggleIcon) {
+            toggleIcon.innerText = 'light_mode';
+            toggleIcon.classList.remove('text-amber-300');
+            toggleIcon.classList.add('text-primary');
+          }
+        }
+      }
+
+      // Check system or saved preference
+      const savedTheme = localStorage.getItem('mc-theme');
+      if (savedTheme === 'dark') {
+        updateThemeUI(true);
+      } else {
+        updateThemeUI(false);
+      }
+
+      if (themeToggleBtn) {
+        themeToggleBtn.addEventListener('click', () => {
+          const isDark = document.documentElement.classList.toggle('dark');
+          localStorage.setItem('mc-theme', isDark ? 'dark' : 'light');
+          updateThemeUI(isDark);
+        });
+      }
+
+      // Dynamic income input formatter
+      const incomeInput = document.getElementById('income-input');
+      if (incomeInput) {
+        incomeInput.addEventListener('input', (e) => {
+          let value = e.target.value.replace(/[^0-9]/g, '');
+          if (value) {
+            e.target.value = parseInt(value, 10).toLocaleString('ko-KR');
+          }
+        });
+      }
+
+      // Bookmark interaction toggle
+      const bookmarkButtons = document.querySelectorAll('button[aria-label="북마크 저장"]');
+      bookmarkButtons.forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          const icon = btn.querySelector('.material-symbols-outlined');
+          if (icon.innerText === 'bookmark_border') {
+            icon.innerText = 'bookmark';
+            icon.style.fontVariationSettings = "'FILL' 1";
+            btn.classList.add('text-primary');
+          } else {
+            icon.innerText = 'bookmark_border';
+            icon.style.fontVariationSettings = "'FILL' 0";
+            btn.classList.remove('text-primary');
+          }
+        });
+      });
+
+      // Filter chips interaction
+      const filterButtons = document.querySelectorAll('section button[class*="rounded-full"]');
+      filterButtons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          filterButtons.forEach(b => {
+            b.classList.remove('bg-primary', 'text-on-primary', 'shadow-sm');
+            b.classList.add('bg-surface-container-low', 'text-on-surface');
+          });
+          btn.classList.remove('bg-surface-container-low', 'text-on-surface');
+          btn.classList.add('bg-primary', 'text-on-primary', 'shadow-sm');
+        });
+      });
+    });
+  </script>
+</div></main><footer class="w-full bg-surface-container-low mt-space-2xl"><div class="max-w-7xl mx-auto px-margin-mobile md:px-margin py-space-xl"><div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-space-lg mb-space-lg"><div class="flex items-center gap-space-sm"><div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-on-primary"><span class="material-symbols-outlined text-[18px]">account_balance_wallet</span></div><span class="font-headline-sm text-headline-sm text-primary font-bold">머니체크</span></div><div class="flex flex-wrap items-center gap-space-md text-on-surface-variant font-body-sm text-body-sm"></div></div><div class="space-y-space-xs text-on-surface-variant font-body-sm text-body-sm leading-relaxed"><p class="text-xs leading-5 text-outline">면책 조항: 머니체크에서 제공하는 진단 결과 및 금융 리포트는 정보 제공 목적의 시뮬레이션이며, 법적 투자 자문 또는 대출 보증을 의미하지 않습니다. 실제 금융 상품 계약 및 실행 조건은 제휴 금융기관의 심사 기준에 따릅니다.</p><div class="flex flex-col sm:flex-row sm:items-center justify-between pt-space-md gap-space-sm"><p class="text-xs font-label-numeric text-on-surface-variant">© 2026 MoneyCheck Corp. All rights reserved by JUNG HYE MIN.</p><div class="flex items-center gap-4 text-xs text-on-surface-variant"></div></div></div></div></footer>
+
+</body></html>
