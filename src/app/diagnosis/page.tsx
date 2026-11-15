@@ -338,16 +338,26 @@ export default function DiagnosisPage() {
           setMonthlyIncome(savedIncome);
         }
         const savedConcern = sessionStorage.getItem("financialDoctor_concern");
+        const savedGoal = sessionStorage.getItem("financialDoctor_goalName");
+        if (savedGoal) {
+          setGoalName(savedGoal);
+        }
         if (savedConcern) {
           setUserConcern(savedConcern);
-          if (savedConcern.includes("생활비")) {
-            setGoalName("은퇴 후 생활비 마련");
-          } else if (savedConcern.includes("연금")) {
-            setGoalName("국민·퇴직연금 수령 준비");
-          } else if (savedConcern.includes("대출")) {
-            setGoalName("은퇴 전 대출 전액 상환");
-          } else if (savedConcern.includes("자산")) {
-            setGoalName("은퇴 자산 안정적 운용");
+          if (!savedGoal) {
+            if (savedConcern.includes("대출")) {
+              setGoalName("은퇴 전 대출 2.5억 전액 상환");
+            } else if (savedConcern.includes("결혼") || savedConcern.includes("자녀")) {
+              setGoalName("장남 결혼자금 7,000만 원 마련");
+            } else if (savedConcern.includes("생활비")) {
+              setGoalName("은퇴 후 생활비 월 300만 원 확보");
+            } else if (savedConcern.includes("상속") || savedConcern.includes("절세")) {
+              setGoalName("상가주택 상속 및 절세 대비");
+            } else if (savedConcern.includes("연금")) {
+              setGoalName("국민·퇴직연금 수령 준비");
+            } else if (savedConcern.includes("자산")) {
+              setGoalName("은퇴 자산 안정적 운용");
+            }
           }
         }
       } catch {

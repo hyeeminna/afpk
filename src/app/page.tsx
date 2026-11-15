@@ -7,11 +7,63 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuth } from "@/contexts/auth-context";
 import { UserProfilePopover } from "@/components/user-profile-popover";
 
-const RETIREMENT_CONCERNS = [
-  "은퇴 후 생활비가 충분할지 걱정돼요",
-  "국민연금과 퇴직연금이 궁금해요",
-  "은퇴 전에 대출을 갚고 싶어요",
-  "모아둔 자산을 어떻게 관리할지 고민이에요",
+export interface CoreConcernItem {
+  id: string;
+  rankBadge: string;
+  rankBadgeColor: string;
+  title: string;
+  quote: string;
+  solutionBrief: string;
+  icon: string;
+  goalName: string;
+  category: string;
+}
+
+export const CORE_CONCERNS: CoreConcernItem[] = [
+  {
+    id: "debt",
+    rankBadge: "🥇 1순위 목표",
+    rankBadgeColor: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700",
+    title: "은퇴 전 대출 2.5억 전액 상환",
+    quote: "“퇴직 전에 남아있는 아파트 담보대출 원리금(월 185만 원) 부담을 말끔히 없애고 싶어요.”",
+    solutionBrief: "현금 1억 + 퇴직금 1.5억 상환으로 월 원리금 지출 0원화",
+    icon: "credit_card",
+    goalName: "은퇴 전 대출 2.5억 전액 상환",
+    category: "부채 상환",
+  },
+  {
+    id: "wedding",
+    rankBadge: "🥈 2순위 목표",
+    rankBadgeColor: "bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300 border-blue-300 dark:border-blue-700",
+    title: "자녀(장남) 결혼자금 7,000만 원 지원",
+    quote: "“자녀 독립과 결혼 시점에 맞춰 7,000만 원 목돈을 노후자금 훼손 없이 안전하게 지원하고 싶어요.”",
+    solutionBrief: "보유 정기예금 2억 원 중 분할 집행으로 부채 없는 자녀 지원 플랜",
+    icon: "celebration",
+    goalName: "장남 결혼자금 7,000만 원 마련",
+    category: "목돈 마련",
+  },
+  {
+    id: "living",
+    rankBadge: "🥉 3순위 목표",
+    rankBadgeColor: "bg-red-100 text-red-800 dark:bg-red-950/80 dark:text-red-300 border-red-300 dark:border-red-700",
+    title: "은퇴 후 생활비 월 300만 원 평생 확보",
+    quote: "“퇴직 후 소득 공백기(61~64세)를 버티고, 100세 종신까지 월 300만 원 생활비를 만들고 싶어요.”",
+    solutionBrief: "부족액 3.2억 원을 IRP 연금수령 절세(30%) + 71세 주택연금 연계로 완벽 보장",
+    icon: "shield",
+    goalName: "은퇴 후 생활비 월 300만 원 확보",
+    category: "은퇴 생활비",
+  },
+  {
+    id: "inheritance",
+    rankBadge: "🏅 4순위 목표",
+    rankBadgeColor: "bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border-amber-300 dark:border-amber-700",
+    title: "상가주택 상속 대비 및 절세 플랜",
+    quote: "“보유 상가주택 상속세(예상 7,760만 원)에 대해 사전 절세 플랜과 가족 간 합의를 마치고 싶어요.”",
+    solutionBrief: "상속세 연부연납 제도 + 상가 임대수익 활용 사전 협의 및 절세 솔루션",
+    icon: "domain",
+    goalName: "상가주택 상속 및 절세 대비",
+    category: "상속 및 절세",
+  },
 ];
 
 export default function HomePage() {
@@ -22,66 +74,14 @@ export default function HomePage() {
   // Character Tab State: findoc1 (3D 처방전) vs findoc2 (2D 리포트)
   const [activeDoctorTab, setActiveDoctorTab] = useState<"findoc1" | "findoc2">("findoc1");
 
-  // Form State
-  const [income, setIncome] = useState<string>("");
-  const [selectedConcern, setSelectedConcern] = useState<string>("");
+  // 4대 핵심 고민 단일 선택 상태 (기본값: 은퇴 생활비 확보)
+  const [selectedConcernId, setSelectedConcernId] = useState<string>("living");
 
-  // Validation Error State
-  const [incomeError, setIncomeError] = useState<string>("");
-  const [concernError, setConcernError] = useState<string>("");
-
-  // Input Ref for Auto Focus
-  const incomeInputRef = useRef<HTMLInputElement>(null);
   const checkSectionRef = useRef<HTMLElement>(null);
 
-  // Smooth scroll to quick-check and focus input
+  // Smooth scroll to core concerns section
   const handleScrollToCheck = () => {
     checkSectionRef.current?.scrollIntoView({ behavior: "smooth" });
-    setTimeout(() => {
-      incomeInputRef.current?.focus();
-    }, 400);
-  };
-
-  // Only allow digits on input
-  const handleIncomeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value.replace(/[^0-9]/g, "");
-    setIncome(raw);
-    if (incomeError) setIncomeError("");
-  };
-
-  // Handle paste: only allow numeric characters
-  const handleIncomePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    e.preventDefault();
-    const pasted = e.clipboardData.getData("text");
-    const digitsOnly = pasted.replace(/[^0-9]/g, "");
-    setIncome((prev) => prev + digitsOnly);
-    if (incomeError) setIncomeError("");
-  };
-
-  // Handle Concern selection
-  const handleConcernSelect = (concern: string) => {
-    setSelectedConcern(concern);
-    if (concernError) setConcernError("");
-  };
-
-  // Keyboard navigation for radio group
-  const handleConcernKeyDown = (
-    e: React.KeyboardEvent,
-    index: number
-  ) => {
-    if (e.key === "ArrowDown" || e.key === "ArrowRight") {
-      e.preventDefault();
-      const nextIndex = (index + 1) % RETIREMENT_CONCERNS.length;
-      handleConcernSelect(RETIREMENT_CONCERNS[nextIndex]);
-    } else if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
-      e.preventDefault();
-      const prevIndex =
-        (index - 1 + RETIREMENT_CONCERNS.length) % RETIREMENT_CONCERNS.length;
-      handleConcernSelect(RETIREMENT_CONCERNS[prevIndex]);
-    } else if (e.key === " " || e.key === "Enter") {
-      e.preventDefault();
-      handleConcernSelect(RETIREMENT_CONCERNS[index]);
-    }
   };
 
   // Handle Google Login via Supabase OAuth
@@ -100,54 +100,20 @@ export default function HomePage() {
     }
   };
 
-  // Form Submission
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    let hasError = false;
-
-    // Validate income: distinction between empty and 0
-    if (income.trim() === "") {
-      setIncomeError(
-        "한 달 소득을 입력해 주세요. (소득이 없는 경우 0을 입력해 주세요)"
-      );
-      hasError = true;
-      incomeInputRef.current?.focus();
-    } else {
-      setIncomeError("");
-    }
-
-    // Validate concern selection
-    if (!selectedConcern) {
-      setConcernError("은퇴 준비에서 가장 걱정되는 항목을 하나 선택해 주세요.");
-      if (!hasError) {
-        hasError = true;
-      }
-    } else {
-      setConcernError("");
-    }
-
-    if (hasError) return;
-
-    // Convert unit: 300만원 -> 3,000,000원 (0 -> 0원)
-    const numericIncome = parseInt(income, 10);
-    const wonValue =
-      numericIncome === 0
-        ? "0"
-        : (numericIncome * 10000).toLocaleString("ko-KR");
-
-    // Store in sessionStorage (do NOT expose income in URL query string)
+  // 선택된 고민으로 맞춤 재무설계 시작
+  const handleStartDiagnosis = (item?: CoreConcernItem) => {
+    const target = item || CORE_CONCERNS.find((c) => c.id === selectedConcernId) || CORE_CONCERNS[2];
     try {
-      sessionStorage.setItem("financialDoctor_income", wonValue);
-      sessionStorage.setItem("financialDoctor_incomeRaw", income);
-      sessionStorage.setItem("financialDoctor_concern", selectedConcern);
+      sessionStorage.setItem("financialDoctor_concern", target.title);
+      sessionStorage.setItem("financialDoctor_goalName", target.goalName);
     } catch {
       // safe fallback
     }
-
-    // Move to existing /diagnosis step 1
     router.push("/diagnosis");
   };
+
+  const selectedConcernItem =
+    CORE_CONCERNS.find((c) => c.id === selectedConcernId) || CORE_CONCERNS[2];
 
   return (
     <div className="min-h-screen flex flex-col bg-surface text-on-surface antialiased transition-colors duration-200">
@@ -163,8 +129,8 @@ export default function HomePage() {
                 className="w-full h-full object-cover"
               />
             </div>
-            <div className="flex flex-col leading-none">
-              <span className="text-xl md:text-2xl text-blue-900 dark:text-blue-300 font-extrabold tracking-tight">
+            <div className="flex flex-col">
+              <span className="text-xl md:text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-none">
                 재무주치의
               </span>
               <span className="text-[11px] text-slate-500 dark:text-slate-400 font-bold tracking-wider uppercase mt-1">
@@ -183,10 +149,10 @@ export default function HomePage() {
                 서비스 소개
               </a>
               <a
-                href="#quick-check"
+                href="#core-concerns"
                 className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-1"
               >
-                간편 점검
+                4대 고민 선택
               </a>
               {!user && !isAuthLoading && (
                 <button
@@ -217,7 +183,7 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* Main Content: 3 Sections */}
+      {/* Main Content */}
       <main className="w-full pt-20 flex-grow">
         {/* ================= A. 서비스 소개 (Intro) ================= */}
         <section
@@ -231,7 +197,7 @@ export default function HomePage() {
                 {/* 상단 안내 문구 */}
                 <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-100 dark:bg-blue-950/80 text-blue-900 dark:text-blue-200 text-sm md:text-[15px] font-bold border border-blue-200 dark:border-blue-800 shadow-sm">
                   <span className="w-2 h-2 rounded-full bg-blue-600 dark:bg-blue-400 inline-block" />
-                  <span>50·60대를 위한 은퇴 준비 무료 점검</span>
+                  <span>50·60대를 위한 은퇴 준비 맞춤 진단</span>
                 </div>
 
                 {/* H1 */}
@@ -245,9 +211,8 @@ export default function HomePage() {
 
                 {/* 설명 */}
                 <p className="text-[17px] md:text-xl text-slate-700 dark:text-slate-300 leading-relaxed max-w-xl font-normal">
-                  은퇴 후 생활비, 연금, 대출, 노후자금이 걱정되시나요? 현재
-                  소득과 재무 목표를 입력하고 나에게 필요한 은퇴 준비를 확인해
-                  보세요.
+                  은퇴 후 생활비, 부채 상환, 자녀 결혼자금, 부동산 상속세가 걱정되시나요?
+                  지금 가장 해결하고 싶은 핵심 고민을 선택하고, AFPK 공인 재무설계 기준의 맞춤 처방을 확인해 보세요.
                 </p>
 
                 {/* 주요 버튼 */}
@@ -257,7 +222,7 @@ export default function HomePage() {
                     onClick={handleScrollToCheck}
                     className="h-14 md:h-[58px] px-8 rounded-2xl bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-extrabold text-lg md:text-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-3 cursor-pointer"
                   >
-                    <span>무료로 내 은퇴 건강검진받기</span>
+                    <span>4대 핵심 고민 선택하기</span>
                     <span className="material-symbols-outlined text-[24px]">
                       arrow_downward
                     </span>
@@ -270,7 +235,7 @@ export default function HomePage() {
                     <span className="material-symbols-outlined text-emerald-600 text-[18px]">
                       check_circle
                     </span>
-                    로그인 없이 즉시 점검
+                    로그인 없이 즉시 선택
                   </span>
                   <span className="flex items-center gap-1.5">
                     <span className="material-symbols-outlined text-emerald-600 text-[18px]">
@@ -287,7 +252,7 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Right Column: Hero Graphic Card showcasing findoc1 & findoc2 */}
+              {/* Right Column: Hero Graphic Card */}
               <div className="lg:col-span-5 flex flex-col items-center justify-center">
                 <div className="w-full max-w-md rounded-3xl bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden transition-all duration-300">
                   {/* Tab Selector: findoc1 vs findoc2 */}
@@ -318,7 +283,7 @@ export default function HomePage() {
                     </button>
                   </div>
 
-                  {/* Character Illustration with Framed Fit & Low Saturation */}
+                  {/* Character Illustration */}
                   <div
                     className={`w-full relative overflow-hidden transition-colors duration-300 ${
                       activeDoctorTab === "findoc1"
@@ -352,7 +317,7 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                {/* Interactive Dual Character Switcher Thumbnails */}
+                {/* Thumbnails */}
                 <div className="mt-3.5 w-full max-w-md grid grid-cols-2 gap-2.5">
                   <button
                     type="button"
@@ -423,194 +388,144 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ================= B. 간편 점검 (Quick Check) ================= */}
+        {/* ================= B. 4대 핵심 고민 선택 (단일 선택) ================= */}
         <section
           ref={checkSectionRef}
-          id="quick-check"
-          className="w-full py-14 md:py-20 bg-white dark:bg-[#0E1628] border-b border-slate-200 dark:border-slate-800"
+          id="core-concerns"
+          className="w-full py-14 md:py-20 bg-white dark:bg-[#0E1628] border-b border-slate-200 dark:border-slate-800 scroll-mt-20"
         >
-          <div className="max-w-3xl mx-auto px-5 md:px-8">
+          {/* 하위 호환용 앵커 */}
+          <span id="quick-check" className="block -mt-20 pt-20 invisible" />
+
+          <div className="max-w-4xl mx-auto px-5 md:px-8">
             {/* Section Header */}
-            <div className="text-center space-y-2 mb-10">
-              <span className="inline-block px-3.5 py-1 rounded-full bg-blue-600 text-white text-xs md:text-sm font-bold uppercase tracking-wider">
-                간편 문진표
+            <div className="text-center space-y-2.5 mb-10">
+              <span className="inline-block px-3.5 py-1 rounded-full bg-blue-600 text-white text-xs md:text-sm font-bold uppercase tracking-wider shadow-xs">
+                ✦ 공인 AFPK 은퇴 재무설계
               </span>
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                1분 은퇴 준비 점검
+                4대 핵심 은퇴 고민 선택
               </h2>
-              <p className="text-base md:text-lg text-slate-600 dark:text-slate-400 font-medium">
-                계좌 연결 없이 시작할 수 있습니다
+              <p className="text-base md:text-lg text-slate-600 dark:text-slate-400 font-medium max-w-2xl mx-auto">
+                지금 가장 해결하고 싶은 은퇴 고민 하나를 선택해 주세요.
+                <br className="hidden sm:inline" />
+                선택하신 고민을 바탕으로 맞춤 재무상태표, 현금흐름표 및 전문 솔루션을 즉시 진단합니다.
               </p>
             </div>
 
-            {/* Diagnostic Card Form */}
-            <form
-              onSubmit={handleSubmit}
-              noValidate
-              className="rounded-3xl bg-surface-container-low dark:bg-slate-900/90 border-2 border-slate-200 dark:border-slate-700/80 p-6 sm:p-10 shadow-lg space-y-8"
+            {/* 4 Cards Grid (Single Select) */}
+            <div
+              role="radiogroup"
+              aria-label="4대 핵심 은퇴 고민 선택"
+              className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5"
             >
-              {/* Question 1: Monthly Income */}
-              <div className="space-y-3">
-                <label
-                  htmlFor="monthly-income"
-                  className="block text-lg md:text-xl font-extrabold text-slate-900 dark:text-white leading-snug"
-                >
-                  <span className="text-blue-600 dark:text-blue-400 mr-2">Q1.</span>
-                  현재 한 달 소득은 얼마인가요?
-                </label>
-                <p className="text-sm md:text-base text-slate-600 dark:text-slate-400 leading-relaxed font-normal">
-                  한 달에 실제로 통장에 입금되는 세후 소득을 입력해 주세요.
-                  (소득이 없는 경우 0을 입력하시면 됩니다.)
-                </p>
-
-                <div className="pt-1">
+              {CORE_CONCERNS.map((item) => {
+                const isSelected = selectedConcernId === item.id;
+                return (
                   <div
-                    className={`flex items-center bg-white dark:bg-slate-800 rounded-2xl border-2 px-4 md:px-5 h-14 md:h-16 shadow-sm transition-all ${
-                      incomeError
-                        ? "border-red-500 ring-2 ring-red-200 dark:ring-red-900"
-                        : "border-slate-300 dark:border-slate-600 focus-within:border-blue-600 focus-within:ring-4 focus-within:ring-blue-100 dark:focus-within:ring-blue-900"
+                    key={item.id}
+                    tabIndex={0}
+                    role="radio"
+                    aria-checked={isSelected}
+                    onClick={() => setSelectedConcernId(item.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setSelectedConcernId(item.id);
+                      }
+                    }}
+                    className={`p-5 sm:p-6 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-between gap-4 select-none relative overflow-hidden group ${
+                      isSelected
+                        ? "bg-blue-50/90 dark:bg-blue-950/60 border-blue-600 dark:border-blue-400 shadow-xl ring-2 ring-blue-200 dark:ring-blue-900 scale-[1.01]"
+                        : "bg-surface-container-low dark:bg-slate-900/90 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-md"
                     }`}
                   >
-                    <input
-                      ref={incomeInputRef}
-                      id="monthly-income"
-                      name="monthlyIncome"
-                      type="text"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      autoComplete="off"
-                      placeholder="예: 300"
-                      value={income}
-                      onChange={handleIncomeChange}
-                      onPaste={handleIncomePaste}
-                      aria-invalid={incomeError ? "true" : "false"}
-                      aria-describedby={
-                        incomeError ? "income-error" : undefined
-                      }
-                      className="w-full text-lg md:text-2xl font-bold bg-transparent text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none"
-                    />
-                    <span className="text-base md:text-xl font-bold text-slate-500 dark:text-slate-400 ml-2 whitespace-nowrap">
-                      만원
-                    </span>
-                  </div>
-
-                  {incomeError && (
-                    <p
-                      id="income-error"
-                      role="alert"
-                      className="text-sm md:text-base text-red-600 dark:text-red-400 font-semibold mt-2 flex items-center gap-1.5"
-                    >
-                      <span className="material-symbols-outlined text-[18px]">
-                        error
+                    {/* Top Row: Badge & Custom Radio indicator */}
+                    <div className="flex items-center justify-between">
+                      <span
+                        className={`px-2.5 py-1 rounded-full text-xs font-extrabold border ${item.rankBadgeColor}`}
+                      >
+                        {item.rankBadge}
                       </span>
-                      <span>{incomeError}</span>
-                    </p>
-                  )}
-                </div>
-              </div>
 
-              {/* Divider */}
-              <div className="border-t border-slate-200 dark:border-slate-800" />
-
-              {/* Question 2: Concern Selection */}
-              <div className="space-y-3">
-                <div
-                  id="concern-question"
-                  className="block text-lg md:text-xl font-extrabold text-slate-900 dark:text-white leading-snug"
-                >
-                  <span className="text-blue-600 dark:text-blue-400 mr-2">Q2.</span>
-                  은퇴 준비에서 가장 걱정되는 것은 무엇인가요?
-                </div>
-                <p className="text-sm md:text-base text-slate-600 dark:text-slate-400 leading-relaxed font-normal">
-                  가장 마음에 걸리는 항목 하나를 골라주시면, 해당 고민부터 먼저
-                  점검해 드립니다.
-                </p>
-
-                <div
-                  role="radiogroup"
-                  aria-labelledby="concern-question"
-                  className="space-y-3 pt-1"
-                >
-                  {RETIREMENT_CONCERNS.map((concern, idx) => {
-                    const isSelected = selectedConcern === concern;
-                    return (
+                      {/* Custom Radio Circle */}
                       <div
-                        key={concern}
-                        tabIndex={0}
-                        role="radio"
-                        aria-checked={isSelected}
-                        onClick={() => handleConcernSelect(concern)}
-                        onKeyDown={(e) => handleConcernKeyDown(e, idx)}
-                        className={`w-full p-4 md:p-5 rounded-2xl border-2 cursor-pointer transition-all flex items-center justify-between gap-4 select-none ${
+                        className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${
                           isSelected
-                            ? "bg-blue-50/90 dark:bg-blue-950/60 border-blue-600 dark:border-blue-400 shadow-md ring-2 ring-blue-200 dark:ring-blue-900"
-                            : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600"
+                            ? "border-blue-600 dark:border-blue-400 bg-blue-600 dark:bg-blue-500"
+                            : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 group-hover:border-slate-400"
                         }`}
                       >
-                        <div className="flex items-center gap-3.5">
-                          {/* Radio Indicator */}
-                          <div
-                            className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${
-                              isSelected
-                                ? "border-blue-600 dark:border-blue-400 bg-blue-600 dark:bg-blue-500"
-                                : "border-slate-300 dark:border-slate-600 bg-transparent"
-                            }`}
-                          >
-                            {isSelected && (
-                              <div className="w-2.5 h-2.5 rounded-full bg-white" />
-                            )}
-                          </div>
-                          <span
-                            className={`text-base md:text-lg font-bold leading-normal ${
-                              isSelected
-                                ? "text-blue-950 dark:text-blue-100 font-extrabold"
-                                : "text-slate-800 dark:text-slate-200"
-                            }`}
-                          >
-                            {concern}
-                          </span>
-                        </div>
-
                         {isSelected && (
-                          <span className="material-symbols-outlined text-blue-600 dark:text-blue-400 text-[22px] flex-shrink-0">
-                            check_circle
+                          <span className="material-symbols-outlined text-white text-[16px] font-bold">
+                            check
                           </span>
                         )}
                       </div>
-                    );
-                  })}
+                    </div>
+
+                    {/* Middle: Title & Quote */}
+                    <div className="space-y-2.5">
+                      <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-blue-600 dark:text-blue-400 text-[22px]">
+                          {item.icon}
+                        </span>
+                        <h3
+                          className={`text-lg sm:text-xl font-extrabold leading-snug tracking-tight ${
+                            isSelected
+                              ? "text-blue-950 dark:text-white"
+                              : "text-slate-800 dark:text-slate-100"
+                          }`}
+                        >
+                          {item.title}
+                        </h3>
+                      </div>
+
+                      <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 italic leading-relaxed bg-white/70 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
+                        {item.quote}
+                      </p>
+                    </div>
+
+                    {/* Bottom: Solution Brief Tag */}
+                    <div className="pt-2 border-t border-slate-200/80 dark:border-slate-800 flex items-center justify-between text-xs gap-2">
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium flex-shrink-0">
+                        핵심 솔루션:
+                      </span>
+                      <span className="text-[11px] font-bold text-blue-700 dark:text-blue-300 truncate text-right">
+                        {item.solutionBrief}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Bottom Action Bar */}
+            <div className="mt-8 p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-[#0F224A] via-[#162D63] to-[#1E3A8A] text-white shadow-xl flex flex-col sm:flex-row items-center justify-between gap-5">
+              <div className="space-y-1 text-center sm:text-left">
+                <div className="text-xs text-blue-200 font-semibold flex items-center justify-center sm:justify-start gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span>선택된 핵심 고민 (단일 선택)</span>
                 </div>
-
-                {concernError && (
-                  <p
-                    id="concern-error"
-                    role="alert"
-                    className="text-sm md:text-base text-red-600 dark:text-red-400 font-semibold mt-2 flex items-center gap-1.5"
-                  >
-                    <span className="material-symbols-outlined text-[18px]">
-                      error
-                    </span>
-                    <span>{concernError}</span>
-                  </p>
-                )}
-              </div>
-
-              {/* Submit Button */}
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  className="w-full h-14 md:h-[58px] rounded-2xl bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-extrabold text-lg md:text-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <span>내 은퇴 준비 무료 점검하기</span>
-                  <span className="material-symbols-outlined text-[24px]">
-                    arrow_forward
-                  </span>
-                </button>
-                <p className="text-center text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-3 font-medium">
-                  입력하신 정보는 상담 안내 화면으로 바로 안전하게 전달됩니다.
+                <div className="text-lg sm:text-xl font-black tracking-tight text-white">
+                  {selectedConcernItem.title}
+                </div>
+                <p className="text-xs text-blue-100">
+                  선택하신 고민을 기반으로 재무상태표, 현금흐름표 및 맞춤 솔루션이 연동됩니다.
                 </p>
               </div>
-            </form>
+
+              <button
+                type="button"
+                onClick={() => handleStartDiagnosis()}
+                className="w-full sm:w-auto px-7 py-4 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-900 font-extrabold text-base shadow-lg hover:shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer flex-shrink-0"
+              >
+                <span>맞춤 재무설계 시작하기</span>
+                <span className="material-symbols-outlined text-[20px]">
+                  arrow_forward
+                </span>
+              </button>
+            </div>
           </div>
         </section>
 
@@ -626,17 +541,14 @@ export default function HomePage() {
               </span>
             </div>
 
-            {/* 제목 */}
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
               내 재무계획을 저장하고 관리해 보세요
             </h2>
 
-            {/* 설명 */}
             <p className="text-base md:text-lg text-slate-600 dark:text-slate-400 leading-relaxed max-w-xl mx-auto font-normal">
               로그인하면 재무설계안과 월별 자산 변화를 저장하고 언제든지 다시 확인할 수 있습니다.
             </p>
 
-            {/* 로그인 상태에 따른 버튼/안내 분기 */}
             <div className="pt-2 flex flex-col items-center justify-center gap-3">
               {user ? (
                 <div className="w-full max-w-md p-6 rounded-2xl bg-white dark:bg-slate-800 border-2 border-blue-200 dark:border-blue-900/60 shadow-md space-y-4 text-center">
@@ -706,7 +618,7 @@ export default function HomePage() {
             </div>
 
             <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 pt-2">
-              ※ 간편 점검은 로그인 없이 언제든지 무료로 이용하실 수 있습니다.
+              ※ 고민 선택 및 기본 진단은 로그인 없이 언제든지 무료로 이용하실 수 있습니다.
             </p>
           </div>
         </section>
@@ -742,10 +654,10 @@ export default function HomePage() {
                 서비스 소개
               </a>
               <a
-                href="#quick-check"
+                href="#core-concerns"
                 className="hover:text-blue-600 transition-colors"
               >
-                1분 점검
+                4대 고민 선택
               </a>
               <Link
                 href="/diagnosis"

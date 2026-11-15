@@ -144,14 +144,14 @@ export function UserProfilePopover() {
             </Link>
 
             <Link
-              href="/#quick-check"
+              href="/#core-concerns"
               onClick={() => setIsOpen(false)}
               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium transition-colors"
             >
               <span className="material-symbols-outlined text-[18px] text-emerald-600 dark:text-emerald-400">
-                speed
+                checklist
               </span>
-              <span>1분 간편 점검 다시하기</span>
+              <span>4대 핵심 고민 다시 선택하기</span>
             </Link>
           </div>
 
