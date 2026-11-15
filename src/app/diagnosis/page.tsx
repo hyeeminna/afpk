@@ -27,17 +27,17 @@ export default function DiagnosisPage() {
   const [currentStep, setCurrentStep] = useState<StepType>("step1");
   const [userConcern, setUserConcern] = useState<string>("");
 
-  // Step 1 State
-  const [totalAsset, setTotalAsset] = useState("120,000,000");
-  const [totalDebt, setTotalDebt] = useState("35,000,000");
-  const [monthlyIncome, setMonthlyIncome] = useState("2,900,000");
-  const [monthlyExpense, setMonthlyExpense] = useState("1,970,000");
-  const [emergencyFund, setEmergencyFund] = useState("8,700,000");
-  const [goalName, setGoalName] = useState("내 집 마련");
-  const [goalAmount, setGoalAmount] = useState("300,000,000");
-  const [goalDate, setGoalDate] = useState("2031-12-31");
+  // Step 1 State (Supabase Table 1 & Table 2 가상 고객 데이터 연동)
+  const [totalAsset, setTotalAsset] = useState("1,721,710,000");
+  const [totalDebt, setTotalDebt] = useState("250,000,000");
+  const [monthlyIncome, setMonthlyIncome] = useState("8,050,000");
+  const [monthlyExpense, setMonthlyExpense] = useState("7,330,000");
+  const [emergencyFund, setEmergencyFund] = useState("22,000,000");
+  const [goalName, setGoalName] = useState("은퇴 후 생활비 마련");
+  const [goalAmount, setGoalAmount] = useState("");
+  const [goalDate, setGoalDate] = useState("");
 
-  // Step 2 State
+  // Step 2 State (사용자 수정 대기: 수입/지출/변동 라벨 및 금액은 기존 유지)
   const [income2, setIncome2] = useState("2,900,000");
   const [fixedExpense, setFixedExpense] = useState("1,200,000");
   const [variableExpense, setVariableExpense] = useState("570,000");
@@ -50,9 +50,8 @@ export default function DiagnosisPage() {
     const timer = setTimeout(() => {
       try {
         const savedIncome = sessionStorage.getItem("financialDoctor_income");
-        if (savedIncome !== null && savedIncome !== "") {
+        if (savedIncome !== null && savedIncome !== "" && savedIncome !== "3,000,000") {
           setMonthlyIncome(savedIncome);
-          setIncome2(savedIncome);
         }
         const savedConcern = sessionStorage.getItem("financialDoctor_concern");
         if (savedConcern) {
@@ -549,7 +548,7 @@ export default function DiagnosisPage() {
                         <span className="text-xs text-slate-500 ml-2">원</span>
                       </div>
                       <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold whitespace-nowrap">
-                        (월 지출의 약 4.4개월분)
+                        (월 지출의 약 3.0개월분)
                       </span>
                     </div>
                   </div>
@@ -632,7 +631,7 @@ export default function DiagnosisPage() {
                           <span>🏠</span> 총 자산
                         </span>
                         <span className="font-bold text-slate-800 dark:text-white">
-                          1억 2,000만원
+                          17억 2,171만원
                         </span>
                       </div>
                       <div className="flex justify-between items-center py-1">
@@ -640,7 +639,7 @@ export default function DiagnosisPage() {
                           <span>💳</span> 총 부채
                         </span>
                         <span className="font-bold text-slate-800 dark:text-white">
-                          3,500만원
+                          2억 5,000만원
                         </span>
                       </div>
                       <div className="flex justify-between items-center py-1 border-t border-slate-100 dark:border-slate-800 pt-2">
@@ -648,7 +647,7 @@ export default function DiagnosisPage() {
                           <span>💰</span> 순자산
                         </span>
                         <span className="font-bold text-blue-600 dark:text-blue-400">
-                          8,500만원
+                          14억 7,171만원
                         </span>
                       </div>
                     </div>
@@ -665,7 +664,7 @@ export default function DiagnosisPage() {
                           <span>💵</span> 월 소득
                         </span>
                         <span className="font-bold text-slate-800 dark:text-white">
-                          290만원
+                          805만원
                         </span>
                       </div>
                       <div className="flex justify-between items-center py-1">
@@ -673,7 +672,7 @@ export default function DiagnosisPage() {
                           <span>🧾</span> 월 지출
                         </span>
                         <span className="font-bold text-slate-800 dark:text-white">
-                          197만원
+                          733만원
                         </span>
                       </div>
                       <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex justify-between items-center">
@@ -682,11 +681,11 @@ export default function DiagnosisPage() {
                             월 저축가능액
                           </div>
                           <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
-                            (저축률 32.1%)
+                            (저축률 8.9%)
                           </div>
                         </div>
                         <span className="text-sm font-extrabold text-emerald-700 dark:text-emerald-300">
-                          93만원
+                          72만원
                         </span>
                       </div>
                     </div>
@@ -699,17 +698,19 @@ export default function DiagnosisPage() {
                     </h4>
                     <div className="flex items-center gap-3 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800">
                       <div className="w-9 h-9 rounded-lg bg-amber-100 dark:bg-amber-900 flex items-center justify-center text-lg">
-                        🏠
+                        🎯
                       </div>
                       <div>
                         <div className="text-xs font-bold text-slate-800 dark:text-slate-100">
-                          내 집 마련
+                          {goalName || "은퇴 재무목표"}
                         </div>
                         <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                          3억 원 • 2031년 12월
+                          {goalAmount && goalDate
+                            ? `${parseInt(goalAmount.replace(/,/g, "") || "0", 10) >= 100000000 ? `${(parseInt(goalAmount.replace(/,/g, ""), 10) / 100000000).toFixed(1)}억 원` : `${goalAmount}원`} • ${goalDate}`
+                            : "목표 금액 및 일정 설정 대기 중"}
                         </div>
                         <div className="text-[10px] text-amber-700 dark:text-amber-300 font-semibold mt-0.5">
-                          (약 5년 1개월 남음)
+                          {goalDate ? "설정된 목표 일정 반영" : "금액과 달성 시점을 직접 입력해 보세요"}
                         </div>
                       </div>
                     </div>
@@ -743,7 +744,7 @@ export default function DiagnosisPage() {
                     ‹
                   </button>
                   <span className="text-xs font-bold text-white px-2">
-                    2026년 11월 ▾
+                    2026년 10월 ▾
                   </span>
                   <button
                     type="button"
@@ -756,10 +757,10 @@ export default function DiagnosisPage() {
 
               {/* Step 2 Two Columns */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                {/* Left Form: 2026년 11월 재무 입력 */}
+                {/* Left Form: 2026년 10월 재무 입력 (입력값 및 괄호 설명은 사용자 수정 대기 유지) */}
                 <div className="lg:col-span-5 bg-white dark:bg-[#11192E] p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
                   <h3 className="text-base font-bold text-slate-800 dark:text-white mb-2">
-                    2026년 11월 재무 입력
+                    2026년 10월 재무 입력
                   </h3>
 
                   <div className="space-y-3 text-xs">
@@ -896,10 +897,10 @@ export default function DiagnosisPage() {
                         이번 달 순자산
                       </div>
                       <div className="text-xl font-extrabold text-slate-800 dark:text-white mt-1">
-                        8,650만원
+                        14억 7,171만원
                       </div>
                       <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold mt-1">
-                        ▲ +150만원 (+1.8%)
+                        ▲ +102만원 (대출원금 상환)
                       </div>
                     </div>
 
@@ -921,13 +922,13 @@ export default function DiagnosisPage() {
                             stroke="#10B981"
                             strokeWidth="4"
                             strokeDasharray={2 * Math.PI * 17}
-                            strokeDashoffset={2 * Math.PI * 17 * (1 - 0.72)}
+                            strokeDashoffset={2 * Math.PI * 17 * (1 - 0.78)}
                             strokeLinecap="round"
                             fill="transparent"
                           />
                         </svg>
                         <span className="absolute text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
-                          72%
+                          78%
                         </span>
                       </div>
                       <div>
@@ -935,10 +936,10 @@ export default function DiagnosisPage() {
                           설계안 대비 달성률
                         </div>
                         <div className="text-base font-bold text-slate-800 dark:text-white">
-                          72%
+                          78%
                         </div>
-                        <div className="text-[9px] text-slate-400">
-                          (목표: 2031.12 내 집 마련)
+                        <div className="text-[9px] text-slate-400 truncate max-w-[110px]">
+                          (목표: {goalName || "은퇴 생활비 마련"})
                         </div>
                       </div>
                     </div>
@@ -948,10 +949,10 @@ export default function DiagnosisPage() {
                         월 저축률
                       </div>
                       <div className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">
-                        34.5%
+                        8.9%
                       </div>
                       <div className="text-[10px] text-slate-400 font-medium mt-1">
-                        (목표: 30% 이상)
+                        (목표: 10% 이상)
                       </div>
                     </div>
                   </div>
@@ -1062,20 +1063,20 @@ export default function DiagnosisPage() {
                         <circle cx="480" cy="20" r="5" fill="#1D4ED8" />
                       </svg>
 
-                      {/* Tooltip on 11월 */}
+                      {/* Tooltip on 10월 */}
                       <div className="absolute right-0 top-0 bg-blue-600 text-white text-[11px] font-bold px-2 py-0.5 rounded shadow">
-                        8,650만원
+                        14억 7,171만원
                       </div>
 
                       {/* X Axis Labels */}
                       <div className="flex justify-between text-[11px] text-slate-400 mt-2">
+                        <span>5월</span>
                         <span>6월</span>
                         <span>7월</span>
                         <span>8월</span>
                         <span>9월</span>
-                        <span>10월</span>
                         <span className="font-bold text-blue-600 dark:text-blue-400">
-                          11월
+                          10월
                         </span>
                       </div>
                     </div>
@@ -1084,7 +1085,7 @@ export default function DiagnosisPage() {
                   {/* 계획 vs 실제 비교 테이블 */}
                   <div className="p-5 rounded-2xl bg-white dark:bg-[#11192E] border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
                     <h4 className="text-xs font-bold text-slate-800 dark:text-white">
-                      계획 vs 실제 (11월)
+                      계획 vs 실제 (10월)
                     </h4>
                     <div className="overflow-x-auto">
                       <table className="w-full text-left text-xs">
@@ -1099,26 +1100,38 @@ export default function DiagnosisPage() {
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                           <tr>
                             <td className="py-2.5 font-medium text-slate-700 dark:text-slate-300">
-                              저축·투자액
+                              월 수입
                             </td>
-                            <td className="py-2.5 text-slate-500">600,000원</td>
+                            <td className="py-2.5 text-slate-500">8,050,000원</td>
                             <td className="py-2.5 font-bold text-slate-800 dark:text-white">
-                              700,000원
+                              8,050,000원
                             </td>
-                            <td className="py-2.5 text-emerald-600 dark:text-emerald-400 font-semibold">
-                              ▲ +100,000원 (+16.7%)
+                            <td className="py-2.5 text-slate-400 font-semibold">
+                              - (100% 달성)
                             </td>
                           </tr>
                           <tr>
                             <td className="py-2.5 font-medium text-slate-700 dark:text-slate-300">
                               순자산
                             </td>
-                            <td className="py-2.5 text-slate-500">8,500만원</td>
+                            <td className="py-2.5 text-slate-500">14억 7,069만원</td>
                             <td className="py-2.5 font-bold text-slate-800 dark:text-white">
-                              8,650만원
+                              14억 7,171만원
                             </td>
                             <td className="py-2.5 text-emerald-600 dark:text-emerald-400 font-semibold">
-                              ▲ +150만원 (+1.8%)
+                              ▲ +102만원 (+0.1%)
+                            </td>
+                          </tr>
+                          <tr>
+                            <td className="py-2.5 font-medium text-slate-700 dark:text-slate-300">
+                              부채 상환
+                            </td>
+                            <td className="py-2.5 text-slate-500">1,016,667원</td>
+                            <td className="py-2.5 font-bold text-slate-800 dark:text-white">
+                              1,016,667원
+                            </td>
+                            <td className="py-2.5 text-emerald-600 dark:text-emerald-400 font-semibold">
+                              ✓ 정상 상환 달성
                             </td>
                           </tr>
                         </tbody>
