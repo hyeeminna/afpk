@@ -95,6 +95,18 @@ export default function DiagnosisPage() {
   const [goalAmount, setGoalAmount] = useState("");
   const [goalDate, setGoalDate] = useState("");
 
+  // 세무사 상담 모달 상태 (한영호 세무사 카카오톡 QR)
+  const [showTaxModal, setShowTaxModal] = useState(false);
+  const [copiedKakaoId, setCopiedKakaoId] = useState(false);
+
+  const handleCopyKakaoId = () => {
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText("hyh1908");
+      setCopiedKakaoId(true);
+      setTimeout(() => setCopiedKakaoId(false), 2000);
+    }
+  };
+
   // Step 2 Monthly Data (Supabase Table 17766 [10월 현금흐름표 상세] & Table 17948 [9월 현금흐름표 가상])
   const MONTHLY_FINANCE_DATA = {
     "2026-10": {
@@ -444,18 +456,20 @@ export default function DiagnosisPage() {
           </nav>
         </div>
 
-        {/* Gemini AI Card at bottom of sidebar */}
+        {/* 세무사 상담 Card at bottom of sidebar */}
         <div
-          onClick={() => setCurrentStep("step3")}
-          className="rounded-xl bg-slate-800/90 border border-slate-700/80 p-3.5 cursor-pointer hover:bg-slate-800 transition-all hover:scale-[1.02] shadow-lg"
+          onClick={() => setShowTaxModal(true)}
+          className="rounded-xl bg-[#131F37] border border-slate-700/80 p-3.5 cursor-pointer hover:bg-[#182744] hover:border-slate-600 transition-all hover:scale-[1.02] shadow-lg group"
         >
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-blue-400 text-lg">✦</span>
-            <span className="text-xs font-bold text-white">Gemini AI</span>
+            <span className="text-blue-400 text-base">✦</span>
+            <span className="text-xs font-bold text-white">세무사 상담</span>
           </div>
-          <p className="text-[11px] text-slate-300 font-medium">재무상담</p>
-          <p className="text-[10px] text-blue-400 flex items-center gap-1 mt-1 font-semibold">
-            <span>바로 질문하기</span>
+          <p className="text-[11px] text-slate-300 font-medium leading-tight">
+            연금·퇴직금·상속 세금이 궁금할 때
+          </p>
+          <p className="text-[10px] text-blue-400 flex items-center gap-1 mt-1 font-semibold group-hover:text-blue-300 transition-colors">
+            <span>카카오톡으로 문의하기</span>
             <span>→</span>
           </p>
         </div>
@@ -1948,6 +1962,67 @@ export default function DiagnosisPage() {
           )}
         </main>
       </div>
+
+      {/* 한영호 세무사 카카오톡 QR 상담 모달 (Image 2 기반) */}
+      {showTaxModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fadeIn"
+          onClick={() => setShowTaxModal(false)}
+        >
+          <div
+            className="w-full max-w-[320px] rounded-2xl bg-[#141E33] border border-slate-700/80 p-6 shadow-2xl relative text-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header: Title & Close Button */}
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-base font-bold text-white tracking-tight">
+                한영호 세무사
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowTaxModal(false)}
+                className="text-slate-400 hover:text-white transition-colors p-1 rounded-lg"
+                aria-label="닫기"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* White Box with Original QR Code */}
+            <div className="bg-white rounded-2xl p-3 my-4 flex items-center justify-center shadow-md">
+              <img
+                src="/images/tax_qr.png"
+                alt="한영호 세무사 카카오톡 QR코드"
+                className="w-48 h-48 object-contain rounded-lg"
+              />
+            </div>
+
+            {/* Kakao CTA Button */}
+            <a
+              href="https://open.kakao.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full py-3.5 rounded-xl bg-[#FEE500] hover:bg-[#FDD800] text-[#191919] font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.98]"
+            >
+              <svg className="w-4 h-4 fill-current flex-shrink-0" viewBox="0 0 24 24">
+                <path d="M12 3C6.48 3 2 6.58 2 11c0 2.8 1.8 5.25 4.54 6.63-.2.74-.75 2.76-.86 3.19-.14.54.2.53.42.39.29-.19 3.96-2.67 4.58-3.1.44.06.87.09 1.32.09 5.52 0 10-3.58 10-8s-4.48-8-10-8z" />
+              </svg>
+              <span>카카오톡으로 연결</span>
+            </a>
+
+            {/* Copy Kakao ID Button */}
+            <button
+              type="button"
+              onClick={handleCopyKakaoId}
+              className="w-full text-center text-[11px] text-slate-400 hover:text-white mt-3 py-1 transition-colors cursor-pointer"
+            >
+              {copiedKakaoId ? "✓ 카카오톡 ID(hyh1908) 복사 완료!" : "카카오톡 ID 복사"}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
