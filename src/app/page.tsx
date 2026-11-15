@@ -189,12 +189,14 @@ export default function HomePage() {
                 간편 점검
               </a>
               {!user && !isAuthLoading && (
-                <a
-                  href="#login"
-                  className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-1"
+                <button
+                  type="button"
+                  onClick={handleGoogleLogin}
+                  disabled={isLoggingIn}
+                  className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-1 cursor-pointer font-bold disabled:opacity-50"
                 >
-                  로그인
-                </a>
+                  {isLoggingIn ? "연결 중..." : "로그인"}
+                </button>
               )}
             </nav>
 

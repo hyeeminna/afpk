@@ -133,7 +133,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           ? window.location.origin
           : "";
 
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
           redirectTo: `${origin}/auth/callback?next=/`,
@@ -147,6 +147,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) {
         console.error("Google sign in error:", error.message);
         throw error;
+      }
+
+      // 명시적으로 Google OAuth URL로 브라우저 이동
+      if (data?.url) {
+        window.location.href = data.url;
       }
     } catch (err: any) {
       console.error("Failed to start Google sign in:", err);
