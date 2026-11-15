@@ -579,12 +579,31 @@ export default function DiagnosisPage() {
             text: m.text,
           })),
           userContext: {
-            goal: goalName || "은퇴 후 안정적 노후 생활비 마련",
-            goalAmount: goalAmount ? `${goalAmount}원` : "미지정",
-            goalDate: goalDate || "은퇴 시점",
-            assets: `총자산: ${totalAsset}원, 총부채: ${totalDebt}원, 순자산: ${calcNetWorth}원`,
-            cashflow: `월소득: ${monthlyIncome}원, 월지출: ${monthlyExpense}원, 월잉여금: ${calcSurplus}원, 비상자금: ${emergencyFund}원`,
-            concern: userConcern || `${goalName || "핵심 재무목표"} 달성 전략`,
+            isCustomUser: isTemplateBlank,
+            goal: goalName || (isTemplateBlank ? "은퇴 재무목표" : "은퇴 후 월 생활비 300만원 마련"),
+            goalAmount: goalAmount ? `${goalAmount}원` : (isTemplateBlank ? "0원" : "6억 8,800만 원"),
+            goalDate: goalDate || (isTemplateBlank ? "시점 미정" : "60세 은퇴 시점"),
+            assets: `총자산: ${totalAsset || "0"}원, 총부채: ${totalDebt || "0"}원, 순자산: ${calcNetWorth.toLocaleString()}원`,
+            cashflow: `월 소득: ${monthlyIncome || "0"}원, 월 지출: ${monthlyExpense || "0"}원, 현재 월 잉여금: ${calcSurplus.toLocaleString()}원, 비상예비자금: ${emergencyFund || "0"}원`,
+            step2Monthly: {
+              rec10: {
+                income: rec10.income,
+                fixedExpense: rec10.fixedExpense,
+                variableExpense: rec10.variableExpense,
+                investment: rec10.investment,
+                debtChange: rec10.debtChange,
+              },
+              rec9: {
+                income: rec9.income,
+                fixedExpense: rec9.fixedExpense,
+                variableExpense: rec9.variableExpense,
+                investment: rec9.investment,
+                debtChange: rec9.debtChange,
+              },
+            },
+            retirementDeficit: isTemplateBlank ? `-${parsedExpense.toLocaleString()}원` : "-592만 원",
+            emergencyMonths: parsedExpense > 0 ? (parsedEmergency / parsedExpense).toFixed(1) : "0",
+            concern: userConcern || `${goalName || "재무목표"} 달성 및 현금흐름 최적화`,
           },
         }),
       });
@@ -2041,32 +2060,41 @@ export default function DiagnosisPage() {
                     <div className="space-y-2">
                       {(() => {
                         const effGoal = goalName || (isTemplateBlank ? "재무 목표" : "은퇴 생활비 300만 원");
-                        const effAmt = goalAmount ? formatKoreanCurrency(parseNumber(goalAmount)) : (isTemplateBlank ? "" : "6억 8,800만 원");
+                        const effAmt = goalAmount ? (parseNumber(goalAmount) >= 10000 ? formatKoreanCurrency(parseNumber(goalAmount)) : parseNumber(goalAmount).toLocaleString() + "원") : (isTemplateBlank ? "" : "6억 8,800만 원");
                         const effDt = goalDate || (isTemplateBlank ? "" : "60세 은퇴");
+                        const surplusStr = calcSurplus >= 10000 ? formatKoreanCurrency(calcSurplus) : `${calcSurplus.toLocaleString()}원`;
+                        const debtStr = parsedDebt >= 10000 ? formatKoreanCurrency(parsedDebt) : `${parsedDebt.toLocaleString()}원`;
+
                         return [
                           {
                             category: `🎯 [${effGoal}] 달성 자금 전략`,
                             icon: "🎯",
-                            question: `"${effGoal}" 목표를 달성하려면 매월 얼마씩 어떤 포트폴리오(IRP·연금저축·ISA)로 모아야 하나요?`,
+                            question: effAmt
+                              ? `목표 자금 ${effAmt} (${effDt})을 달성하기 위해 매월 얼마의 저축과 연 몇 %의 목표 수익률이 필요한가요?`
+                              : `"${effGoal}" 목표를 달성하려면 매월 얼마씩 어떤 포트폴리오(IRP·연금저축·ISA)로 모아야 하나요?`,
                             desc: effAmt ? `목표 자금 ${effAmt} (${effDt}) 맞춤 자금 솔루션` : "목표 자금 마련을 위한 저축·투자 포트폴리오",
+                          },
+                          {
+                            category: "💰 잉여금 활용 & 연금 극대화",
+                            icon: "💰",
+                            question: calcSurplus > 0
+                              ? `이번 달 남은 잉여금 ${surplusStr} 중 ${(Math.round(calcSurplus * 0.5)).toLocaleString()}원을 IRP·연금저축에 더 넣으면 "${effGoal}" 준비에 어떤 효과가 있나요?`
+                              : `현재 월 잉여금이 부족한 상태인데, 월 지출을 줄여 "${effGoal}" 준비금을 마련하려면 어디서부터 줄여야 할까요?`,
+                            desc: calcSurplus > 0 ? `실시간 계산된 월 잉여금(${surplusStr}) 기반 절세 및 자산 형성 효과` : "지출 다이어트를 통한 목표 자금 확보안",
                           },
                           {
                             category: "💳 부채 상환 vs 목표 저축",
                             icon: "💳",
-                            question: `현재 부채 상환과 "${effGoal}" 자금 마련 중 어떤 것에 우선순위를 두어야 유리한가요?`,
-                            desc: "대출이자 절감과 복리 투자수익 기회비용 종합 분석",
+                            question: parsedDebt > 0
+                              ? `현재 부채(${debtStr}) 원금 상환과 "${effGoal}" 자금 마련 중 어떤 것에 우선순위를 두어야 유리한가요?`
+                              : `부채가 없는 상태에서 매월 발생하는 잉여금을 "${effGoal}" 달성을 위해 어떻게 포트폴리오를 구성할까요?`,
+                            desc: parsedDebt > 0 ? `대출이자 절감과 복리 투자수익 기회비용 비교 (총부채: ${debtStr})` : "무부채 상태에서의 잉여금 최적 배분안",
                           },
                           {
-                            category: "💰 절세 혜택 극대화",
-                            icon: "💰",
-                            question: `연말정산 세액공제(IRP·연금저축 연 900만원)와 ISA 비과세를 활용해 목표 자금을 불리는 법은?`,
-                            desc: "합법적 절세와 과세이연을 통한 실질 수익률 극대화",
-                          },
-                          {
-                            category: "📉 지출 최적화 및 잉여금 확대",
+                            category: "📉 STEP 02 변동지출 관리 & 잉여금 확대",
                             icon: "📉",
-                            question: `현재 월 지출에서 줄일 수 있는 고정·변동 비용과 목표 달성을 위한 잉여금 확대 팁은?`,
-                            desc: `불필요한 지출 축소로 "${effGoal}" 준비금 추가 확보`,
+                            question: `STEP 02의 월별 변동지출(식비·의료·여가)을 고려할 때, "${effGoal}" 달성을 위한 비상금 규모와 잉여금 확대 방안은?`,
+                            desc: `실제 월 지출 구조조정으로 "${effGoal}" 준비금 추가 확보`,
                           },
                         ];
                       })().map((item, idx) => (
@@ -2323,6 +2351,11 @@ export default function DiagnosisPage() {
               totalDebt={totalDebt}
               monthlyIncome={monthlyIncome}
               monthlyExpense={monthlyExpense}
+              emergencyFund={emergencyFund}
+              goalName={goalName}
+              goalAmount={goalAmount}
+              goalDate={goalDate}
+              monthlyRecords={monthlyRecords}
             />
           )}
 
