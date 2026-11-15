@@ -6,8 +6,18 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuth } from "@/contexts/auth-context";
 import { UserProfilePopover } from "@/components/user-profile-popover";
 import FinancialStatusView from "@/components/FinancialStatusView";
+import GoalsView from "@/components/GoalsView";
+import ReportView from "@/components/ReportView";
+import SettingsView from "@/components/SettingsView";
 
-type StepType = "step1" | "step2" | "step3" | "financial_status";
+type StepType =
+  | "step1"
+  | "step2"
+  | "step3"
+  | "financial_status"
+  | "goals"
+  | "report"
+  | "settings";
 
 interface ChatMessage {
   id: string;
@@ -153,22 +163,40 @@ export default function DiagnosisPage() {
   };
 
   const [selectedMonth, setSelectedMonth] = useState<"2026-09" | "2026-10">("2026-10");
-  const [income2, setIncome2] = useState("8,050,000");
-  const [fixedExpense, setFixedExpense] = useState("2,850,000");
-  const [variableExpense, setVariableExpense] = useState("4,150,000");
-  const [investment, setInvestment] = useState("330,000");
-  const [assetChange, setAssetChange] = useState("0");
-  const [debtChange, setDebtChange] = useState("-1,016,667");
+  const [monthlyRecords, setMonthlyRecords] = useState({
+    "2026-10": {
+      income: "8,050,000",
+      fixedExpense: "2,850,000",
+      variableExpense: "4,150,000",
+      investment: "330,000",
+      assetChange: "0",
+      debtChange: "-1,016,667",
+    },
+    "2026-09": {
+      income: "8,040,000",
+      fixedExpense: "2,820,000",
+      variableExpense: "3,850,000",
+      investment: "330,000",
+      assetChange: "0",
+      debtChange: "-1,016,667",
+    },
+  });
+
+  const updateCurrentMonthRecord = (
+    field: "income" | "fixedExpense" | "variableExpense" | "investment" | "assetChange" | "debtChange",
+    value: string
+  ) => {
+    setMonthlyRecords((prev) => ({
+      ...prev,
+      [selectedMonth]: {
+        ...prev[selectedMonth],
+        [field]: value,
+      },
+    }));
+  };
 
   const handleSelectMonth = (month: "2026-09" | "2026-10") => {
     setSelectedMonth(month);
-    const data = MONTHLY_FINANCE_DATA[month];
-    setIncome2(data.income);
-    setFixedExpense(data.fixedExpense);
-    setVariableExpense(data.variableExpense);
-    setInvestment(data.investment);
-    setAssetChange(data.assetChange);
-    setDebtChange(data.debtChange);
   };
 
   // 실시간 계산용 수치 (Step 1)
@@ -186,19 +214,38 @@ export default function DiagnosisPage() {
   const calcEmergencyMonths =
     parsedExpense > 0 ? (parsedEmergency / parsedExpense).toFixed(1) : "0.0";
 
-  // 실시간 계산용 수치 (Step 2)
-  const step2Income = parseNumber(income2);
-  const step2Fixed = parseNumber(fixedExpense);
-  const step2Variable = parseNumber(variableExpense);
-  const step2Invest = parseNumber(investment);
-  const step2TotalExpense = step2Fixed + step2Variable + step2Invest;
-  const step2Surplus = step2Income - step2TotalExpense;
-  const step2DebtChangeNum = parseNumber(debtChange);
-  const step2AssetChangeNum = parseNumber(assetChange);
-  const step2SavingsRate =
-    step2Income > 0 ? ((step2Surplus / step2Income) * 100).toFixed(1) : "0.0";
-  const step2NetWorth =
-    1470693333 + Math.abs(step2DebtChangeNum) + step2AssetChangeNum;
+  // 실시간 계산용 수치 (Step 2: 9월 및 10월 독립 연산)
+  const rec9 = monthlyRecords["2026-09"];
+  const m9Income = parseNumber(rec9.income);
+  const m9Fixed = parseNumber(rec9.fixedExpense);
+  const m9Variable = parseNumber(rec9.variableExpense);
+  const m9Invest = parseNumber(rec9.investment);
+  const m9TotalExpense = m9Fixed + m9Variable + m9Invest;
+  const m9Surplus = m9Income - m9TotalExpense;
+  const m9DebtNum = parseNumber(rec9.debtChange);
+  const m9AssetNum = parseNumber(rec9.assetChange);
+  const m9NetWorth = 1470693333; // 9월 순자산 기준
+
+  const rec10 = monthlyRecords["2026-10"];
+  const m10Income = parseNumber(rec10.income);
+  const m10Fixed = parseNumber(rec10.fixedExpense);
+  const m10Variable = parseNumber(rec10.variableExpense);
+  const m10Invest = parseNumber(rec10.investment);
+  const m10TotalExpense = m10Fixed + m10Variable + m10Invest;
+  const m10Surplus = m10Income - m10TotalExpense;
+  const m10DebtNum = parseNumber(rec10.debtChange);
+  const m10AssetNum = parseNumber(rec10.assetChange);
+  const m10NetWorth = 1470693333 + Math.abs(m10DebtNum) + m10AssetNum;
+
+  // 현재 선택된 월의 요약 수치
+  const currentRec = monthlyRecords[selectedMonth];
+  const currentMonthIncome = parseNumber(currentRec.income);
+  const currentMonthFixed = parseNumber(currentRec.fixedExpense);
+  const currentMonthVariable = parseNumber(currentRec.variableExpense);
+  const currentMonthInvest = parseNumber(currentRec.investment);
+  const currentMonthTotalExpense = currentMonthFixed + currentMonthVariable + currentMonthInvest;
+  const currentMonthSurplus = currentMonthIncome - currentMonthTotalExpense;
+  const currentMonthNetWorth = selectedMonth === "2026-10" ? m10NetWorth : m9NetWorth;
 
   // Retrieve user inputs from homepage (without URL query string)
   useEffect(() => {
@@ -436,7 +483,12 @@ export default function DiagnosisPage() {
             </button>
             <button
               type="button"
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors"
+              onClick={() => setCurrentStep("goals")}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                currentStep === "goals"
+                  ? "bg-blue-600 text-white font-bold shadow-sm"
+                  : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+              }`}
             >
               <span className="material-symbols-outlined text-[20px]">
                 check_circle
@@ -445,7 +497,12 @@ export default function DiagnosisPage() {
             </button>
             <button
               type="button"
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors"
+              onClick={() => setCurrentStep("report")}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                currentStep === "report"
+                  ? "bg-blue-600 text-white font-bold shadow-sm"
+                  : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+              }`}
             >
               <span className="material-symbols-outlined text-[20px]">
                 description
@@ -454,7 +511,12 @@ export default function DiagnosisPage() {
             </button>
             <button
               type="button"
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors"
+              onClick={() => setCurrentStep("settings")}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                currentStep === "settings"
+                  ? "bg-blue-600 text-white font-bold shadow-sm"
+                  : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+              }`}
             >
               <span className="material-symbols-outlined text-[20px]">settings</span>
               <span>설정</span>
@@ -494,6 +556,9 @@ export default function DiagnosisPage() {
               {currentStep === "step2" && "STEP 02 월별 변동 입력"}
               {currentStep === "step3" && "STEP 03 Gemini AI 재무상담"}
               {currentStep === "financial_status" && "내 재무현황 (재무상태표 & 현금흐름표)"}
+              {currentStep === "goals" && "재무목표 관리 (4대 목표 진단 & 솔루션)"}
+              {currentStep === "report" && "공인 은퇴설계 종합 진단 리포트"}
+              {currentStep === "settings" && "환경설정 및 데이터 관리"}
             </span>
           </div>
 
@@ -1015,8 +1080,8 @@ export default function DiagnosisPage() {
                         <input
                           type="text"
                           inputMode="numeric"
-                          value={income2}
-                          onChange={(e) => setIncome2(formatCalculatorNumber(e.target.value))}
+                          value={monthlyRecords[selectedMonth].income}
+                          onChange={(e) => updateCurrentMonthRecord("income", formatCalculatorNumber(e.target.value))}
                           placeholder="0"
                           className="w-full text-right font-bold bg-transparent text-slate-800 dark:text-white focus:outline-none"
                         />
@@ -1037,8 +1102,8 @@ export default function DiagnosisPage() {
                         <input
                           type="text"
                           inputMode="numeric"
-                          value={fixedExpense}
-                          onChange={(e) => setFixedExpense(formatCalculatorNumber(e.target.value))}
+                          value={monthlyRecords[selectedMonth].fixedExpense}
+                          onChange={(e) => updateCurrentMonthRecord("fixedExpense", formatCalculatorNumber(e.target.value))}
                           placeholder="0"
                           className="w-full text-right font-bold bg-transparent text-slate-800 dark:text-white focus:outline-none"
                         />
@@ -1059,8 +1124,8 @@ export default function DiagnosisPage() {
                         <input
                           type="text"
                           inputMode="numeric"
-                          value={variableExpense}
-                          onChange={(e) => setVariableExpense(formatCalculatorNumber(e.target.value))}
+                          value={monthlyRecords[selectedMonth].variableExpense}
+                          onChange={(e) => updateCurrentMonthRecord("variableExpense", formatCalculatorNumber(e.target.value))}
                           placeholder="0"
                           className="w-full text-right font-bold bg-transparent text-slate-800 dark:text-white focus:outline-none"
                         />
@@ -1081,8 +1146,8 @@ export default function DiagnosisPage() {
                         <input
                           type="text"
                           inputMode="numeric"
-                          value={investment}
-                          onChange={(e) => setInvestment(formatCalculatorNumber(e.target.value))}
+                          value={monthlyRecords[selectedMonth].investment}
+                          onChange={(e) => updateCurrentMonthRecord("investment", formatCalculatorNumber(e.target.value))}
                           placeholder="0"
                           className="w-full text-right font-bold bg-transparent text-slate-800 dark:text-white focus:outline-none"
                         />
@@ -1102,8 +1167,8 @@ export default function DiagnosisPage() {
                         <span className="mr-2">✨</span>
                         <input
                           type="text"
-                          value={assetChange}
-                          onChange={(e) => setAssetChange(formatSignedCalculatorNumber(e.target.value))}
+                          value={monthlyRecords[selectedMonth].assetChange}
+                          onChange={(e) => updateCurrentMonthRecord("assetChange", formatSignedCalculatorNumber(e.target.value))}
                           placeholder="0"
                           className="w-full text-right font-bold bg-transparent text-blue-600 dark:text-blue-400 focus:outline-none"
                         />
@@ -1123,8 +1188,8 @@ export default function DiagnosisPage() {
                         <span className="mr-2">💳</span>
                         <input
                           type="text"
-                          value={debtChange}
-                          onChange={(e) => setDebtChange(formatSignedCalculatorNumber(e.target.value))}
+                          value={monthlyRecords[selectedMonth].debtChange}
+                          onChange={(e) => updateCurrentMonthRecord("debtChange", formatSignedCalculatorNumber(e.target.value))}
                           placeholder="0"
                           className="w-full text-right font-bold bg-transparent text-emerald-600 dark:text-emerald-400 focus:outline-none"
                         />
@@ -1136,12 +1201,12 @@ export default function DiagnosisPage() {
                   <button
                     type="button"
                     onClick={() => {
-                      alert(`${MONTHLY_FINANCE_DATA[selectedMonth].label} 재무 데이터가 성공적으로 반영되었습니다.`);
+                      alert(`${MONTHLY_FINANCE_DATA[selectedMonth].label} 재무 데이터가 성공적으로 저장되었습니다.`);
                     }}
-                    className="w-full py-3 rounded-xl bg-[#1B3574] hover:bg-[#142857] text-white text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.99]"
+                    className="w-full py-3 rounded-xl bg-[#1B3574] hover:bg-[#142857] text-white text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.99] cursor-pointer"
                   >
-                    <span>📊</span>
-                    <span>{MONTHLY_FINANCE_DATA[selectedMonth].label} 분석하기</span>
+                    <span>💾</span>
+                    <span>{MONTHLY_FINANCE_DATA[selectedMonth].label} 저장하기</span>
                   </button>
 
                   <div className="pt-2 flex items-center justify-between border-t border-slate-100 dark:border-slate-800">
@@ -1165,73 +1230,30 @@ export default function DiagnosisPage() {
 
                 {/* Right Analysis Column: 월별 재무 변동 분석 및 비교 */}
                 <div className="lg:col-span-7 space-y-4">
-                  {/* Top 3 Metric Cards */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {/* Top Metric Cards (순자산 및 월 잉여금) */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="p-4 rounded-xl bg-white dark:bg-[#11192E] border border-slate-200 dark:border-slate-800 shadow-sm">
                       <div className="text-[11px] text-slate-500 font-medium">
-                        이번 달 순자산
+                        {MONTHLY_FINANCE_DATA[selectedMonth].label} 순자산
                       </div>
                       <div className="text-xl font-extrabold text-slate-800 dark:text-white mt-1">
-                        {formatKoreanCurrency(step2NetWorth)}
+                        {formatKoreanCurrency(currentMonthNetWorth)}
                       </div>
                       <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold mt-1 flex items-center gap-1">
-                        <span>
-                          {Math.abs(step2DebtChangeNum) + step2AssetChangeNum >= 0 ? "▲ +" : "▼ "}
-                          {formatKoreanCurrency(Math.abs(step2DebtChangeNum) + step2AssetChangeNum)}
-                        </span>
-                        <span className="text-slate-400 font-normal">(대출원금 상환 등)</span>
-                      </div>
-                    </div>
-
-                    <div className="p-4 rounded-xl bg-white dark:bg-[#11192E] border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3">
-                      <div className="relative w-11 h-11 flex items-center justify-center flex-shrink-0">
-                        <svg className="w-11 h-11 transform -rotate-90">
-                          <circle
-                            cx="22"
-                            cy="22"
-                            r="17"
-                            stroke="rgba(100,116,139,0.2)"
-                            strokeWidth="4"
-                            fill="transparent"
-                          />
-                          <circle
-                            cx="22"
-                            cy="22"
-                            r="17"
-                            stroke="#10B981"
-                            strokeWidth="4"
-                            strokeDasharray={2 * Math.PI * 17}
-                            strokeDashoffset={2 * Math.PI * 17 * (1 - 0.78)}
-                            strokeLinecap="round"
-                            fill="transparent"
-                          />
-                        </svg>
-                        <span className="absolute text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
-                          78%
-                        </span>
-                      </div>
-                      <div>
-                        <div className="text-[10px] text-slate-500 font-medium">
-                          설계안 대비 달성률
-                        </div>
-                        <div className="text-base font-bold text-slate-800 dark:text-white">
-                          78%
-                        </div>
-                        <div className="text-[9px] text-slate-400 truncate max-w-[120px]">
-                          (목표: {goalName || "은퇴 후 생활비 마련"})
-                        </div>
+                        <span>▲ +102만 원</span>
+                        <span className="text-slate-400 font-normal">(대출원금 상환 반영)</span>
                       </div>
                     </div>
 
                     <div className="p-4 rounded-xl bg-white dark:bg-[#11192E] border border-slate-200 dark:border-slate-800 shadow-sm">
                       <div className="text-[11px] text-slate-500 font-medium">
-                        월 저축률
+                        {MONTHLY_FINANCE_DATA[selectedMonth].label} 월 잉여금 (저축가능액)
                       </div>
-                      <div className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">
-                        {step2SavingsRate}%
+                      <div className={`text-xl font-extrabold mt-1 ${currentMonthSurplus >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-500"}`}>
+                        {(currentMonthSurplus >= 0 ? "+" : "") + currentMonthSurplus.toLocaleString("ko-KR")}원
                       </div>
                       <div className="text-[10px] text-slate-400 font-medium mt-1">
-                        (목표: 10% 이상, 9월 12.9%)
+                        수입 {currentMonthIncome.toLocaleString("ko-KR")}원 / 지출 {currentMonthTotalExpense.toLocaleString("ko-KR")}원
                       </div>
                     </div>
                   </div>
@@ -1347,9 +1369,9 @@ export default function DiagnosisPage() {
                         <circle cx="480" cy="20" r="5" fill="#1D4ED8" />
                       </svg>
 
-                      {/* Tooltip on 10월 */}
+                      {/* Tooltip on selectedMonth */}
                       <div className="absolute right-0 top-0 bg-blue-600 text-white text-[11px] font-bold px-2 py-0.5 rounded shadow">
-                        {formatKoreanCurrency(step2NetWorth)}
+                        {formatKoreanCurrency(currentMonthNetWorth)}
                       </div>
 
                       {/* X Axis Labels */}
@@ -1399,13 +1421,15 @@ export default function DiagnosisPage() {
                             <td className="py-2.5 px-3 font-semibold text-slate-800 dark:text-slate-200">
                               월 수입 합계
                             </td>
-                            <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400">8,040,000원</td>
-                            <td className="py-2.5 px-3 font-bold text-slate-800 dark:text-white">
-                              {step2Income.toLocaleString("ko-KR")}원
+                            <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400">
+                              {m9Income.toLocaleString("ko-KR")}원
                             </td>
-                            <td className={`py-2.5 px-3 font-semibold ${step2Income >= 8040000 ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
-                              {step2Income >= 8040000 ? "▲ +" : "▼ "}
-                              {Math.abs(step2Income - 8040000).toLocaleString("ko-KR")}원
+                            <td className="py-2.5 px-3 font-bold text-slate-800 dark:text-white">
+                              {m10Income.toLocaleString("ko-KR")}원
+                            </td>
+                            <td className={`py-2.5 px-3 font-semibold ${m10Income >= m9Income ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
+                              {m10Income >= m9Income ? "▲ +" : "▼ "}
+                              {Math.abs(m10Income - m9Income).toLocaleString("ko-KR")}원
                             </td>
                             <td className="py-2.5 px-3 text-[11px] text-slate-500">
                               금융 배당소득 증가 (4만 → 5만 원)
@@ -1417,13 +1441,15 @@ export default function DiagnosisPage() {
                             <td className="py-2.5 px-3 font-semibold text-slate-800 dark:text-slate-200">
                               고정지출 합계
                             </td>
-                            <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400">2,820,000원</td>
-                            <td className="py-2.5 px-3 font-bold text-slate-800 dark:text-white">
-                              {step2Fixed.toLocaleString("ko-KR")}원
+                            <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400">
+                              {m9Fixed.toLocaleString("ko-KR")}원
                             </td>
-                            <td className={`py-2.5 px-3 font-semibold ${step2Fixed <= 2820000 ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
-                              {step2Fixed >= 2820000 ? "▲ +" : "▼ "}
-                              {Math.abs(step2Fixed - 2820000).toLocaleString("ko-KR")}원
+                            <td className="py-2.5 px-3 font-bold text-slate-800 dark:text-white">
+                              {m10Fixed.toLocaleString("ko-KR")}원
+                            </td>
+                            <td className={`py-2.5 px-3 font-semibold ${m10Fixed <= m9Fixed ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
+                              {m10Fixed >= m9Fixed ? "▲ +" : "▼ "}
+                              {Math.abs(m10Fixed - m9Fixed).toLocaleString("ko-KR")}원
                             </td>
                             <td className="py-2.5 px-3 text-[11px] text-slate-500">
                               아파트 관리비 증가 (32만 → 35만 원)
@@ -1435,13 +1461,15 @@ export default function DiagnosisPage() {
                             <td className="py-2.5 px-3 font-semibold text-amber-900 dark:text-amber-200">
                               변동지출 합계
                             </td>
-                            <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400">3,850,000원</td>
-                            <td className="py-2.5 px-3 font-bold text-amber-700 dark:text-amber-300">
-                              {step2Variable.toLocaleString("ko-KR")}원
+                            <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400">
+                              {m9Variable.toLocaleString("ko-KR")}원
                             </td>
-                            <td className={`py-2.5 px-3 font-semibold ${step2Variable <= 3850000 ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
-                              {step2Variable >= 3850000 ? "▲ +" : "▼ "}
-                              {Math.abs(step2Variable - 3850000).toLocaleString("ko-KR")}원
+                            <td className="py-2.5 px-3 font-bold text-amber-700 dark:text-amber-300">
+                              {m10Variable.toLocaleString("ko-KR")}원
+                            </td>
+                            <td className={`py-2.5 px-3 font-semibold ${m10Variable <= m9Variable ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
+                              {m10Variable >= m9Variable ? "▲ +" : "▼ "}
+                              {Math.abs(m10Variable - m9Variable).toLocaleString("ko-KR")}원
                             </td>
                             <td className="py-2.5 px-3 text-[11px] text-amber-800 dark:text-amber-300">
                               여가·골프(+15만), 의료(+5만), 식비(+5만), 경조(+5만)
@@ -1453,12 +1481,14 @@ export default function DiagnosisPage() {
                             <td className="py-2.5 px-3 font-semibold text-slate-800 dark:text-slate-200">
                               투자 및 저축
                             </td>
-                            <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400">330,000원</td>
+                            <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400">
+                              {m9Invest.toLocaleString("ko-KR")}원
+                            </td>
                             <td className="py-2.5 px-3 font-bold text-slate-800 dark:text-white">
-                              {step2Invest.toLocaleString("ko-KR")}원
+                              {m10Invest.toLocaleString("ko-KR")}원
                             </td>
                             <td className="py-2.5 px-3 text-slate-400 font-medium">
-                              {step2Invest === 330000 ? "- (동일)" : `${step2Invest > 330000 ? "▲ +" : "▼ "}${Math.abs(step2Invest - 330000).toLocaleString("ko-KR")}원`}
+                              {m10Invest === m9Invest ? "- (동일)" : `${m10Invest > m9Invest ? "▲ +" : "▼ "}${Math.abs(m10Invest - m9Invest).toLocaleString("ko-KR")}원`}
                             </td>
                             <td className="py-2.5 px-3 text-[11px] text-slate-500">
                               연금저축 및 개인형IRP 정기 불입
@@ -1470,13 +1500,15 @@ export default function DiagnosisPage() {
                             <td className="py-2.5 px-3 font-bold text-slate-800 dark:text-slate-200">
                               총 지출 합계
                             </td>
-                            <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400">7,000,000원</td>
-                            <td className="py-2.5 px-3 font-extrabold text-slate-900 dark:text-white">
-                              {step2TotalExpense.toLocaleString("ko-KR")}원
+                            <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400">
+                              {m9TotalExpense.toLocaleString("ko-KR")}원
                             </td>
-                            <td className={`py-2.5 px-3 font-bold ${step2TotalExpense <= 7000000 ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
-                              {step2TotalExpense >= 7000000 ? "▲ +" : "▼ "}
-                              {Math.abs(step2TotalExpense - 7000000).toLocaleString("ko-KR")}원
+                            <td className="py-2.5 px-3 font-extrabold text-slate-900 dark:text-white">
+                              {m10TotalExpense.toLocaleString("ko-KR")}원
+                            </td>
+                            <td className={`py-2.5 px-3 font-bold ${m10TotalExpense <= m9TotalExpense ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
+                              {m10TotalExpense >= m9TotalExpense ? "▲ +" : "▼ "}
+                              {Math.abs(m10TotalExpense - m9TotalExpense).toLocaleString("ko-KR")}원
                             </td>
                             <td className="py-2.5 px-3 text-[11px] text-slate-500">
                               변동지출 및 관리비 증가로 지출 확대
@@ -1488,16 +1520,18 @@ export default function DiagnosisPage() {
                             <td className="py-2.5 px-3 font-bold text-emerald-800 dark:text-emerald-300">
                               월 잉여금 (저축가능액)
                             </td>
-                            <td className="py-2.5 px-3 font-semibold text-slate-700 dark:text-slate-300">+1,040,000원</td>
-                            <td className="py-2.5 px-3 font-extrabold text-emerald-700 dark:text-emerald-300">
-                              {(step2Surplus >= 0 ? "+" : "") + step2Surplus.toLocaleString("ko-KR")}원
+                            <td className="py-2.5 px-3 font-semibold text-slate-700 dark:text-slate-300">
+                              {(m9Surplus >= 0 ? "+" : "") + m9Surplus.toLocaleString("ko-KR")}원
                             </td>
-                            <td className={`py-2.5 px-3 font-bold ${step2Surplus >= 1040000 ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}`}>
-                              {step2Surplus >= 1040000 ? "▲ +" : "▼ "}
-                              {Math.abs(step2Surplus - 1040000).toLocaleString("ko-KR")}원
+                            <td className="py-2.5 px-3 font-extrabold text-emerald-700 dark:text-emerald-300">
+                              {(m10Surplus >= 0 ? "+" : "") + m10Surplus.toLocaleString("ko-KR")}원
+                            </td>
+                            <td className={`py-2.5 px-3 font-bold ${m10Surplus >= m9Surplus ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}`}>
+                              {m10Surplus >= m9Surplus ? "▲ +" : "▼ "}
+                              {Math.abs(m10Surplus - m9Surplus).toLocaleString("ko-KR")}원
                             </td>
                             <td className="py-2.5 px-3 text-[11px] text-emerald-700 dark:text-emerald-300">
-                              지출 증가로 잉여 감소 (저축률 {step2SavingsRate}%)
+                              지출 증가로 잉여 감소 반영
                             </td>
                           </tr>
 
@@ -1506,9 +1540,11 @@ export default function DiagnosisPage() {
                             <td className="py-2.5 px-3 font-semibold text-slate-800 dark:text-slate-200">
                               부채 상환 (원금)
                             </td>
-                            <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400">-1,016,667원</td>
+                            <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400">
+                              {rec9.debtChange}원
+                            </td>
                             <td className="py-2.5 px-3 font-bold text-emerald-600 dark:text-emerald-400">
-                              {debtChange ? `${debtChange}원` : "0원"}
+                              {rec10.debtChange}원
                             </td>
                             <td className="py-2.5 px-3 text-emerald-600 dark:text-emerald-400 font-semibold">
                               ✓ 정상 분할상환
@@ -1523,12 +1559,14 @@ export default function DiagnosisPage() {
                             <td className="py-2.5 px-3 font-bold text-blue-900 dark:text-blue-200">
                               순자산
                             </td>
-                            <td className="py-2.5 px-3 font-semibold text-slate-700 dark:text-slate-300">14억 7,069만</td>
+                            <td className="py-2.5 px-3 font-semibold text-slate-700 dark:text-slate-300">
+                              {formatKoreanCurrency(m9NetWorth)}
+                            </td>
                             <td className="py-2.5 px-3 font-extrabold text-blue-700 dark:text-blue-300">
-                              {formatKoreanCurrency(step2NetWorth)}
+                              {formatKoreanCurrency(m10NetWorth)}
                             </td>
                             <td className="py-2.5 px-3 font-bold text-blue-600 dark:text-blue-400">
-                              ▲ +{formatKoreanCurrency(Math.abs(step2DebtChangeNum) + step2AssetChangeNum)}
+                              ▲ +{formatKoreanCurrency(m10NetWorth - m9NetWorth)}
                             </td>
                             <td className="py-2.5 px-3 text-[11px] text-blue-800 dark:text-blue-300 font-medium">
                               대출원금 상환으로 순자산 지속 증가
@@ -1973,6 +2011,42 @@ export default function DiagnosisPage() {
             <FinancialStatusView
               onNavigateStep={(step) => setCurrentStep(step)}
               onOpenTaxModal={() => setShowTaxModal(true)}
+            />
+          )}
+
+          {/* 목표 관리 (4대 재무목표 타임라인 & 신호등 카드 & 솔루션) */}
+          {currentStep === "goals" && (
+            <GoalsView
+              onNavigateStep={(step) => setCurrentStep(step)}
+              onOpenTaxModal={() => setShowTaxModal(true)}
+            />
+          )}
+
+          {/* 리포트(PDF) (재무상태표, 현금흐름표, 재무목표 기반 종합 진단서) */}
+          {currentStep === "report" && (
+            <ReportView
+              onNavigateStep={(step) => setCurrentStep(step)}
+              onOpenTaxModal={() => setShowTaxModal(true)}
+            />
+          )}
+
+          {/* 설정 (Supabase 연동 관리 & 재무 데이터 직접 입력·저장) */}
+          {currentStep === "settings" && (
+            <SettingsView
+              totalAsset={totalAsset}
+              setTotalAsset={setTotalAsset}
+              totalDebt={totalDebt}
+              setTotalDebt={setTotalDebt}
+              monthlyIncome={monthlyIncome}
+              setMonthlyIncome={setMonthlyIncome}
+              monthlyExpense={monthlyExpense}
+              setMonthlyExpense={setMonthlyExpense}
+              onRefreshData={() => {
+                alert("Supabase 최신 데이터를 성공적으로 동기화했습니다.");
+              }}
+              onResetData={() => {
+                alert("가상 고객 기본 데이터로 리셋되었습니다.");
+              }}
             />
           )}
         </main>
