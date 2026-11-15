@@ -68,6 +68,7 @@ function parseNumber(value: string): number {
   const num = parseFloat(clean);
   return isNaN(num) ? 0 : num;
 }
+const parseRawNumber = parseNumber;
 
 // 4. 금액을 한국어 통화 단위(조, 억, 만 원)로 변환
 function formatKoreanCurrency(amount: number): string {
@@ -1901,7 +1902,7 @@ export default function DiagnosisPage() {
                   {/* 🎯 AI 중점 상담 목표 카드 (STEP 01 재무 목표 연동) */}
                   {(() => {
                     const effGoalName = goalName ? goalName : (isTemplateBlank ? "목표 설정 대기" : "은퇴 후 생활비 300만원 마련");
-                    const effGoalAmount = goalAmount ? formatKoreanCurrency(parseRawNumber(goalAmount)) : (isTemplateBlank ? "0원" : "6억 8,800만 원");
+                    const effGoalAmount = goalAmount ? formatKoreanCurrency(parseNumber(goalAmount)) : (isTemplateBlank ? "0원" : "6억 8,800만 원");
                     const effGoalDate = goalDate ? goalDate : (isTemplateBlank ? "시점 미정" : "60세 은퇴 시점");
                     return (
                       <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50/50 dark:from-amber-950/40 dark:to-orange-950/20 border border-amber-200/80 dark:border-amber-800/60 shadow-sm space-y-2.5">
@@ -1964,7 +1965,7 @@ export default function DiagnosisPage() {
                         </div>
                         <div className="text-xs font-bold text-slate-800 dark:text-white mt-1">
                           {isTemplateBlank
-                            ? (totalAsset ? formatKoreanCurrency(parseRawNumber(totalAsset)) : "0원")
+                            ? (totalAsset ? formatKoreanCurrency(parseNumber(totalAsset)) : "0원")
                             : "17억 2,171만 원"}
                         </div>
                       </div>
@@ -1974,7 +1975,7 @@ export default function DiagnosisPage() {
                         </div>
                         <div className="text-xs font-bold text-slate-800 dark:text-white mt-1">
                           {isTemplateBlank
-                            ? (totalDebt ? formatKoreanCurrency(parseRawNumber(totalDebt)) : "0원")
+                            ? (totalDebt ? formatKoreanCurrency(parseNumber(totalDebt)) : "0원")
                             : "2억 5,000만 원"}
                         </div>
                       </div>
@@ -2040,7 +2041,7 @@ export default function DiagnosisPage() {
                     <div className="space-y-2">
                       {(() => {
                         const effGoal = goalName || (isTemplateBlank ? "재무 목표" : "은퇴 생활비 300만 원");
-                        const effAmt = goalAmount ? formatKoreanCurrency(parseRawNumber(goalAmount)) : (isTemplateBlank ? "" : "6억 8,800만 원");
+                        const effAmt = goalAmount ? formatKoreanCurrency(parseNumber(goalAmount)) : (isTemplateBlank ? "" : "6억 8,800만 원");
                         const effDt = goalDate || (isTemplateBlank ? "" : "60세 은퇴");
                         return [
                           {
