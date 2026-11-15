@@ -1681,7 +1681,9 @@ export default function DiagnosisPage() {
                           🏠 총 자산
                         </div>
                         <div className="text-xs font-bold text-slate-800 dark:text-white mt-1">
-                          17억 2,171만
+                          {isTemplateBlank
+                            ? (totalAsset ? formatKoreanCurrency(parseRawNumber(totalAsset)) : "0원")
+                            : "17억 2,171만 원"}
                         </div>
                       </div>
                       <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50">
@@ -1689,7 +1691,9 @@ export default function DiagnosisPage() {
                           💳 총 부채
                         </div>
                         <div className="text-xs font-bold text-slate-800 dark:text-white mt-1">
-                          2억 5,000만
+                          {isTemplateBlank
+                            ? (totalDebt ? formatKoreanCurrency(parseRawNumber(totalDebt)) : "0원")
+                            : "2억 5,000만 원"}
                         </div>
                       </div>
                       <div className="p-3 rounded-xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800">
@@ -1697,26 +1701,42 @@ export default function DiagnosisPage() {
                           💰 순자산
                         </div>
                         <div className="text-xs font-extrabold text-blue-700 dark:text-blue-300 mt-1">
-                          14억 7,171만
+                          {isTemplateBlank
+                            ? (calcNetWorth !== 0 ? formatKoreanCurrency(calcNetWorth) : "0원")
+                            : "14억 7,171만 원"}
                         </div>
-                        <div className="text-[9px] text-emerald-600 dark:text-emerald-400 font-semibold mt-0.5">
-                          ▲ +102만 (상환)
-                        </div>
+                        {!isTemplateBlank && (
+                          <div className="text-[9px] text-emerald-600 dark:text-emerald-400 font-semibold mt-0.5">
+                            ▲ +102만 (상환)
+                          </div>
+                        )}
                       </div>
                     </div>
 
                     <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-1.5 text-[11px]">
                       <div className="flex justify-between">
-                        <span className="text-slate-500">10월 월 소득</span>
-                        <span className="font-semibold text-slate-800 dark:text-slate-200">805만 원</span>
+                        <span className="text-slate-500">{isTemplateBlank ? "월 소득" : "10월 월 소득"}</span>
+                        <span className="font-semibold text-slate-800 dark:text-slate-200">
+                          {isTemplateBlank
+                            ? (monthlyIncome ? monthlyIncome + "원" : "0원")
+                            : "805만 원"}
+                        </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-slate-500">10월 월 지출</span>
-                        <span className="font-semibold text-slate-800 dark:text-slate-200">733만 원 (원리금 185만 포함)</span>
+                        <span className="text-slate-500">{isTemplateBlank ? "월 지출" : "10월 월 지출"}</span>
+                        <span className="font-semibold text-slate-800 dark:text-slate-200">
+                          {isTemplateBlank
+                            ? (monthlyExpense ? monthlyExpense + "원" : "0원")
+                            : "733만 원 (원리금 185만 포함)"}
+                        </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-slate-500">10월 잉여금</span>
-                        <span className="font-bold text-emerald-600 dark:text-emerald-400">72만 원 (저축률 8.9%)</span>
+                        <span className="text-slate-500">{isTemplateBlank ? "월 잉여금" : "10월 잉여금"}</span>
+                        <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                          {isTemplateBlank
+                            ? (calcSurplus !== 0 ? (calcSurplus >= 0 ? "+" : "") + calcSurplus.toLocaleString("ko-KR") + "원" : "0원")
+                            : "72만 원 (저축률 8.9%)"}
+                        </span>
                       </div>
                     </div>
                   </div>
