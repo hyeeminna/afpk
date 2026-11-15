@@ -30,6 +30,56 @@ interface ChatMessage {
   };
 }
 
+// 1. 계산기 스타일 숫자 포맷터: 한글, 영문, 특수문자 제거 후 3자리 콤마 (,000 구조)
+function formatCalculatorNumber(value: string): string {
+  const digitsOnly = value.replace(/[^0-9]/g, "");
+  if (!digitsOnly) return "";
+  const normalized = digitsOnly.replace(/^0+(?=\d)/, "");
+  if (normalized === "") return "0";
+  return BigInt(normalized).toLocaleString("ko-KR");
+}
+
+// 2. 부호(+/-)를 허용하는 계산기 스타일 포맷터 (자산/부채 변동 입력용)
+function formatSignedCalculatorNumber(value: string): string {
+  let sign = "";
+  if (value.startsWith("-")) sign = "-";
+  else if (value.startsWith("+")) sign = "+";
+  const digitsOnly = value.replace(/[^0-9]/g, "");
+  if (!digitsOnly) return sign;
+  const normalized = digitsOnly.replace(/^0+(?=\d)/, "");
+  if (normalized === "") return "0";
+  return sign + BigInt(normalized).toLocaleString("ko-KR");
+}
+
+// 3. 콤마 포함 문자열을 순수 숫자로 파싱 (계산용)
+function parseNumber(value: string): number {
+  if (!value) return 0;
+  const clean = value.replace(/[^0-9.-]/g, "");
+  const num = parseFloat(clean);
+  return isNaN(num) ? 0 : num;
+}
+
+// 4. 금액을 한국어 통화 단위(조, 억, 만 원)로 변환
+function formatKoreanCurrency(amount: number): string {
+  if (isNaN(amount) || amount === 0) return "0원";
+  const isNegative = amount < 0;
+  const abs = Math.abs(amount);
+
+  const jo = Math.floor(abs / 1_000_000_000_000);
+  const eok = Math.floor((abs % 1_000_000_000_000) / 100_000_000);
+  const man = Math.floor((abs % 100_000_000) / 10_000);
+  const remainder = Math.floor(abs % 10_000);
+
+  const parts: string[] = [];
+  if (jo > 0) parts.push(`${jo}조`);
+  if (eok > 0) parts.push(`${eok}억`);
+  if (man > 0) parts.push(`${man.toLocaleString("ko-KR")}만`);
+  if (remainder > 0 && parts.length === 0) parts.push(`${remainder.toLocaleString("ko-KR")}`);
+
+  const formatted = (parts.join(" ") + "원").trim();
+  return isNegative ? `-${formatted}` : formatted;
+}
+
 export default function DiagnosisPage() {
   const { user, profile, signInWithGoogle, isLoading: isAuthLoading } = useAuth();
   const [currentStep, setCurrentStep] = useState<StepType>("step1");
@@ -107,6 +157,35 @@ export default function DiagnosisPage() {
     setAssetChange(data.assetChange);
     setDebtChange(data.debtChange);
   };
+
+  // 실시간 계산용 수치 (Step 1)
+  const parsedAsset = parseNumber(totalAsset);
+  const parsedDebt = parseNumber(totalDebt);
+  const calcNetWorth = parsedAsset - parsedDebt;
+
+  const parsedIncome = parseNumber(monthlyIncome);
+  const parsedExpense = parseNumber(monthlyExpense);
+  const calcSurplus = parsedIncome - parsedExpense;
+  const calcSavingsRate =
+    parsedIncome > 0 ? ((calcSurplus / parsedIncome) * 100).toFixed(1) : "0.0";
+
+  const parsedEmergency = parseNumber(emergencyFund);
+  const calcEmergencyMonths =
+    parsedExpense > 0 ? (parsedEmergency / parsedExpense).toFixed(1) : "0.0";
+
+  // 실시간 계산용 수치 (Step 2)
+  const step2Income = parseNumber(income2);
+  const step2Fixed = parseNumber(fixedExpense);
+  const step2Variable = parseNumber(variableExpense);
+  const step2Invest = parseNumber(investment);
+  const step2TotalExpense = step2Fixed + step2Variable + step2Invest;
+  const step2Surplus = step2Income - step2TotalExpense;
+  const step2DebtChangeNum = parseNumber(debtChange);
+  const step2AssetChangeNum = parseNumber(assetChange);
+  const step2SavingsRate =
+    step2Income > 0 ? ((step2Surplus / step2Income) * 100).toFixed(1) : "0.0";
+  const step2NetWorth =
+    1470693333 + Math.abs(step2DebtChangeNum) + step2AssetChangeNum;
 
   // Retrieve user inputs from homepage (without URL query string)
   useEffect(() => {
@@ -488,8 +567,10 @@ export default function DiagnosisPage() {
                         </span>
                         <input
                           type="text"
+                          inputMode="numeric"
                           value={totalAsset}
-                          onChange={(e) => setTotalAsset(e.target.value)}
+                          onChange={(e) => setTotalAsset(formatCalculatorNumber(e.target.value))}
+                          placeholder="0"
                           className="w-full text-right text-xs font-bold bg-transparent text-slate-800 dark:text-white focus:outline-none"
                         />
                         <span className="text-xs text-slate-500 ml-2">원</span>
@@ -507,8 +588,10 @@ export default function DiagnosisPage() {
                         </span>
                         <input
                           type="text"
+                          inputMode="numeric"
                           value={totalDebt}
-                          onChange={(e) => setTotalDebt(e.target.value)}
+                          onChange={(e) => setTotalDebt(formatCalculatorNumber(e.target.value))}
+                          placeholder="0"
                           className="w-full text-right text-xs font-bold bg-transparent text-slate-800 dark:text-white focus:outline-none"
                         />
                         <span className="text-xs text-slate-500 ml-2">원</span>
@@ -529,8 +612,10 @@ export default function DiagnosisPage() {
                         </span>
                         <input
                           type="text"
+                          inputMode="numeric"
                           value={monthlyIncome}
-                          onChange={(e) => setMonthlyIncome(e.target.value)}
+                          onChange={(e) => setMonthlyIncome(formatCalculatorNumber(e.target.value))}
+                          placeholder="0"
                           className="w-full text-right text-xs font-bold bg-transparent text-slate-800 dark:text-white focus:outline-none"
                         />
                         <span className="text-xs text-slate-500 ml-2">원</span>
@@ -541,8 +626,10 @@ export default function DiagnosisPage() {
                         </span>
                         <input
                           type="text"
+                          inputMode="numeric"
                           value={monthlyExpense}
-                          onChange={(e) => setMonthlyExpense(e.target.value)}
+                          onChange={(e) => setMonthlyExpense(formatCalculatorNumber(e.target.value))}
+                          placeholder="0"
                           className="w-full text-right text-xs font-bold bg-transparent text-slate-800 dark:text-white focus:outline-none"
                         />
                         <span className="text-xs text-slate-500 ml-2">원</span>
@@ -563,14 +650,16 @@ export default function DiagnosisPage() {
                         </span>
                         <input
                           type="text"
+                          inputMode="numeric"
                           value={emergencyFund}
-                          onChange={(e) => setEmergencyFund(e.target.value)}
+                          onChange={(e) => setEmergencyFund(formatCalculatorNumber(e.target.value))}
+                          placeholder="0"
                           className="w-full text-right text-xs font-bold bg-transparent text-slate-800 dark:text-white focus:outline-none"
                         />
                         <span className="text-xs text-slate-500 ml-2">원</span>
                       </div>
                       <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold whitespace-nowrap">
-                        (월 지출의 약 3.0개월분)
+                        (월 지출의 약 {calcEmergencyMonths}개월분)
                       </span>
                     </div>
                   </div>
@@ -600,8 +689,10 @@ export default function DiagnosisPage() {
                         <div className="flex items-center bg-white dark:bg-slate-900 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700">
                           <input
                             type="text"
+                            inputMode="numeric"
                             value={goalAmount}
-                            onChange={(e) => setGoalAmount(e.target.value)}
+                            onChange={(e) => setGoalAmount(formatCalculatorNumber(e.target.value))}
+                            placeholder="0"
                             className="w-full text-right text-xs font-bold bg-transparent text-slate-800 dark:text-white focus:outline-none"
                           />
                           <span className="text-xs text-slate-400 ml-1">원</span>
@@ -640,75 +731,139 @@ export default function DiagnosisPage() {
                   </div>
                 </div>
 
-                {/* Right Summary Column */}
+                {/* Right Summary Column: 실시간 계산 반영 */}
                 <div className="lg:col-span-4 space-y-4">
                   {/* 입력 요약 */}
                   <div className="bg-white dark:bg-[#11192E] p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
-                    <h4 className="text-xs font-bold text-slate-800 dark:text-white">
-                      입력 요약
-                    </h4>
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-bold text-slate-800 dark:text-white">
+                        입력 요약
+                      </h4>
+                      <span className="text-[10px] text-blue-600 dark:text-blue-400 font-medium">
+                        실시간 계산 반영
+                      </span>
+                    </div>
                     <div className="space-y-2 text-xs">
                       <div className="flex justify-between items-center py-1">
                         <span className="flex items-center gap-1.5 text-slate-500">
                           <span>🏠</span> 총 자산
                         </span>
-                        <span className="font-bold text-slate-800 dark:text-white">
-                          17억 2,171만원
-                        </span>
+                        <div className="text-right">
+                          <span className="font-bold text-slate-800 dark:text-white">
+                            {formatKoreanCurrency(parsedAsset)}
+                          </span>
+                          {parsedAsset > 0 && (
+                            <span className="text-[10px] text-slate-400 block">
+                              {parsedAsset.toLocaleString("ko-KR")}원
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <div className="flex justify-between items-center py-1">
                         <span className="flex items-center gap-1.5 text-slate-500">
                           <span>💳</span> 총 부채
                         </span>
-                        <span className="font-bold text-slate-800 dark:text-white">
-                          2억 5,000만원
-                        </span>
+                        <div className="text-right">
+                          <span className="font-bold text-slate-800 dark:text-white">
+                            {formatKoreanCurrency(parsedDebt)}
+                          </span>
+                          {parsedDebt > 0 && (
+                            <span className="text-[10px] text-slate-400 block">
+                              {parsedDebt.toLocaleString("ko-KR")}원
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <div className="flex justify-between items-center py-1 border-t border-slate-100 dark:border-slate-800 pt-2">
                         <span className="flex items-center gap-1.5 text-slate-500">
                           <span>💰</span> 순자산
                         </span>
-                        <span className="font-bold text-blue-600 dark:text-blue-400">
-                          14억 7,171만원
-                        </span>
+                        <div className="text-right">
+                          <span className={`font-bold ${calcNetWorth >= 0 ? "text-blue-600 dark:text-blue-400" : "text-red-500"}`}>
+                            {formatKoreanCurrency(calcNetWorth)}
+                          </span>
+                          <span className="text-[10px] text-slate-400 block">
+                            {calcNetWorth.toLocaleString("ko-KR")}원
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
 
                   {/* 월 현금흐름 */}
                   <div className="bg-white dark:bg-[#11192E] p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
-                    <h4 className="text-xs font-bold text-slate-800 dark:text-white">
-                      월 현금흐름
-                    </h4>
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-bold text-slate-800 dark:text-white">
+                        월 현금흐름
+                      </h4>
+                      <span className="text-[10px] text-slate-400">
+                        월 기준
+                      </span>
+                    </div>
                     <div className="space-y-2 text-xs">
                       <div className="flex justify-between items-center py-1">
                         <span className="flex items-center gap-1.5 text-slate-500">
                           <span>💵</span> 월 소득
                         </span>
-                        <span className="font-bold text-slate-800 dark:text-white">
-                          805만원
-                        </span>
+                        <div className="text-right">
+                          <span className="font-bold text-slate-800 dark:text-white">
+                            {formatKoreanCurrency(parsedIncome)}
+                          </span>
+                          {parsedIncome > 0 && (
+                            <span className="text-[10px] text-slate-400 block">
+                              {parsedIncome.toLocaleString("ko-KR")}원
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <div className="flex justify-between items-center py-1">
                         <span className="flex items-center gap-1.5 text-slate-500">
                           <span>🧾</span> 월 지출
                         </span>
-                        <span className="font-bold text-slate-800 dark:text-white">
-                          733만원
-                        </span>
+                        <div className="text-right">
+                          <span className="font-bold text-slate-800 dark:text-white">
+                            {formatKoreanCurrency(parsedExpense)}
+                          </span>
+                          {parsedExpense > 0 && (
+                            <span className="text-[10px] text-slate-400 block">
+                              {parsedExpense.toLocaleString("ko-KR")}원
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex justify-between items-center">
+                      <div className={`p-3 rounded-xl border flex justify-between items-center ${
+                        calcSurplus >= 0
+                          ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800"
+                          : "bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800"
+                      }`}>
                         <div>
-                          <div className="text-[11px] text-emerald-800 dark:text-emerald-300 font-semibold">
-                            월 저축가능액
+                          <div className={`text-[11px] font-semibold ${
+                            calcSurplus >= 0
+                              ? "text-emerald-800 dark:text-emerald-300"
+                              : "text-red-800 dark:text-red-300"
+                          }`}>
+                            {calcSurplus >= 0 ? "월 저축가능액 (잉여)" : "월 적자"}
                           </div>
-                          <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
-                            (저축률 8.9%)
+                          <div className={`text-[10px] font-medium ${
+                            calcSurplus >= 0
+                              ? "text-emerald-600 dark:text-emerald-400"
+                              : "text-red-600 dark:text-red-400"
+                          }`}>
+                            (저축률 {calcSavingsRate}%)
                           </div>
                         </div>
-                        <span className="text-sm font-extrabold text-emerald-700 dark:text-emerald-300">
-                          72만원
-                        </span>
+                        <div className="text-right">
+                          <span className={`text-sm font-extrabold ${
+                            calcSurplus >= 0
+                              ? "text-emerald-700 dark:text-emerald-300"
+                              : "text-red-600 dark:text-red-400"
+                          }`}>
+                            {formatKoreanCurrency(calcSurplus)}
+                          </span>
+                          <span className="text-[10px] text-slate-500 dark:text-slate-400 block">
+                            {calcSurplus.toLocaleString("ko-KR")}원
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -728,7 +883,9 @@ export default function DiagnosisPage() {
                         </div>
                         <div className="text-[11px] text-slate-500 dark:text-slate-400">
                           {goalAmount && goalDate
-                            ? `${parseInt(goalAmount.replace(/,/g, "") || "0", 10) >= 100000000 ? `${(parseInt(goalAmount.replace(/,/g, ""), 10) / 100000000).toFixed(1)}억 원` : `${goalAmount}원`} • ${goalDate}`
+                            ? `${formatKoreanCurrency(parseNumber(goalAmount))} • ${goalDate}`
+                            : goalAmount
+                            ? `${formatKoreanCurrency(parseNumber(goalAmount))} • 일정 미설정`
                             : "목표 금액 및 일정 설정 대기 중"}
                         </div>
                         <div className="text-[10px] text-amber-700 dark:text-amber-300 font-semibold mt-0.5">
@@ -836,8 +993,10 @@ export default function DiagnosisPage() {
                         <span className="mr-2">💵</span>
                         <input
                           type="text"
+                          inputMode="numeric"
                           value={income2}
-                          onChange={(e) => setIncome2(e.target.value)}
+                          onChange={(e) => setIncome2(formatCalculatorNumber(e.target.value))}
+                          placeholder="0"
                           className="w-full text-right font-bold bg-transparent text-slate-800 dark:text-white focus:outline-none"
                         />
                         <span className="ml-2 text-slate-400">원</span>
@@ -856,8 +1015,10 @@ export default function DiagnosisPage() {
                         <span className="mr-2">🏠</span>
                         <input
                           type="text"
+                          inputMode="numeric"
                           value={fixedExpense}
-                          onChange={(e) => setFixedExpense(e.target.value)}
+                          onChange={(e) => setFixedExpense(formatCalculatorNumber(e.target.value))}
+                          placeholder="0"
                           className="w-full text-right font-bold bg-transparent text-slate-800 dark:text-white focus:outline-none"
                         />
                         <span className="ml-2 text-slate-400">원</span>
@@ -876,8 +1037,10 @@ export default function DiagnosisPage() {
                         <span className="mr-2">🍔</span>
                         <input
                           type="text"
+                          inputMode="numeric"
                           value={variableExpense}
-                          onChange={(e) => setVariableExpense(e.target.value)}
+                          onChange={(e) => setVariableExpense(formatCalculatorNumber(e.target.value))}
+                          placeholder="0"
                           className="w-full text-right font-bold bg-transparent text-slate-800 dark:text-white focus:outline-none"
                         />
                         <span className="ml-2 text-slate-400">원</span>
@@ -896,8 +1059,10 @@ export default function DiagnosisPage() {
                         <span className="mr-2">📈</span>
                         <input
                           type="text"
+                          inputMode="numeric"
                           value={investment}
-                          onChange={(e) => setInvestment(e.target.value)}
+                          onChange={(e) => setInvestment(formatCalculatorNumber(e.target.value))}
+                          placeholder="0"
                           className="w-full text-right font-bold bg-transparent text-slate-800 dark:text-white focus:outline-none"
                         />
                         <span className="ml-2 text-slate-400">원</span>
@@ -917,7 +1082,8 @@ export default function DiagnosisPage() {
                         <input
                           type="text"
                           value={assetChange}
-                          onChange={(e) => setAssetChange(e.target.value)}
+                          onChange={(e) => setAssetChange(formatSignedCalculatorNumber(e.target.value))}
+                          placeholder="0"
                           className="w-full text-right font-bold bg-transparent text-blue-600 dark:text-blue-400 focus:outline-none"
                         />
                         <span className="ml-2 text-slate-400">원</span>
@@ -937,7 +1103,8 @@ export default function DiagnosisPage() {
                         <input
                           type="text"
                           value={debtChange}
-                          onChange={(e) => setDebtChange(e.target.value)}
+                          onChange={(e) => setDebtChange(formatSignedCalculatorNumber(e.target.value))}
+                          placeholder="0"
                           className="w-full text-right font-bold bg-transparent text-emerald-600 dark:text-emerald-400 focus:outline-none"
                         />
                         <span className="ml-2 text-slate-400">원</span>
@@ -984,11 +1151,14 @@ export default function DiagnosisPage() {
                         이번 달 순자산
                       </div>
                       <div className="text-xl font-extrabold text-slate-800 dark:text-white mt-1">
-                        14억 7,171만원
+                        {formatKoreanCurrency(step2NetWorth)}
                       </div>
                       <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold mt-1 flex items-center gap-1">
-                        <span>▲ +102만원</span>
-                        <span className="text-slate-400 font-normal">(대출원금 상환)</span>
+                        <span>
+                          {Math.abs(step2DebtChangeNum) + step2AssetChangeNum >= 0 ? "▲ +" : "▼ "}
+                          {formatKoreanCurrency(Math.abs(step2DebtChangeNum) + step2AssetChangeNum)}
+                        </span>
+                        <span className="text-slate-400 font-normal">(대출원금 상환 등)</span>
                       </div>
                     </div>
 
@@ -1037,7 +1207,7 @@ export default function DiagnosisPage() {
                         월 저축률
                       </div>
                       <div className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">
-                        8.9%
+                        {step2SavingsRate}%
                       </div>
                       <div className="text-[10px] text-slate-400 font-medium mt-1">
                         (목표: 10% 이상, 9월 12.9%)
@@ -1158,7 +1328,7 @@ export default function DiagnosisPage() {
 
                       {/* Tooltip on 10월 */}
                       <div className="absolute right-0 top-0 bg-blue-600 text-white text-[11px] font-bold px-2 py-0.5 rounded shadow">
-                        14억 7,171만원
+                        {formatKoreanCurrency(step2NetWorth)}
                       </div>
 
                       {/* X Axis Labels */}
@@ -1209,9 +1379,12 @@ export default function DiagnosisPage() {
                               월 수입 합계
                             </td>
                             <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400">8,040,000원</td>
-                            <td className="py-2.5 px-3 font-bold text-slate-800 dark:text-white">8,050,000원</td>
-                            <td className="py-2.5 px-3 font-semibold text-emerald-600 dark:text-emerald-400">
-                              ▲ +10,000원 (+0.1%)
+                            <td className="py-2.5 px-3 font-bold text-slate-800 dark:text-white">
+                              {step2Income.toLocaleString("ko-KR")}원
+                            </td>
+                            <td className={`py-2.5 px-3 font-semibold ${step2Income >= 8040000 ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
+                              {step2Income >= 8040000 ? "▲ +" : "▼ "}
+                              {Math.abs(step2Income - 8040000).toLocaleString("ko-KR")}원
                             </td>
                             <td className="py-2.5 px-3 text-[11px] text-slate-500">
                               금융 배당소득 증가 (4만 → 5만 원)
@@ -1224,9 +1397,12 @@ export default function DiagnosisPage() {
                               고정지출 합계
                             </td>
                             <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400">2,820,000원</td>
-                            <td className="py-2.5 px-3 font-bold text-slate-800 dark:text-white">2,850,000원</td>
-                            <td className="py-2.5 px-3 font-semibold text-red-500 dark:text-red-400">
-                              ▲ +30,000원 (+1.1%)
+                            <td className="py-2.5 px-3 font-bold text-slate-800 dark:text-white">
+                              {step2Fixed.toLocaleString("ko-KR")}원
+                            </td>
+                            <td className={`py-2.5 px-3 font-semibold ${step2Fixed <= 2820000 ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
+                              {step2Fixed >= 2820000 ? "▲ +" : "▼ "}
+                              {Math.abs(step2Fixed - 2820000).toLocaleString("ko-KR")}원
                             </td>
                             <td className="py-2.5 px-3 text-[11px] text-slate-500">
                               아파트 관리비 증가 (32만 → 35만 원)
@@ -1239,9 +1415,12 @@ export default function DiagnosisPage() {
                               변동지출 합계
                             </td>
                             <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400">3,850,000원</td>
-                            <td className="py-2.5 px-3 font-bold text-amber-700 dark:text-amber-300">4,150,000원</td>
-                            <td className="py-2.5 px-3 font-semibold text-red-500 dark:text-red-400">
-                              ▲ +300,000원 (+7.8%)
+                            <td className="py-2.5 px-3 font-bold text-amber-700 dark:text-amber-300">
+                              {step2Variable.toLocaleString("ko-KR")}원
+                            </td>
+                            <td className={`py-2.5 px-3 font-semibold ${step2Variable <= 3850000 ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
+                              {step2Variable >= 3850000 ? "▲ +" : "▼ "}
+                              {Math.abs(step2Variable - 3850000).toLocaleString("ko-KR")}원
                             </td>
                             <td className="py-2.5 px-3 text-[11px] text-amber-800 dark:text-amber-300">
                               여가·골프(+15만), 의료(+5만), 식비(+5만), 경조(+5만)
@@ -1254,8 +1433,12 @@ export default function DiagnosisPage() {
                               투자 및 저축
                             </td>
                             <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400">330,000원</td>
-                            <td className="py-2.5 px-3 font-bold text-slate-800 dark:text-white">330,000원</td>
-                            <td className="py-2.5 px-3 text-slate-400 font-medium">- (동일)</td>
+                            <td className="py-2.5 px-3 font-bold text-slate-800 dark:text-white">
+                              {step2Invest.toLocaleString("ko-KR")}원
+                            </td>
+                            <td className="py-2.5 px-3 text-slate-400 font-medium">
+                              {step2Invest === 330000 ? "- (동일)" : `${step2Invest > 330000 ? "▲ +" : "▼ "}${Math.abs(step2Invest - 330000).toLocaleString("ko-KR")}원`}
+                            </td>
                             <td className="py-2.5 px-3 text-[11px] text-slate-500">
                               연금저축 및 개인형IRP 정기 불입
                             </td>
@@ -1267,9 +1450,12 @@ export default function DiagnosisPage() {
                               총 지출 합계
                             </td>
                             <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400">7,000,000원</td>
-                            <td className="py-2.5 px-3 font-extrabold text-slate-900 dark:text-white">7,330,000원</td>
-                            <td className="py-2.5 px-3 font-bold text-red-500 dark:text-red-400">
-                              ▲ +330,000원 (+4.7%)
+                            <td className="py-2.5 px-3 font-extrabold text-slate-900 dark:text-white">
+                              {step2TotalExpense.toLocaleString("ko-KR")}원
+                            </td>
+                            <td className={`py-2.5 px-3 font-bold ${step2TotalExpense <= 7000000 ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
+                              {step2TotalExpense >= 7000000 ? "▲ +" : "▼ "}
+                              {Math.abs(step2TotalExpense - 7000000).toLocaleString("ko-KR")}원
                             </td>
                             <td className="py-2.5 px-3 text-[11px] text-slate-500">
                               변동지출 및 관리비 증가로 지출 확대
@@ -1282,12 +1468,15 @@ export default function DiagnosisPage() {
                               월 잉여금 (저축가능액)
                             </td>
                             <td className="py-2.5 px-3 font-semibold text-slate-700 dark:text-slate-300">+1,040,000원</td>
-                            <td className="py-2.5 px-3 font-extrabold text-emerald-700 dark:text-emerald-300">+720,000원</td>
-                            <td className="py-2.5 px-3 font-bold text-amber-600 dark:text-amber-400">
-                              ▼ -320,000원 (-30.8%)
+                            <td className="py-2.5 px-3 font-extrabold text-emerald-700 dark:text-emerald-300">
+                              {(step2Surplus >= 0 ? "+" : "") + step2Surplus.toLocaleString("ko-KR")}원
+                            </td>
+                            <td className={`py-2.5 px-3 font-bold ${step2Surplus >= 1040000 ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}`}>
+                              {step2Surplus >= 1040000 ? "▲ +" : "▼ "}
+                              {Math.abs(step2Surplus - 1040000).toLocaleString("ko-KR")}원
                             </td>
                             <td className="py-2.5 px-3 text-[11px] text-emerald-700 dark:text-emerald-300">
-                              지출 증가로 잉여 감소 (저축률 12.9% → 8.9%)
+                              지출 증가로 잉여 감소 (저축률 {step2SavingsRate}%)
                             </td>
                           </tr>
 
@@ -1297,7 +1486,9 @@ export default function DiagnosisPage() {
                               부채 상환 (원금)
                             </td>
                             <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400">-1,016,667원</td>
-                            <td className="py-2.5 px-3 font-bold text-emerald-600 dark:text-emerald-400">-1,016,667원</td>
+                            <td className="py-2.5 px-3 font-bold text-emerald-600 dark:text-emerald-400">
+                              {debtChange ? `${debtChange}원` : "0원"}
+                            </td>
                             <td className="py-2.5 px-3 text-emerald-600 dark:text-emerald-400 font-semibold">
                               ✓ 정상 분할상환
                             </td>
@@ -1312,9 +1503,11 @@ export default function DiagnosisPage() {
                               순자산
                             </td>
                             <td className="py-2.5 px-3 font-semibold text-slate-700 dark:text-slate-300">14억 7,069만</td>
-                            <td className="py-2.5 px-3 font-extrabold text-blue-700 dark:text-blue-300">14억 7,171만</td>
+                            <td className="py-2.5 px-3 font-extrabold text-blue-700 dark:text-blue-300">
+                              {formatKoreanCurrency(step2NetWorth)}
+                            </td>
                             <td className="py-2.5 px-3 font-bold text-blue-600 dark:text-blue-400">
-                              ▲ +102만원 (+0.1%)
+                              ▲ +{formatKoreanCurrency(Math.abs(step2DebtChangeNum) + step2AssetChangeNum)}
                             </td>
                             <td className="py-2.5 px-3 text-[11px] text-blue-800 dark:text-blue-300 font-medium">
                               대출원금 상환으로 순자산 지속 증가
