@@ -364,54 +364,18 @@ export default function DiagnosisPage() {
           {currentStep === "step1" && (
             <div className="space-y-6 animate-fadeIn">
               {/* Hero Banner */}
-              <div className="rounded-2xl bg-[#0B2568] dark:bg-[#07194A] text-white p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-xl relative overflow-hidden">
-                <div className="space-y-2 z-10">
+              <div className="rounded-2xl bg-[#0B2568] dark:bg-[#07194A] text-white p-6 md:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xl relative overflow-hidden">
+                <div className="space-y-1.5 z-10">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-blue-200 text-xs font-semibold mb-1">
+                    <span>📋</span>
+                    <span>은퇴 설계 기초 진단표</span>
+                  </div>
                   <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">
                     STEP 01 재무설계안 등록
                   </h2>
-                  <p className="text-xs md:text-sm text-blue-100 max-w-xl">
-                    현재의 자산, 부채, 소득, 지출과 재무 목표를 입력해 나만의
-                    재무설계안을 만들어보세요.
+                  <p className="text-xs md:text-sm text-blue-100 max-w-2xl">
+                    현재의 자산, 부채, 월 소득 및 지출 현황을 확인하고 은퇴 목표를 점검해 보세요.
                   </p>
-                </div>
-
-                {/* Progress Circle Badge */}
-                <div className="flex items-center gap-4 bg-white/10 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/20 z-10 flex-shrink-0">
-                  <div className="relative w-14 h-14 flex items-center justify-center">
-                    <svg className="w-14 h-14 transform -rotate-90">
-                      <circle
-                        cx="28"
-                        cy="28"
-                        r="22"
-                        stroke="rgba(255,255,255,0.2)"
-                        strokeWidth="5"
-                        fill="transparent"
-                      />
-                      <circle
-                        cx="28"
-                        cy="28"
-                        r="22"
-                        stroke="#10B981"
-                        strokeWidth="5"
-                        strokeDasharray={2 * Math.PI * 22}
-                        strokeDashoffset={2 * Math.PI * 22 * (1 - 0.8)}
-                        strokeLinecap="round"
-                        fill="transparent"
-                      />
-                    </svg>
-                    <span className="absolute text-xs font-bold text-white">
-                      80%
-                    </span>
-                  </div>
-                  <div>
-                    <div className="text-[11px] text-blue-200 font-medium">
-                      설계안 작성 진행률
-                    </div>
-                    <div className="text-sm font-bold text-white">80%</div>
-                    <div className="text-[10px] text-emerald-300 font-semibold">
-                      4 / 5 완료
-                    </div>
-                  </div>
                 </div>
               </div>
 
@@ -890,250 +854,256 @@ export default function DiagnosisPage() {
                   </div>
                 </div>
 
-                {/* Right Analysis Column */}
+                {/* Right Analysis Column: 재무설계 계획안 vs 실행 후 비교 분석 */}
                 <div className="lg:col-span-7 space-y-4">
-                  {/* Top 3 Metric Cards */}
+                  {/* Top 3 Metric Cards: 실행 후 핵심 지표 */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div className="p-4 rounded-xl bg-white dark:bg-[#11192E] border border-slate-200 dark:border-slate-800 shadow-sm">
                       <div className="text-[11px] text-slate-500 font-medium">
-                        이번 달 순자산
+                        실행 후 순자산
                       </div>
-                      <div className="text-xl font-extrabold text-slate-800 dark:text-white mt-1">
-                        14억 7,171만원
+                      <div className="text-xl font-extrabold text-blue-600 dark:text-blue-400 mt-1">
+                        약 13.93억
                       </div>
-                      <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold mt-1">
-                        ▲ +102만원 (대출원금 상환)
-                      </div>
-                    </div>
-
-                    <div className="p-4 rounded-xl bg-white dark:bg-[#11192E] border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3">
-                      <div className="relative w-11 h-11 flex items-center justify-center">
-                        <svg className="w-11 h-11 transform -rotate-90">
-                          <circle
-                            cx="22"
-                            cy="22"
-                            r="17"
-                            stroke="rgba(100,116,139,0.2)"
-                            strokeWidth="4"
-                            fill="transparent"
-                          />
-                          <circle
-                            cx="22"
-                            cy="22"
-                            r="17"
-                            stroke="#10B981"
-                            strokeWidth="4"
-                            strokeDasharray={2 * Math.PI * 17}
-                            strokeDashoffset={2 * Math.PI * 17 * (1 - 0.78)}
-                            strokeLinecap="round"
-                            fill="transparent"
-                          />
-                        </svg>
-                        <span className="absolute text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
-                          78%
-                        </span>
-                      </div>
-                      <div>
-                        <div className="text-[10px] text-slate-500 font-medium">
-                          설계안 대비 달성률
-                        </div>
-                        <div className="text-base font-bold text-slate-800 dark:text-white">
-                          78%
-                        </div>
-                        <div className="text-[9px] text-slate-400 truncate max-w-[110px]">
-                          (목표: {goalName || "은퇴 생활비 마련"})
-                        </div>
+                      <div className="text-[10px] text-slate-500 font-medium mt-1">
+                        현재 약 14.72억 (부채 0원 달성)
                       </div>
                     </div>
 
                     <div className="p-4 rounded-xl bg-white dark:bg-[#11192E] border border-slate-200 dark:border-slate-800 shadow-sm">
                       <div className="text-[11px] text-slate-500 font-medium">
-                        월 저축률
+                        월 지출 절감액
                       </div>
                       <div className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">
-                        8.9%
+                        ▼ -185만 원
                       </div>
-                      <div className="text-[10px] text-slate-400 font-medium mt-1">
-                        (목표: 10% 이상)
+                      <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold mt-1">
+                        대출 원리금 0원 영구 해소
+                      </div>
+                    </div>
+
+                    <div className="p-4 rounded-xl bg-white dark:bg-[#11192E] border border-slate-200 dark:border-slate-800 shadow-sm">
+                      <div className="text-[11px] text-slate-500 font-medium">
+                        은퇴 후 월 수입
+                      </div>
+                      <div className="text-xl font-extrabold text-slate-800 dark:text-white mt-1">
+                        월 300만 원
+                      </div>
+                      <div className="text-[10px] text-blue-600 dark:text-blue-400 font-medium mt-1">
+                        IRP 250만 + 연금저축 50만
                       </div>
                     </div>
                   </div>
 
-                  {/* Net Asset Trend Chart */}
-                  <div className="p-6 rounded-2xl bg-white dark:bg-[#11192E] border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+                  {/* 재무설계 전·후 핵심 구조 비교 시각화 카드 */}
+                  <div className="p-5 rounded-2xl bg-white dark:bg-[#11192E] border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
                     <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-bold text-slate-800 dark:text-white">
-                        순자산 추이
-                      </h4>
-                      <div className="flex items-center gap-4 text-[11px] text-slate-500">
-                        <span className="flex items-center gap-1.5">
-                          <span className="w-2.5 h-2.5 rounded-full bg-blue-600 inline-block" />
-                          실제 순자산
-                        </span>
-                        <span className="flex items-center gap-1.5">
-                          <span className="w-3 h-0.5 bg-slate-400 border-t border-dashed inline-block" />
-                          계획 순자산
-                        </span>
+                      <div>
+                        <h4 className="text-sm font-bold text-slate-800 dark:text-white">
+                          재무설계 실행 전·후 핵심 구조 비교
+                        </h4>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                          대출 상환 및 연금 구조화에 따른 현금흐름과 자산 건전성 개선
+                        </p>
                       </div>
+                      <span className="px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-[11px] font-bold text-emerald-700 dark:text-emerald-300">
+                        부채 전액 상환 플랜
+                      </span>
                     </div>
 
-                    {/* SVG Curve Chart */}
-                    <div className="relative h-44 w-full pt-4">
-                      <svg
-                        className="w-full h-full overflow-visible"
-                        viewBox="0 0 500 130"
-                      >
-                        <defs>
-                          <linearGradient
-                            id="assetGrad"
-                            x1="0"
-                            y1="0"
-                            x2="0"
-                            y2="1"
-                          >
-                            <stop
-                              offset="0%"
-                              stopColor="#2563EB"
-                              stopOpacity="0.25"
-                            />
-                            <stop
-                              offset="100%"
-                              stopColor="#2563EB"
-                              stopOpacity="0.0"
-                            />
-                          </linearGradient>
-                        </defs>
-                        {/* Grid lines */}
-                        <line
-                          x1="0"
-                          y1="10"
-                          x2="500"
-                          y2="10"
-                          stroke="currentColor"
-                          className="text-slate-100 dark:text-slate-800"
-                          strokeWidth="1"
-                        />
-                        <line
-                          x1="0"
-                          y1="50"
-                          x2="500"
-                          y2="50"
-                          stroke="currentColor"
-                          className="text-slate-100 dark:text-slate-800"
-                          strokeWidth="1"
-                        />
-                        <line
-                          x1="0"
-                          y1="90"
-                          x2="500"
-                          y2="90"
-                          stroke="currentColor"
-                          className="text-slate-100 dark:text-slate-800"
-                          strokeWidth="1"
-                        />
-
-                        {/* Planned line (dashed) */}
-                        <path
-                          d="M 20 95 Q 150 80, 260 60 T 480 30"
-                          fill="none"
-                          stroke="#94A3B8"
-                          strokeWidth="2"
-                          strokeDasharray="4 4"
-                        />
-
-                        {/* Actual Area */}
-                        <path
-                          d="M 20 100 Q 140 85, 250 65 T 480 20 L 480 120 L 20 120 Z"
-                          fill="url(#assetGrad)"
-                        />
-
-                        {/* Actual Line */}
-                        <path
-                          d="M 20 100 Q 140 85, 250 65 T 480 20"
-                          fill="none"
-                          stroke="#2563EB"
-                          strokeWidth="3"
-                          strokeLinecap="round"
-                        />
-
-                        {/* Dots */}
-                        <circle cx="20" cy="100" r="4" fill="#2563EB" />
-                        <circle cx="110" cy="88" r="4" fill="#2563EB" />
-                        <circle cx="200" cy="76" r="4" fill="#2563EB" />
-                        <circle cx="290" cy="70" r="4" fill="#2563EB" />
-                        <circle cx="385" cy="50" r="4" fill="#2563EB" />
-                        <circle cx="480" cy="20" r="5" fill="#1D4ED8" />
-                      </svg>
-
-                      {/* Tooltip on 10월 */}
-                      <div className="absolute right-0 top-0 bg-blue-600 text-white text-[11px] font-bold px-2 py-0.5 rounded shadow">
-                        14억 7,171만원
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+                      {/* 현재 (퇴직 전/유지) */}
+                      <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                        <div className="flex justify-between items-center pb-1.5 border-b border-slate-200 dark:border-slate-800">
+                          <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                            현재 상태 (퇴직 전/현상태 유지)
+                          </span>
+                          <span className="text-[10px] font-bold text-slate-500">
+                            기존 계획
+                          </span>
+                        </div>
+                        <div className="space-y-1.5 text-xs">
+                          <div className="flex justify-between">
+                            <span className="text-slate-500">순자산</span>
+                            <span className="font-semibold text-slate-800 dark:text-slate-200">약 14.72억 원</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-500">총 부채</span>
+                            <span className="font-bold text-red-600 dark:text-red-400">2억 5,000만 원 (연 4%)</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-500">월 지출</span>
+                            <span className="font-semibold text-slate-800 dark:text-slate-200">733만 원 (원리금 185만 포함)</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-500">은퇴 후 수입</span>
+                            <span className="font-bold text-amber-600">45만 원 (월 적자 −592만)</span>
+                          </div>
+                        </div>
                       </div>
 
-                      {/* X Axis Labels */}
-                      <div className="flex justify-between text-[11px] text-slate-400 mt-2">
-                        <span>5월</span>
-                        <span>6월</span>
-                        <span>7월</span>
-                        <span>8월</span>
-                        <span>9월</span>
-                        <span className="font-bold text-blue-600 dark:text-blue-400">
-                          10월
-                        </span>
+                      {/* 실행 후 (재무설계 계획안) */}
+                      <div className="p-4 rounded-xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 space-y-2.5">
+                        <div className="flex justify-between items-center pb-1.5 border-b border-blue-200 dark:border-blue-900">
+                          <span className="text-xs font-bold text-blue-900 dark:text-blue-300">
+                            재무설계 실행 후 (개선 계획안)
+                          </span>
+                          <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                            ✓ 실행 목표
+                          </span>
+                        </div>
+                        <div className="space-y-1.5 text-xs">
+                          <div className="flex justify-between">
+                            <span className="text-slate-600 dark:text-slate-400">순자산</span>
+                            <span className="font-bold text-blue-900 dark:text-blue-200">약 13.93억 원</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-600 dark:text-slate-400">총 부채</span>
+                            <span className="font-extrabold text-emerald-600 dark:text-emerald-400">0원 (전액 상환 완료)</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-600 dark:text-slate-400">월 지출</span>
+                            <span className="font-bold text-slate-900 dark:text-slate-100">452만 원 (▼ 185만 감소)</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-600 dark:text-slate-400">은퇴 후 수입</span>
+                            <span className="font-extrabold text-blue-700 dark:text-blue-300">월 300만 원 (연금 확충)</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* 계획 vs 실제 비교 테이블 */}
+                  {/* 재무설계 실행 전·후 상세 비교 테이블 (Supabase 실행후 테이블 기반) */}
                   <div className="p-5 rounded-2xl bg-white dark:bg-[#11192E] border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
-                    <h4 className="text-xs font-bold text-slate-800 dark:text-white">
-                      계획 vs 실제 (10월)
-                    </h4>
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-bold text-slate-800 dark:text-white">
+                        계획안 vs 실행 후 비교표 (Supabase 실데이터)
+                      </h4>
+                      <span className="text-[10px] text-slate-400">
+                        단위: 원, 만 원, 억 원
+                      </span>
+                    </div>
+
                     <div className="overflow-x-auto">
                       <table className="w-full text-left text-xs">
                         <thead>
-                          <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-medium">
-                            <th className="pb-2">항목</th>
-                            <th className="pb-2">계획</th>
-                            <th className="pb-2">실제</th>
-                            <th className="pb-2">차이</th>
+                          <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-400 font-semibold bg-slate-50/60 dark:bg-slate-900/60">
+                            <th className="py-2.5 px-3">항목</th>
+                            <th className="py-2.5 px-3">현재 상태</th>
+                            <th className="py-2.5 px-3">실행 후 계획안</th>
+                            <th className="py-2.5 px-3">분석 및 비고</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                           <tr>
-                            <td className="py-2.5 font-medium text-slate-700 dark:text-slate-300">
-                              월 수입
+                            <td className="py-2.5 px-3 font-semibold text-slate-800 dark:text-slate-200">
+                              현금성자산
                             </td>
-                            <td className="py-2.5 text-slate-500">8,050,000원</td>
-                            <td className="py-2.5 font-bold text-slate-800 dark:text-white">
-                              8,050,000원
+                            <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400">2억</td>
+                            <td className="py-2.5 px-3 font-bold text-blue-600 dark:text-blue-400">
+                              약 1,700만원
                             </td>
-                            <td className="py-2.5 text-slate-400 font-semibold">
-                              - (100% 달성)
+                            <td className="py-2.5 px-3 text-[11px] text-slate-500">
+                              상환·결혼자금·퇴직소득세 차감
                             </td>
                           </tr>
                           <tr>
-                            <td className="py-2.5 font-medium text-slate-700 dark:text-slate-300">
+                            <td className="py-2.5 px-3 font-semibold text-slate-800 dark:text-slate-200">
+                              주식·ETF
+                            </td>
+                            <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400">약 4,170만원</td>
+                            <td className="py-2.5 px-3 font-bold text-slate-800 dark:text-slate-200">
+                              약 4,170만원
+                            </td>
+                            <td className="py-2.5 px-3 text-[11px] text-slate-500">
+                              ISA 계좌 이전 (비과세 절세)
+                            </td>
+                          </tr>
+                          <tr>
+                            <td className="py-2.5 px-3 font-semibold text-slate-800 dark:text-slate-200">
+                              퇴직급여·IRP
+                            </td>
+                            <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400">4억</td>
+                            <td className="py-2.5 px-3 font-bold text-blue-600 dark:text-blue-400">
+                              2.5억
+                            </td>
+                            <td className="py-2.5 px-3 text-[11px] text-slate-500">
+                              대출 일부 상환 후 잔여 연금 전환
+                            </td>
+                          </tr>
+                          <tr>
+                            <td className="py-2.5 px-3 font-semibold text-slate-800 dark:text-slate-200">
+                              연금저축
+                            </td>
+                            <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400">8천만원</td>
+                            <td className="py-2.5 px-3 font-bold text-slate-800 dark:text-slate-200">
+                              약 8,400만원
+                            </td>
+                            <td className="py-2.5 px-3 text-[11px] text-slate-500">
+                              안정형 배분으로 변동성 관리
+                            </td>
+                          </tr>
+                          <tr>
+                            <td className="py-2.5 px-3 font-semibold text-slate-800 dark:text-slate-200">
+                              아파트
+                            </td>
+                            <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400">10억</td>
+                            <td className="py-2.5 px-3 font-bold text-slate-800 dark:text-slate-200">
+                              10억
+                            </td>
+                            <td className="py-2.5 px-3 text-[11px] text-slate-500">
+                              자산 가치 유지 (주택연금 후보)
+                            </td>
+                          </tr>
+                          <tr className="bg-red-50/40 dark:bg-red-950/20">
+                            <td className="py-2.5 px-3 font-bold text-red-700 dark:text-red-300">
+                              대출 (부채)
+                            </td>
+                            <td className="py-2.5 px-3 font-semibold text-red-600 dark:text-red-400">2.5억</td>
+                            <td className="py-2.5 px-3 font-extrabold text-emerald-600 dark:text-emerald-400">
+                              0 (전액 상환)
+                            </td>
+                            <td className="py-2.5 px-3 text-[11px] text-emerald-700 dark:text-emerald-300 font-semibold">
+                              ✓ 월 원리금 185만 원 영구 소멸
+                            </td>
+                          </tr>
+                          <tr className="bg-blue-50/50 dark:bg-blue-950/30">
+                            <td className="py-2.5 px-3 font-bold text-blue-900 dark:text-blue-200">
                               순자산
                             </td>
-                            <td className="py-2.5 text-slate-500">14억 7,069만원</td>
-                            <td className="py-2.5 font-bold text-slate-800 dark:text-white">
-                              14억 7,171만원
+                            <td className="py-2.5 px-3 font-semibold text-slate-700 dark:text-slate-300">약 14.72억</td>
+                            <td className="py-2.5 px-3 font-extrabold text-blue-700 dark:text-blue-300">
+                              약 13.93억
                             </td>
-                            <td className="py-2.5 text-emerald-600 dark:text-emerald-400 font-semibold">
-                              ▲ +102만원 (+0.1%)
+                            <td className="py-2.5 px-3 text-[11px] text-blue-800 dark:text-blue-300 font-medium">
+                              부채 리스크 완전 제거 후 안정 확보
                             </td>
                           </tr>
                           <tr>
-                            <td className="py-2.5 font-medium text-slate-700 dark:text-slate-300">
-                              부채 상환
+                            <td className="py-2.5 px-3 font-semibold text-slate-800 dark:text-slate-200">
+                              월 수입 (은퇴 후)
                             </td>
-                            <td className="py-2.5 text-slate-500">1,016,667원</td>
-                            <td className="py-2.5 font-bold text-slate-800 dark:text-white">
-                              1,016,667원
+                            <td className="py-2.5 px-3 text-slate-400">—</td>
+                            <td className="py-2.5 px-3 font-bold text-emerald-600 dark:text-emerald-400">
+                              300만원
                             </td>
-                            <td className="py-2.5 text-emerald-600 dark:text-emerald-400 font-semibold">
-                              ✓ 정상 상환 달성
+                            <td className="py-2.5 px-3 text-[11px] text-slate-500">
+                              IRP 250만 + 연금저축 50만 (64세+ 국민연금 85만)
+                            </td>
+                          </tr>
+                          <tr>
+                            <td className="py-2.5 px-3 font-semibold text-slate-800 dark:text-slate-200">
+                              월 지출
+                            </td>
+                            <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400">
+                              733만 원 (퇴직 후 637만)
+                            </td>
+                            <td className="py-2.5 px-3 font-bold text-emerald-600 dark:text-emerald-400">
+                              452만 원
+                            </td>
+                            <td className="py-2.5 px-3 text-[11px] text-emerald-700 dark:text-emerald-300 font-semibold">
+                              대출 상환으로 원리금 185만 원 감소
                             </td>
                           </tr>
                         </tbody>
