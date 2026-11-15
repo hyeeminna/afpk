@@ -171,6 +171,13 @@ export default function HomePage() {
               <ThemeToggle />
               <Link
                 href="/diagnosis"
+                onClick={(e) => {
+                  if (!user) {
+                    e.preventDefault();
+                    alert("진단 페이지는 로그인 후 이용하실 수 있습니다. Google 계정으로 시작하기로 연결합니다.");
+                    handleGoogleLogin();
+                  }
+                }}
                 className="hidden lg:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 transition-colors"
               >
                 <span>진단 페이지</span>
@@ -529,13 +536,13 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ================= C. 로그인 (Login) ================= */}
+        {/* ================= C. 로그인 (Google 계정으로 시작하기 단일 CTA) ================= */}
         <section
           id="login"
-          className="w-full py-14 md:py-20 bg-slate-50 dark:bg-[#070D1E] border-b border-slate-200 dark:border-slate-800"
+          className="w-full py-16 md:py-24 bg-white dark:bg-[#070D1E] border-b border-slate-200 dark:border-slate-800"
         >
           <div className="max-w-3xl mx-auto px-5 md:px-8 text-center space-y-6">
-            <div className="w-14 h-14 rounded-2xl bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-400 flex items-center justify-center mx-auto shadow-sm">
+            <div className="w-16 h-16 rounded-2xl bg-blue-100/80 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center mx-auto shadow-xs">
               <span className="material-symbols-outlined text-[32px]">
                 lock
               </span>
@@ -549,75 +556,57 @@ export default function HomePage() {
               로그인하면 재무설계안과 월별 자산 변화를 저장하고 언제든지 다시 확인할 수 있습니다.
             </p>
 
-            <div className="pt-2 flex flex-col items-center justify-center gap-3">
-              {user ? (
-                <div className="w-full max-w-md p-6 rounded-2xl bg-white dark:bg-slate-800 border-2 border-blue-200 dark:border-blue-900/60 shadow-md space-y-4 text-center">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-bold">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                    로그인 완료
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-                      {profile?.full_name || user.user_metadata?.full_name || user.email?.split("@")[0]}님, 환영합니다!
-                    </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                      {user.email} 계정에 재무설계안이 안전하게 보관됩니다.
-                    </p>
-                  </div>
-                  <Link
-                    href="/diagnosis"
-                    className="inline-flex items-center justify-center gap-2 w-full h-12 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all"
-                  >
-                    <span>내 재무진단 바로가기</span>
-                    <span className="material-symbols-outlined text-[18px]">
+            <div className="pt-2 flex flex-col items-center justify-center">
+              <button
+                type="button"
+                onClick={user ? () => router.push("/diagnosis") : handleGoogleLogin}
+                disabled={isLoggingIn}
+                className="w-full sm:w-auto min-w-[280px] sm:min-w-[320px] h-14 px-8 rounded-2xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 disabled:opacity-60 text-slate-800 dark:text-white font-bold text-base sm:text-lg flex items-center justify-center gap-3.5 cursor-pointer disabled:cursor-wait border-2 border-slate-200 dark:border-slate-700 shadow-md hover:shadow-lg active:scale-[0.99] transition-all"
+              >
+                {isLoggingIn ? (
+                  <>
+                    <span className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin flex-shrink-0" />
+                    <span>Google 로그인 연결 중...</span>
+                  </>
+                ) : user ? (
+                  <>
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0" />
+                    <span>{profile?.full_name || user.user_metadata?.full_name || user.email?.split("@")[0]} 님 재무진단 바로가기</span>
+                    <span className="material-symbols-outlined text-[20px]">
                       arrow_forward
                     </span>
-                  </Link>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleGoogleLogin}
-                  disabled={isLoggingIn}
-                  className="w-full sm:w-auto min-w-[280px] h-13 md:h-14 px-8 rounded-2xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 disabled:opacity-60 text-slate-800 dark:text-white font-bold text-base md:text-lg flex items-center justify-center gap-3.5 cursor-pointer disabled:cursor-wait border-2 border-slate-200 dark:border-slate-700 shadow-md hover:shadow-lg active:scale-[0.99] transition-all"
-                >
-                  {isLoggingIn ? (
-                    <>
-                      <span className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin flex-shrink-0" />
-                      <span>Google 로그인 연결 중...</span>
-                    </>
-                  ) : (
-                    <>
-                      <svg
-                        aria-hidden="true"
-                        className="w-5 h-5 flex-shrink-0"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3.03h3.88c2.27-2.09 3.66-5.17 3.66-9.12z"
-                          fill="#4285F4"
-                        />
-                        <path
-                          d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.03c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.13C3.26 21.36 7.33 24 12 24z"
-                          fill="#34A853"
-                        />
-                        <path
-                          d="M5.28 14.29c-.25-.72-.38-1.49-.38-2.29s.13-1.57.38-2.29V6.57H1.25C.45 8.15 0 9.99 0 12s.45 3.85 1.25 5.43l4.03-3.14z"
-                          fill="#FBBC05"
-                        />
-                        <path
-                          d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.57l4.03 3.14c.95-2.83 3.6-4.96 6.72-4.96z"
-                          fill="#EA4335"
-                        />
-                      </svg>
-                      <span>Google 계정으로 시작하기</span>
-                    </>
-                  )}
-                </button>
-              )}
+                  </>
+                ) : (
+                  <>
+                    <svg
+                      aria-hidden="true"
+                      className="w-5 h-5 flex-shrink-0"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3.03h3.88c2.27-2.09 3.66-5.17 3.66-9.12z"
+                        fill="#4285F4"
+                      />
+                      <path
+                        d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.03c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.13C3.26 21.36 7.33 24 12 24z"
+                        fill="#34A853"
+                      />
+                      <path
+                        d="M5.28 14.29c-.25-.72-.38-1.49-.38-2.29s.13-1.57.38-2.29V6.57H1.25C.45 8.15 0 9.99 0 12s.45 3.85 1.25 5.43l4.03-3.14z"
+                        fill="#FBBC05"
+                      />
+                      <path
+                        d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.57l4.03 3.14c.95-2.83 3.6-4.96 6.72-4.96z"
+                        fill="#EA4335"
+                      />
+                    </svg>
+                    <span>Google 계정으로 시작하기</span>
+                  </>
+                )}
+              </button>
             </div>
 
-            <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 pt-2">
+            <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 pt-2 font-medium">
               ※ 고민 선택 및 기본 진단은 로그인 없이 언제든지 무료로 이용하실 수 있습니다.
             </p>
           </div>
@@ -661,6 +650,13 @@ export default function HomePage() {
               </a>
               <Link
                 href="/diagnosis"
+                onClick={(e) => {
+                  if (!user) {
+                    e.preventDefault();
+                    alert("진단 페이지는 로그인 후 이용하실 수 있습니다. Google 계정으로 시작하기로 연결합니다.");
+                    handleGoogleLogin();
+                  }
+                }}
                 className="hover:text-blue-600 transition-colors"
               >
                 진단 페이지

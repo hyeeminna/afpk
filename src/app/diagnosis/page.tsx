@@ -306,7 +306,11 @@ export default function DiagnosisPage() {
   const m9Surplus = m9Income - m9TotalExpense;
   const m9DebtNum = parseNumber(rec9.debtChange);
   const m9AssetNum = parseNumber(rec9.assetChange);
-  const m9NetWorth = 1470693333; // 9월 순자산 기준
+  // 순자산: 14억 7,069만 특정값 배제, 실시간 자산·부채 계산식 적용
+  const baseNetWorth = isTemplateBlank
+    ? (calcNetWorth !== 0 ? calcNetWorth : 0)
+    : (calcNetWorth || 1471710000);
+  const m9NetWorth = baseNetWorth;
 
   const rec10 = monthlyRecords["2026-10"];
   const m10Income = parseNumber(rec10.income);
@@ -317,7 +321,9 @@ export default function DiagnosisPage() {
   const m10Surplus = m10Income - m10TotalExpense;
   const m10DebtNum = parseNumber(rec10.debtChange);
   const m10AssetNum = parseNumber(rec10.assetChange);
-  const m10NetWorth = 1470693333 + Math.abs(m10DebtNum) + m10AssetNum;
+  const m10NetWorth = isTemplateBlank
+    ? baseNetWorth
+    : baseNetWorth + Math.abs(m10DebtNum) + m10AssetNum;
 
   // 현재 선택된 월의 요약 수치
   const currentRec = monthlyRecords[selectedMonth];
@@ -1205,7 +1211,9 @@ export default function DiagnosisPage() {
                         {MONTHLY_FINANCE_DATA[selectedMonth].label} 재무 입력
                       </h3>
                       <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                        {selectedMonth === "2026-10" ? "Supabase 10월 현금흐름표 상세 실데이터" : "Supabase 9월 현금흐름표 가상 실데이터"}
+                        {!isTemplateBlank
+                          ? (selectedMonth === "2026-10" ? "Supabase 10월 현금흐름표 상세 실데이터" : "Supabase 9월 현금흐름표 가상 실데이터")
+                          : "신규 고객 월별 재무 데이터 직접 입력"}
                       </p>
                     </div>
                     <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-1 rounded-lg border border-blue-200 dark:border-blue-800">
@@ -1218,9 +1226,11 @@ export default function DiagnosisPage() {
                     <div>
                       <div className="flex justify-between text-slate-600 dark:text-slate-400 mb-1 font-medium">
                         <span className="font-semibold text-slate-800 dark:text-slate-200">월 수입 (급여, 기타소득)</span>
-                        <span className="text-[10px] text-blue-600 dark:text-blue-400">
-                          ({MONTHLY_FINANCE_DATA[selectedMonth].incomeSub})
-                        </span>
+                        {!isTemplateBlank && (
+                          <span className="text-[10px] text-blue-600 dark:text-blue-400">
+                            ({MONTHLY_FINANCE_DATA[selectedMonth].incomeSub})
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center bg-slate-50 dark:bg-slate-900 px-3 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700">
                         <span className="mr-2">💵</span>
@@ -1240,9 +1250,11 @@ export default function DiagnosisPage() {
                     <div>
                       <div className="flex justify-between text-slate-600 dark:text-slate-400 mb-1 font-medium">
                         <span className="font-semibold text-slate-800 dark:text-slate-200">고정지출 (주거, 통신, 보험 등)</span>
-                        <span className="text-[10px] text-blue-600 dark:text-blue-400">
-                          ({MONTHLY_FINANCE_DATA[selectedMonth].fixedSub})
-                        </span>
+                        {!isTemplateBlank && (
+                          <span className="text-[10px] text-blue-600 dark:text-blue-400">
+                            ({MONTHLY_FINANCE_DATA[selectedMonth].fixedSub})
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center bg-slate-50 dark:bg-slate-900 px-3 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700">
                         <span className="mr-2">🏠</span>
@@ -1262,9 +1274,11 @@ export default function DiagnosisPage() {
                     <div>
                       <div className="flex justify-between text-slate-600 dark:text-slate-400 mb-1 font-medium">
                         <span className="font-semibold text-slate-800 dark:text-slate-200">변동지출 (식비, 교통, 여가 등)</span>
-                        <span className="text-[10px] text-blue-600 dark:text-blue-400">
-                          ({MONTHLY_FINANCE_DATA[selectedMonth].variableSub})
-                        </span>
+                        {!isTemplateBlank && (
+                          <span className="text-[10px] text-blue-600 dark:text-blue-400">
+                            ({MONTHLY_FINANCE_DATA[selectedMonth].variableSub})
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center bg-slate-50 dark:bg-slate-900 px-3 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700">
                         <span className="mr-2">🍔</span>
@@ -1284,9 +1298,11 @@ export default function DiagnosisPage() {
                     <div>
                       <div className="flex justify-between text-slate-600 dark:text-slate-400 mb-1 font-medium">
                         <span className="font-semibold text-slate-800 dark:text-slate-200">투자/저축 (적립금, 펀드, 주식 등)</span>
-                        <span className="text-[10px] text-blue-600 dark:text-blue-400">
-                          ({MONTHLY_FINANCE_DATA[selectedMonth].investmentSub})
-                        </span>
+                        {!isTemplateBlank && (
+                          <span className="text-[10px] text-blue-600 dark:text-blue-400">
+                            ({MONTHLY_FINANCE_DATA[selectedMonth].investmentSub})
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center bg-slate-50 dark:bg-slate-900 px-3 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700">
                         <span className="mr-2">📈</span>
@@ -1306,9 +1322,11 @@ export default function DiagnosisPage() {
                     <div>
                       <div className="flex justify-between text-slate-600 dark:text-slate-400 mb-1 font-medium">
                         <span className="font-semibold text-slate-800 dark:text-slate-200">자산 변화 (매입/매도·평가변동)</span>
-                        <span className="text-[10px] text-slate-400">
-                          ({MONTHLY_FINANCE_DATA[selectedMonth].assetSub})
-                        </span>
+                        {!isTemplateBlank && (
+                          <span className="text-[10px] text-slate-400">
+                            ({MONTHLY_FINANCE_DATA[selectedMonth].assetSub})
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center bg-slate-50 dark:bg-slate-900 px-3 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700">
                         <span className="mr-2">✨</span>
@@ -1327,9 +1345,11 @@ export default function DiagnosisPage() {
                     <div>
                       <div className="flex justify-between text-slate-600 dark:text-slate-400 mb-1 font-medium">
                         <span className="font-semibold text-slate-800 dark:text-slate-200">부채 변화 (대출상환/신규)</span>
-                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400">
-                          ({MONTHLY_FINANCE_DATA[selectedMonth].debtSub})
-                        </span>
+                        {!isTemplateBlank && (
+                          <span className="text-[10px] text-emerald-600 dark:text-emerald-400">
+                            ({MONTHLY_FINANCE_DATA[selectedMonth].debtSub})
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center bg-slate-50 dark:bg-slate-900 px-3 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700">
                         <span className="mr-2">💳</span>
@@ -1384,12 +1404,16 @@ export default function DiagnosisPage() {
                         {MONTHLY_FINANCE_DATA[selectedMonth].label} 순자산
                       </div>
                       <div className="text-xl font-extrabold text-slate-800 dark:text-white mt-1">
-                        {formatKoreanCurrency(currentMonthNetWorth)}
+                        {isTemplateBlank
+                          ? (calcNetWorth !== 0 ? formatKoreanCurrency(calcNetWorth) : "0원 (입력 대기)")
+                          : formatKoreanCurrency(currentMonthNetWorth)}
                       </div>
-                      <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold mt-1 flex items-center gap-1">
-                        <span>▲ +102만 원</span>
-                        <span className="text-slate-400 font-normal">(대출원금 상환 반영)</span>
-                      </div>
+                      {!isTemplateBlank && (
+                        <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold mt-1 flex items-center gap-1">
+                          <span>▲ +102만 원</span>
+                          <span className="text-slate-400 font-normal">(대출원금 상환 반영)</span>
+                        </div>
+                      )}
                     </div>
 
                     <div className="p-4 rounded-xl bg-white dark:bg-[#11192E] border border-slate-200 dark:border-slate-800 shadow-sm">
@@ -1405,136 +1429,6 @@ export default function DiagnosisPage() {
                     </div>
                   </div>
 
-                  {/* Net Asset Trend Chart (순자산 추이) */}
-                  <div className="p-6 rounded-2xl bg-white dark:bg-[#11192E] border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="text-sm font-bold text-slate-800 dark:text-white">
-                          순자산 추이
-                        </h4>
-                        <p className="text-[11px] text-slate-400 mt-0.5">
-                          대출 원금 지속 상환에 따른 안정적 순자산 우상향
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-4 text-[11px] text-slate-500">
-                        <span className="flex items-center gap-1.5">
-                          <span className="w-2.5 h-2.5 rounded-full bg-blue-600 inline-block" />
-                          실제 순자산
-                        </span>
-                        <span className="flex items-center gap-1.5">
-                          <span className="w-3 h-0.5 bg-slate-400 border-t border-dashed inline-block" />
-                          계획 순자산
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* SVG Curve Chart */}
-                    <div className="relative h-44 w-full pt-4">
-                      <svg
-                        className="w-full h-full overflow-visible"
-                        viewBox="0 0 500 130"
-                      >
-                        <defs>
-                          <linearGradient
-                            id="assetGrad"
-                            x1="0"
-                            y1="0"
-                            x2="0"
-                            y2="1"
-                          >
-                            <stop
-                              offset="0%"
-                              stopColor="#2563EB"
-                              stopOpacity="0.25"
-                            />
-                            <stop
-                              offset="100%"
-                              stopColor="#2563EB"
-                              stopOpacity="0.0"
-                            />
-                          </linearGradient>
-                        </defs>
-                        {/* Grid lines */}
-                        <line
-                          x1="0"
-                          y1="10"
-                          x2="500"
-                          y2="10"
-                          stroke="currentColor"
-                          className="text-slate-100 dark:text-slate-800"
-                          strokeWidth="1"
-                        />
-                        <line
-                          x1="0"
-                          y1="50"
-                          x2="500"
-                          y2="50"
-                          stroke="currentColor"
-                          className="text-slate-100 dark:text-slate-800"
-                          strokeWidth="1"
-                        />
-                        <line
-                          x1="0"
-                          y1="90"
-                          x2="500"
-                          y2="90"
-                          stroke="currentColor"
-                          className="text-slate-100 dark:text-slate-800"
-                          strokeWidth="1"
-                        />
-
-                        {/* Planned line (dashed) */}
-                        <path
-                          d="M 20 95 Q 150 80, 260 60 T 480 30"
-                          fill="none"
-                          stroke="#94A3B8"
-                          strokeWidth="2"
-                          strokeDasharray="4 4"
-                        />
-
-                        {/* Actual Area */}
-                        <path
-                          d="M 20 100 Q 140 85, 250 65 T 480 20 L 480 120 L 20 120 Z"
-                          fill="url(#assetGrad)"
-                        />
-
-                        {/* Actual Line */}
-                        <path
-                          d="M 20 100 Q 140 85, 250 65 T 480 20"
-                          fill="none"
-                          stroke="#2563EB"
-                          strokeWidth="3"
-                          strokeLinecap="round"
-                        />
-
-                        {/* Dots */}
-                        <circle cx="20" cy="100" r="4" fill="#2563EB" />
-                        <circle cx="110" cy="88" r="4" fill="#2563EB" />
-                        <circle cx="200" cy="76" r="4" fill="#2563EB" />
-                        <circle cx="290" cy="70" r="4" fill="#2563EB" />
-                        <circle cx="385" cy="50" r="4" fill="#2563EB" />
-                        <circle cx="480" cy="20" r="5" fill="#1D4ED8" />
-                      </svg>
-
-                      {/* Tooltip on selectedMonth */}
-                      <div className="absolute right-0 top-0 bg-blue-600 text-white text-[11px] font-bold px-2 py-0.5 rounded shadow">
-                        {formatKoreanCurrency(currentMonthNetWorth)}
-                      </div>
-
-                      {/* X Axis Labels */}
-                      <div className="flex justify-between text-[11px] text-slate-400 mt-2">
-                        <span>5월</span>
-                        <span>6월</span>
-                        <span>7월</span>
-                        <span>8월</span>
-                        <span className={selectedMonth === "2026-09" ? "font-bold text-blue-600 dark:text-blue-400" : ""}>9월</span>
-                        <span className={`font-bold ${selectedMonth === "2026-10" ? "text-blue-600 dark:text-blue-400" : ""}`}>
-                          10월
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
                   {/* 월별 재무 변동 비교 테이블 (Supabase 9월 vs 10월) */}
                   <div className="p-5 rounded-2xl bg-white dark:bg-[#11192E] border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
@@ -1543,7 +1437,7 @@ export default function DiagnosisPage() {
                           월별 재무 변동 비교 (2026년 9월 vs 10월)
                         </h4>
                         <p className="text-[10px] text-slate-400 mt-0.5">
-                          Supabase 실데이터 연동 (9월 가상 vs 10월 상세)
+                          {!isTemplateBlank ? "Supabase 실데이터 연동 (9월 가상 vs 10월 상세)" : "신규 고객 직접 입력 실데이터 비교"}
                         </p>
                       </div>
                       <span className="text-[10px] text-slate-400 self-start sm:self-auto">
@@ -1579,7 +1473,7 @@ export default function DiagnosisPage() {
                               {Math.abs(m10Income - m9Income).toLocaleString("ko-KR")}원
                             </td>
                             <td className="py-2.5 px-3 text-[11px] text-slate-500">
-                              금융 배당소득 증가 (4만 → 5만 원)
+                              {!isTemplateBlank ? "금융 배당소득 증가 (4만 → 5만 원)" : "-"}
                             </td>
                           </tr>
 
@@ -1599,7 +1493,7 @@ export default function DiagnosisPage() {
                               {Math.abs(m10Fixed - m9Fixed).toLocaleString("ko-KR")}원
                             </td>
                             <td className="py-2.5 px-3 text-[11px] text-slate-500">
-                              아파트 관리비 증가 (32만 → 35만 원)
+                              {!isTemplateBlank ? "아파트 관리비 증가 (32만 → 35만 원)" : "-"}
                             </td>
                           </tr>
 
@@ -1619,7 +1513,7 @@ export default function DiagnosisPage() {
                               {Math.abs(m10Variable - m9Variable).toLocaleString("ko-KR")}원
                             </td>
                             <td className="py-2.5 px-3 text-[11px] text-amber-800 dark:text-amber-300">
-                              여가·골프(+15만), 의료(+5만), 식비(+5만), 경조(+5만)
+                              {!isTemplateBlank ? "여가·골프(+15만), 의료(+5만), 식비(+5만), 경조(+5만)" : "-"}
                             </td>
                           </tr>
 
@@ -1638,7 +1532,7 @@ export default function DiagnosisPage() {
                               {m10Invest === m9Invest ? "- (동일)" : `${m10Invest > m9Invest ? "▲ +" : "▼ "}${Math.abs(m10Invest - m9Invest).toLocaleString("ko-KR")}원`}
                             </td>
                             <td className="py-2.5 px-3 text-[11px] text-slate-500">
-                              연금저축 및 개인형IRP 정기 불입
+                              {!isTemplateBlank ? "연금저축 및 개인형IRP 정기 불입" : "-"}
                             </td>
                           </tr>
 
@@ -1658,7 +1552,7 @@ export default function DiagnosisPage() {
                               {Math.abs(m10TotalExpense - m9TotalExpense).toLocaleString("ko-KR")}원
                             </td>
                             <td className="py-2.5 px-3 text-[11px] text-slate-500">
-                              변동지출 및 관리비 증가로 지출 확대
+                              {!isTemplateBlank ? "변동지출 및 관리비 증가로 지출 확대" : "-"}
                             </td>
                           </tr>
 
@@ -1678,7 +1572,7 @@ export default function DiagnosisPage() {
                               {Math.abs(m10Surplus - m9Surplus).toLocaleString("ko-KR")}원
                             </td>
                             <td className="py-2.5 px-3 text-[11px] text-emerald-700 dark:text-emerald-300">
-                              지출 증가로 잉여 감소 반영
+                              {!isTemplateBlank ? "지출 증가로 잉여 감소 반영" : "-"}
                             </td>
                           </tr>
 
@@ -1688,16 +1582,16 @@ export default function DiagnosisPage() {
                               부채 상환 (원금)
                             </td>
                             <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400">
-                              {rec9.debtChange}원
+                              {rec9.debtChange || "0"}원
                             </td>
                             <td className="py-2.5 px-3 font-bold text-emerald-600 dark:text-emerald-400">
-                              {rec10.debtChange}원
+                              {rec10.debtChange || "0"}원
                             </td>
                             <td className="py-2.5 px-3 text-emerald-600 dark:text-emerald-400 font-semibold">
-                              ✓ 정상 분할상환
+                              {!isTemplateBlank ? "✓ 정상 분할상환" : "-"}
                             </td>
                             <td className="py-2.5 px-3 text-[11px] text-slate-500">
-                              아파트 담보대출 원금 매월 정기 상환
+                              {!isTemplateBlank ? "아파트 담보대출 원금 매월 정기 상환" : "-"}
                             </td>
                           </tr>
 
@@ -1707,40 +1601,27 @@ export default function DiagnosisPage() {
                               순자산
                             </td>
                             <td className="py-2.5 px-3 font-semibold text-slate-700 dark:text-slate-300">
-                              {formatKoreanCurrency(m9NetWorth)}
+                              {isTemplateBlank
+                                ? (calcNetWorth !== 0 ? formatKoreanCurrency(calcNetWorth) : "0원")
+                                : formatKoreanCurrency(m9NetWorth)}
                             </td>
                             <td className="py-2.5 px-3 font-extrabold text-blue-700 dark:text-blue-300">
-                              {formatKoreanCurrency(m10NetWorth)}
+                              {isTemplateBlank
+                                ? (calcNetWorth !== 0 ? formatKoreanCurrency(calcNetWorth) : "0원")
+                                : formatKoreanCurrency(m10NetWorth)}
                             </td>
                             <td className="py-2.5 px-3 font-bold text-blue-600 dark:text-blue-400">
-                              ▲ +{formatKoreanCurrency(m10NetWorth - m9NetWorth)}
+                              {isTemplateBlank
+                                ? "- (동일)"
+                                : `▲ +${formatKoreanCurrency(m10NetWorth - m9NetWorth)}`}
                             </td>
                             <td className="py-2.5 px-3 text-[11px] text-blue-800 dark:text-blue-300 font-medium">
-                              대출원금 상환으로 순자산 지속 증가
+                              {isTemplateBlank ? "직접 입력한 자산·부채 기준 순자산" : "대출원금 상환으로 순자산 지속 증가"}
                             </td>
                           </tr>
                         </tbody>
                       </table>
                     </div>
-                  </div>
-
-                  {/* AFPK AI 재무 진단 인사이트 카드 */}
-                  <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
-                    <div className="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-white">
-                      <span>💡</span>
-                      <span>AFPK 재무 변동 진단 요약</span>
-                    </div>
-                    <ul className="text-[11px] text-slate-600 dark:text-slate-300 space-y-1 list-disc list-inside">
-                      <li>
-                        <strong className="text-slate-800 dark:text-slate-100">변동지출 증가:</strong> 10월은 가을철 여가활동(골프·여행 70만, +15만) 및 부모님 병원 진료비(60만, +5만) 등으로 변동지출이 30만 원 증가하여 월 잉여금이 72만 원으로 축소되었습니다.
-                      </li>
-                      <li>
-                        <strong className="text-slate-800 dark:text-slate-100">순자산 순증:</strong> 월 지출 증가에도 불구하고 매월 1,016,667원의 담보대출 원금을 계획대로 상환하여 순자산은 14억 7,171만 원으로 안정적인 우상향을 유지하고 있습니다.
-                      </li>
-                      <li>
-                        <strong className="text-slate-800 dark:text-slate-100">권장 조치:</strong> 연말 변동지출을 통제하고, 남은 잉여금(72만 원)은 IRP/연금저축 추가 납입을 통해 세액공제(연말정산 혜택)를 극대화하는 것을 권장합니다.
-                      </li>
-                    </ul>
                   </div>
                 </div>
               </div>
