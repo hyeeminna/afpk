@@ -5,8 +5,9 @@ import { useState, useEffect } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuth } from "@/contexts/auth-context";
 import { UserProfilePopover } from "@/components/user-profile-popover";
+import FinancialStatusView from "@/components/FinancialStatusView";
 
-type StepType = "step1" | "step2" | "step3";
+type StepType = "step1" | "step2" | "step3" | "financial_status";
 
 interface ChatMessage {
   id: string;
@@ -421,7 +422,12 @@ export default function DiagnosisPage() {
 
             <button
               type="button"
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors"
+              onClick={() => setCurrentStep("financial_status")}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
+                currentStep === "financial_status"
+                  ? "bg-blue-600 text-white font-bold shadow-sm"
+                  : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+              }`}
             >
               <span className="material-symbols-outlined text-[20px]">
                 query_stats
@@ -487,6 +493,7 @@ export default function DiagnosisPage() {
               {currentStep === "step1" && "STEP 01 설계안 등록"}
               {currentStep === "step2" && "STEP 02 월별 변동 입력"}
               {currentStep === "step3" && "STEP 03 Gemini AI 재무상담"}
+              {currentStep === "financial_status" && "내 재무현황 (재무상태표 & 현금흐름표)"}
             </span>
           </div>
 
@@ -1959,6 +1966,14 @@ export default function DiagnosisPage() {
                 </div>
               </div>
             </div>
+          )}
+
+          {/* 내 재무현황 종합 분석표 (Supabase 실데이터 연동) */}
+          {currentStep === "financial_status" && (
+            <FinancialStatusView
+              onNavigateStep={(step) => setCurrentStep(step)}
+              onOpenTaxModal={() => setShowTaxModal(true)}
+            />
           )}
         </main>
       </div>
