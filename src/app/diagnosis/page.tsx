@@ -14,12 +14,17 @@ interface ChatMessage {
   time: string;
   text: string;
   details?: {
-    basis: string[];
-    comparison: {
+    basis?: string[];
+    comparison?: {
       plan: string;
       saving: string;
       date: string;
       reduction: string;
+    }[];
+    summary?: {
+      label: string;
+      value: string;
+      note?: string;
     }[];
     suggestions: string[];
   };
@@ -139,39 +144,35 @@ export default function DiagnosisPage() {
       id: "1",
       sender: "user",
       time: "오후 2:14",
-      text: "이번 달 40만 원 더 저축하면 목표 달성 시기가 얼마나 빨라지나요?",
+      text: "이번 달 남은 잉여금 72만 원 중 40만 원을 연금저축·IRP에 더 넣으면 은퇴 준비에 어떤 효과가 있나요?",
     },
     {
       id: "2",
       sender: "gemini",
       time: "오후 2:14",
-      text: "이번 달부터 매월 저축액을 40만 원(연 480만 원) 늘리면, '내 집 마련' 목표 달성 시기가 약 8개월 빠릅니다. 🎯",
+      text: "월 40만 원(연 480만 원)을 개인형 IRP 및 연금저축에 추가 납입하시면, 연간 약 63만~79만 원의 세액공제(절세) 혜택과 함께 은퇴 시 매월 약 25만~35만 원 수준의 추가 생활비 재원을 안정적으로 확보할 수 있습니다. 🎯",
       details: {
-        basis: [
-          "기존 저축·투자액: 월 70만 원",
-          "변경 후 저축·투자액: 월 110만 원 (▲ +40만 원)",
-          "기대 수익률(가정): 연 4.0%",
-          "목표 금액: 3억 원 / 현재 순자산: 8,650만 원",
-          "복리 기준으로 누적 자산을 계산",
-        ],
-        comparison: [
+        summary: [
           {
-            plan: "기존 계획",
-            saving: "70만 원",
-            date: "2031년 12월",
-            reduction: "-",
+            label: "연간 절세 혜택 (세액공제)",
+            value: "약 63.3만 ~ 79.2만 원",
+            note: "소득 구간별 13.2%~16.5% 환급",
           },
           {
-            plan: "변경 계획",
-            saving: "110만 원",
-            date: "2031년 4월",
-            reduction: "✓ 약 8개월 단축",
+            label: "10년 운용 시 자산 형성",
+            value: "약 5,800만 ~ 6,200만 원",
+            note: "연 4~5% 복리 수익률 가정",
+          },
+          {
+            label: "은퇴 후 연금 수령 추정",
+            value: "월 약 25만 ~ 35만 원",
+            note: "20년 분할 수령 기준",
           },
         ],
         suggestions: [
-          "이번 달부터 저축액을 110만 2천 원으로 상향해보세요.",
-          "IRP·연금저축 등 세제 혜택이 있는 상품으로 일부 전환을 검토해보세요.",
-          "부동산 목표에 맞춰 주택청약, 전세대출 조건 등도 함께 점검해보세요.",
+          "연말정산 세액공제 한도(900만 원) 우선 활용: 기존 연금 불입액에 480만 원 추가 시 100% 공제 혜택을 누릴 수 있습니다.",
+          "담보대출 분할상환과의 조율: 아파트 담보대출(연 4%) 원금 상환을 차질 없이 유지하면서 연금 복리 효과를 함께 챙기세요.",
+          "비상예비자금 30만 원 유지: 남은 월 잉여금(32만 원)은 수시입출금 파킹통장/CMA에 비축하여 유동성을 확보하세요.",
         ],
       },
     },
@@ -1380,113 +1381,130 @@ export default function DiagnosisPage() {
 
               {/* Step 3 Two Columns */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                {/* Left Column: 현재 재무상태 요약 */}
+                {/* Left Column: 현재 재무상태 요약 & AI 추천 질문 가이드 */}
                 <div className="lg:col-span-5 space-y-4">
-                  <div className="p-5 rounded-2xl bg-white dark:bg-[#11192E] border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+                  {/* 현재 재무상태 요약 (10월 실데이터 기준) */}
+                  <div className="p-5 rounded-2xl bg-white dark:bg-[#11192E] border border-slate-200 dark:border-slate-800 shadow-sm space-y-3.5">
                     <div className="flex items-center justify-between">
-                      <h4 className="text-xs font-bold text-slate-800 dark:text-white">
-                        현재 재무상태 요약 (가상 금융정보)
+                      <h4 className="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
+                        <span>📊</span>
+                        <span>현재 재무상태 요약</span>
                       </h4>
-                      <span className="text-[10px] text-slate-400">
-                        기준: 2026.11.30
+                      <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded">
+                        2026년 10월 실적 기준
                       </span>
                     </div>
 
                     <div className="grid grid-cols-3 gap-2 text-center">
                       <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-                        <div className="text-[10px] text-slate-500">
+                        <div className="text-[10px] text-slate-500 font-medium">
                           🏠 총 자산
                         </div>
                         <div className="text-xs font-bold text-slate-800 dark:text-white mt-1">
-                          1억 2,000만원
+                          17억 2,171만
                         </div>
                       </div>
                       <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-                        <div className="text-[10px] text-slate-500">
+                        <div className="text-[10px] text-slate-500 font-medium">
                           💳 총 부채
                         </div>
                         <div className="text-xs font-bold text-slate-800 dark:text-white mt-1">
-                          3,500만원
+                          2억 5,000만
                         </div>
                       </div>
-                      <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-800">
-                        <div className="text-[10px] text-emerald-800 dark:text-emerald-300 font-semibold">
+                      <div className="p-3 rounded-xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800">
+                        <div className="text-[10px] text-blue-800 dark:text-blue-300 font-bold">
                           💰 순자산
                         </div>
-                        <div className="text-xs font-bold text-emerald-700 dark:text-emerald-300 mt-1">
-                          8,650만원
+                        <div className="text-xs font-extrabold text-blue-700 dark:text-blue-300 mt-1">
+                          14억 7,171만
                         </div>
-                        <div className="text-[8px] text-emerald-600 mt-0.5">
-                          (+1.8%)
+                        <div className="text-[9px] text-emerald-600 dark:text-emerald-400 font-semibold mt-0.5">
+                          ▲ +102만 (상환)
                         </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-1.5 text-[11px]">
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">10월 월 소득</span>
+                        <span className="font-semibold text-slate-800 dark:text-slate-200">805만 원</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">10월 월 지출</span>
+                        <span className="font-semibold text-slate-800 dark:text-slate-200">733만 원 (원리금 185만 포함)</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">10월 잉여금</span>
+                        <span className="font-bold text-emerald-600 dark:text-emerald-400">72만 원 (저축률 8.9%)</span>
                       </div>
                     </div>
                   </div>
 
-                  {/* 주요 근거 데이터 & 목표 */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="p-4 rounded-xl bg-white dark:bg-[#11192E] border border-slate-200 dark:border-slate-800 shadow-sm space-y-2">
-                      <h5 className="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
-                        <span>📊</span> 주요 근거 데이터
-                      </h5>
-                      <div className="space-y-1.5 text-[11px]">
-                        <div className="flex justify-between">
-                          <span className="text-slate-400">월 소득 (세후)</span>
-                          <span className="font-semibold">290만원</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-400">월 지출</span>
-                          <span className="font-semibold">197만원</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-400">월 저축·투자액</span>
-                          <span className="font-semibold">70만원</span>
-                        </div>
-                        <div className="flex justify-between pt-1 border-t border-slate-100 dark:border-slate-800">
-                          <span className="text-slate-400">저축률</span>
-                          <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                            34.5% (목표 30% ↑)
-                          </span>
-                        </div>
+                  {/* AI 추천 질문 카테고리 가이드 */}
+                  <div className="p-5 rounded-2xl bg-white dark:bg-[#11192E] border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
+                          <span>💡</span>
+                          <span>추천 질문 가이드</span>
+                        </h4>
+                        <p className="text-[10px] text-slate-400 mt-0.5">
+                          클릭하시면 질문 내용이 채팅창에 바로 입력돼요
+                        </p>
                       </div>
                     </div>
 
-                    <div className="p-4 rounded-xl bg-white dark:bg-[#11192E] border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3">
-                      <div className="relative w-12 h-12 flex items-center justify-center flex-shrink-0">
-                        <svg className="w-12 h-12 transform -rotate-90">
-                          <circle
-                            cx="24"
-                            cy="24"
-                            r="19"
-                            stroke="rgba(100,116,139,0.2)"
-                            strokeWidth="5"
-                            fill="transparent"
-                          />
-                          <circle
-                            cx="24"
-                            cy="24"
-                            r="19"
-                            stroke="#10B981"
-                            strokeWidth="5"
-                            strokeDasharray={2 * Math.PI * 19}
-                            strokeDashoffset={2 * Math.PI * 19 * (1 - 0.72)}
-                            strokeLinecap="round"
-                            fill="transparent"
-                          />
-                        </svg>
-                        <span className="absolute text-[11px] font-bold text-emerald-600">
-                          72%
-                        </span>
-                      </div>
-                      <div className="text-[11px]">
-                        <span className="text-xs font-bold text-slate-800 dark:text-white block">
-                          내 집 마련
-                        </span>
-                        <span className="text-slate-500 block">3억 원</span>
-                        <span className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold">
-                          2031년 12월
-                        </span>
-                      </div>
+                    <div className="space-y-2">
+                      {[
+                        {
+                          category: "대출 & 부채 전략",
+                          icon: "💳",
+                          question: "아파트 담보대출 조기 상환 vs 연금 추가 납입 중 무엇이 유리한가요?",
+                          desc: "연 4% 대출이자 절감과 연금 복리 수익 비교",
+                        },
+                        {
+                          category: "절세 & 연금 극대화",
+                          icon: "💰",
+                          question: "10월 잉여금(72만 원)으로 연말정산 세액공제를 극대화하려면?",
+                          desc: "IRP 및 연금저축 연간 900만 원 한도 활용법",
+                        },
+                        {
+                          category: "지출 최적화",
+                          icon: "📉",
+                          question: "10월에 늘어난 여가(골프·여행) 및 의료비 지출을 줄이는 실천 팁은?",
+                          desc: "가을철 변동지출 관리 및 생활비 리밸런싱",
+                        },
+                        {
+                          category: "은퇴 현금흐름",
+                          icon: "🎯",
+                          question: "은퇴 후 월 300만 원 생활비를 만들려면 연금을 어떻게 수령해야 하나요?",
+                          desc: "국민연금 개시 전 5년 소득 공백기 브릿지 대책",
+                        },
+                      ].map((item, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setInputMessage(item.question)}
+                          className="w-full text-left p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 hover:bg-blue-50 dark:hover:bg-blue-950/40 border border-slate-100 dark:border-slate-700/60 hover:border-blue-200 dark:hover:border-blue-800 transition-all group"
+                        >
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1">
+                              <span>{item.icon}</span>
+                              <span>{item.category}</span>
+                            </span>
+                            <span className="text-[10px] text-slate-400 group-hover:text-blue-600 font-medium">
+                              질문 채우기 ↵
+                            </span>
+                          </div>
+                          <div className="text-xs font-bold text-slate-800 dark:text-white group-hover:text-blue-700 dark:group-hover:text-blue-300 leading-snug">
+                            {item.question}
+                          </div>
+                          <div className="text-[10px] text-slate-400 mt-0.5">
+                            {item.desc}
+                          </div>
+                        </button>
+                      ))}
                     </div>
                   </div>
 
@@ -1495,13 +1513,13 @@ export default function DiagnosisPage() {
                     <button
                       type="button"
                       onClick={() => setCurrentStep("step2")}
-                      className="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300"
+                      className="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                     >
                       ← STEP 02로 이동
                     </button>
                     <Link
                       href="/"
-                      className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold"
+                      className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold transition-colors"
                     >
                       홈으로 돌아가기
                     </Link>
@@ -1509,7 +1527,7 @@ export default function DiagnosisPage() {
                 </div>
 
                 {/* Right Column: AI Chat Panel */}
-                <div className="lg:col-span-7 bg-white dark:bg-[#11192E] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col h-[650px] overflow-hidden">
+                <div className="lg:col-span-7 bg-white dark:bg-[#11192E] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col h-[700px] overflow-hidden">
                   {/* Chat messages scroll area */}
                   <div className="flex-1 p-5 overflow-y-auto space-y-4">
                     {messages.map((msg) => (
@@ -1524,7 +1542,7 @@ export default function DiagnosisPage() {
                             <span className="text-[10px] text-slate-400">
                               {msg.time}
                             </span>
-                            <div className="px-4 py-3 rounded-2xl rounded-tr-none bg-blue-600 text-white text-xs font-medium shadow-sm">
+                            <div className="px-4 py-3 rounded-2xl rounded-tr-none bg-blue-600 text-white text-xs font-medium shadow-sm leading-relaxed">
                               {msg.text}
                             </div>
                             <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs flex-shrink-0">
@@ -1536,10 +1554,10 @@ export default function DiagnosisPage() {
                             <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center text-white text-sm font-bold shadow-sm flex-shrink-0">
                               ✦
                             </div>
-                            <div className="space-y-3 flex-1">
+                            <div className="space-y-2.5 flex-1">
                               <div className="flex items-center gap-2">
                                 <span className="text-xs font-bold text-slate-800 dark:text-white">
-                                  Gemini
+                                  Gemini 재무주치의
                                 </span>
                                 <span className="text-[10px] text-slate-400">
                                   {msg.time}
@@ -1547,32 +1565,56 @@ export default function DiagnosisPage() {
                               </div>
 
                               <div className="p-4 rounded-2xl rounded-tl-none bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60 text-xs text-slate-800 dark:text-slate-100 space-y-3 leading-relaxed">
-                                <p className="font-semibold text-slate-900 dark:text-white">
+                                <p className="font-semibold text-slate-900 dark:text-white text-[13px]">
                                   {msg.text}
                                 </p>
 
                                 {msg.details && (
-                                  <>
-                                    {/* Split card */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                                      <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
-                                        <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                                          계산 근거 (가정)
-                                        </div>
-                                        <ul className="text-[10px] text-slate-600 dark:text-slate-400 space-y-1 list-disc pl-3">
-                                          {msg.details.basis.map((b, i) => (
-                                            <li key={i}>{b}</li>
-                                          ))}
-                                        </ul>
+                                  <div className="space-y-3 pt-1">
+                                    {/* 핵심 예상 효과 요약 카드 (너무 확정적인 고정 날짜 대신 유연한 추정 범위 안내) */}
+                                    {Array.isArray(msg.details.summary) && msg.details.summary.length > 0 && (
+                                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                                        {msg.details.summary.map((item, idx) => (
+                                          <div
+                                            key={idx}
+                                            className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xs"
+                                          >
+                                            <div className="text-[10px] text-slate-500 font-medium">
+                                              {item.label}
+                                            </div>
+                                            <div className="text-xs font-extrabold text-blue-600 dark:text-blue-400 mt-0.5">
+                                              {item.value}
+                                            </div>
+                                            {item.note && (
+                                              <div className="text-[9px] text-slate-400 mt-0.5">
+                                                {item.note}
+                                              </div>
+                                            )}
+                                          </div>
+                                        ))}
                                       </div>
+                                    )}
 
-                                      <div className="p-3 rounded-xl bg-blue-50/60 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900">
-                                        <div className="text-[11px] font-bold text-blue-900 dark:text-blue-300 mb-1.5">
-                                          시나리오 비교
+                                    {/* 기존 basis & comparison 호환 렌더링 (있는 경우) */}
+                                    {Array.isArray(msg.details.basis) && Array.isArray(msg.details.comparison) && (
+                                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                                        <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+                                          <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                                            계산 근거 (가정)
+                                          </div>
+                                          <ul className="text-[10px] text-slate-600 dark:text-slate-400 space-y-1 list-disc pl-3">
+                                            {msg.details.basis.map((b, i) => (
+                                              <li key={i}>{b}</li>
+                                            ))}
+                                          </ul>
                                         </div>
-                                        <div className="space-y-1 text-[10px]">
-                                          {msg.details.comparison.map(
-                                            (c, i) => (
+
+                                        <div className="p-3 rounded-xl bg-blue-50/60 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900">
+                                          <div className="text-[11px] font-bold text-blue-900 dark:text-blue-300 mb-1.5">
+                                            시나리오 비교
+                                          </div>
+                                          <div className="space-y-1 text-[10px]">
+                                            {msg.details.comparison.map((c, i) => (
                                               <div
                                                 key={i}
                                                 className="flex justify-between items-center py-0.5 border-b border-blue-100 dark:border-blue-900/60 last:border-none"
@@ -1587,36 +1629,37 @@ export default function DiagnosisPage() {
                                                   </span>
                                                 </span>
                                               </div>
-                                            )
-                                          )}
+                                            ))}
+                                          </div>
                                         </div>
                                       </div>
-                                    </div>
+                                    )}
 
                                     {/* 다음 행동 제안 */}
-                                    <div className="pt-2">
-                                      <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-1">
-                                        <span>💡</span> 다음 행동 제안
-                                      </div>
-                                      <div className="grid grid-cols-1 gap-1.5">
-                                        {msg.details.suggestions.map(
-                                          (s, i) => (
+                                    {Array.isArray(msg.details.suggestions) && msg.details.suggestions.length > 0 && (
+                                      <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xs space-y-2">
+                                        <div className="text-[11px] font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
+                                          <span>💡</span>
+                                          <span>다음 행동 제안</span>
+                                        </div>
+                                        <div className="space-y-1.5">
+                                          {msg.details.suggestions.map((s, i) => (
                                             <div
                                               key={i}
-                                              className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[10px] flex items-center gap-2"
+                                              className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60 text-xs flex items-start gap-2.5"
                                             >
-                                              <span className="w-4 h-4 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center font-bold text-[9px] flex-shrink-0">
+                                              <span className="w-4 h-4 rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 flex items-center justify-center font-bold text-[10px] flex-shrink-0 mt-0.5">
                                                 {i + 1}
                                               </span>
-                                              <span className="text-slate-700 dark:text-slate-300">
+                                              <span className="text-slate-700 dark:text-slate-200 leading-snug">
                                                 {s}
                                               </span>
                                             </div>
-                                          )
-                                        )}
+                                          ))}
+                                        </div>
                                       </div>
-                                    </div>
-                                  </>
+                                    )}
+                                  </div>
                                 )}
                               </div>
                             </div>
@@ -1647,16 +1690,38 @@ export default function DiagnosisPage() {
                     )}
                   </div>
 
-                  {/* Input Box */}
-                  <div className="p-3 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center gap-2">
-                    <button
-                      type="button"
-                      className="p-2 text-slate-400 hover:text-slate-600"
-                    >
-                      <span className="material-symbols-outlined text-[20px]">
-                        attach_file
+                  {/* Quick Question Chips (추천 질문 바) */}
+                  <div className="px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border-t border-slate-200/80 dark:border-slate-800">
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                        <span>✨</span> 추천 질문
                       </span>
-                    </button>
+                      <span className="text-[10px] text-slate-400">
+                        (클릭하면 입력창에 바로 입력돼요)
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-[11px]">
+                      {[
+                        "월 잉여금 72만 원, 어디에 먼저 넣어야 할까요?",
+                        "담보대출 조기 상환 vs 연금 추가 납입 중 유리한 것은?",
+                        "은퇴 후 월 300만 원 생활비를 만들려면 연금을 어떻게 수령해야 하나요?",
+                        "10월에 늘어난 변동지출(여가/의료)을 줄이는 방법은?",
+                        "연말정산 세액공제 900만 원을 채우려면 IRP에 얼마나 더 넣어야 하나요?",
+                      ].map((promptText, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setInputMessage(promptText)}
+                          className="px-3 py-1.5 rounded-full bg-white dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950/60 text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 border border-slate-200 dark:border-slate-700 text-[11px] font-medium whitespace-nowrap transition-all shadow-xs active:scale-95"
+                        >
+                          💬 {promptText}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Input Box: 파일칸 제거 & 명확한 플레이스홀더 제공 */}
+                  <div className="p-3 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center gap-2">
                     <input
                       type="text"
                       value={inputMessage}
@@ -1670,13 +1735,14 @@ export default function DiagnosisPage() {
                           ? "Gemini가 분석 답변을 작성 중입니다..."
                           : "궁금한 내용을 입력하세요. (예: 대출 상환 전략, 세금 절세 방법 등)"
                       }
-                      className="flex-1 bg-white dark:bg-slate-800 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60"
+                      className="flex-1 bg-slate-50 dark:bg-slate-800 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60"
                     />
                     <button
                       type="button"
                       onClick={handleSendMessage}
                       disabled={isAiTyping || !inputMessage.trim()}
-                      className="w-9 h-9 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white flex items-center justify-center transition-all shadow active:scale-95 flex-shrink-0 cursor-pointer disabled:cursor-not-allowed"
+                      className="w-10 h-10 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white flex items-center justify-center transition-all shadow-md active:scale-95 flex-shrink-0 cursor-pointer disabled:cursor-not-allowed"
+                      title="질문 전송"
                     >
                       <span className="material-symbols-outlined text-[18px]">
                         send
