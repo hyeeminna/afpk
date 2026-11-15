@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { useAuth } from "@/contexts/auth-context";
+import { UserProfilePopover } from "@/components/user-profile-popover";
 
 type StepType = "step1" | "step2" | "step3";
 
@@ -24,6 +26,7 @@ interface ChatMessage {
 }
 
 export default function DiagnosisPage() {
+  const { user, profile, signInWithGoogle, isLoading: isAuthLoading } = useAuth();
   const [currentStep, setCurrentStep] = useState<StepType>("step1");
   const [userConcern, setUserConcern] = useState<string>("");
 
@@ -339,20 +342,19 @@ export default function DiagnosisPage() {
           </div>
 
           {/* Right Header items: Theme toggle + Profile */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <ThemeToggle />
-            <button
-              type="button"
-              className="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white"
-            >
-              <span className="material-symbols-outlined text-[20px]">
-                notifications
-              </span>
-            </button>
-            <div className="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-200 cursor-pointer">
-              <span>홍길동님</span>
-              <span className="text-slate-400 text-[10px]">▼</span>
-            </div>
+            {user ? (
+              <UserProfilePopover />
+            ) : (
+              <button
+                type="button"
+                onClick={signInWithGoogle}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-sm cursor-pointer"
+              >
+                <span>Google 로그인</span>
+              </button>
+            )}
           </div>
         </header>
 
