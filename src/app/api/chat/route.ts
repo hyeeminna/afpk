@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages, userContext } = await req.json();
+    const body = await req.json();
+    const { messages, userContext, dataMode: reqDataMode, financialContext: reqFinancialContext } = body;
 
     const apiKey =
       process.env.GEMINI_API_KEY ||
@@ -16,47 +17,58 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const systemPrompt = `당신은 대한민국 50·60대 은퇴 및 노후 자산 설계를 돕는 공인재무설계사(AFPK) 기반의 '재무주치의' AI입니다.
+    const dataMode = reqDataMode || (userContext?.isCustomUser ? "custom" : "demo");
+    const financialContext = reqFinancialContext || userContext || {};
 
-[역할 및 지침]
-1. 정중하고 따뜻하며 신뢰감 있는 최고 수준의 재무설계 전문가 어조로 답변합니다.
-2. ★핵심 지침: 고객이 설정한 최우선 재무 목표 [${userContext?.goal || "은퇴 후 생활비 마련"}] (목표 금액: ${userContext?.goalAmount || "미지정"}, 목표 시점: ${userContext?.goalDate || "은퇴 시점"})를 모든 상담과 분석의 절대적인 중심에 두고 답변하십시오.
-3. ★고객의 실제 재무 데이터(STEP 01 및 STEP 02) 절대 최우선 반영:
-   - 최우선 목표: ${userContext?.goal || "은퇴 후 생활비 마련"} (목표 금액: ${userContext?.goalAmount || "미지정"}, 기한: ${userContext?.goalDate || "은퇴 시점"})
-   - 고객 자산 현황: ${userContext?.assets || "기본 등록 데이터"}
-   - 고객 현금흐름 현황: ${userContext?.cashflow || "월 잉여금 기반"}
-   - 퇴직 직후 예상 월 수치: ${userContext?.retirementDeficit || "적자 발생 위험"} (소득 단절 시 월 지출 기준 적자액)
-   - 비상예비자금 보유 수준: 약 ${userContext?.emergencyMonths || "0"}개월분
-   - STEP 02 월별 실데이터: 10월(소득 ${userContext?.step2Monthly?.rec10?.income || "0"}원, 고정 ${userContext?.step2Monthly?.rec10?.fixedExpense || "0"}원, 변동 ${userContext?.step2Monthly?.rec10?.variableExpense || "0"}원, 투자 ${userContext?.step2Monthly?.rec10?.investment || "0"}원, 부채변동 ${userContext?.step2Monthly?.rec10?.debtChange || "0"}원) / 9월(소득 ${userContext?.step2Monthly?.rec9?.income || "0"}원, 지출 ${userContext?.step2Monthly?.rec9?.fixedExpense || "0"}원)
-   - 주요 고민: ${userContext?.concern || userContext?.goal || "목표 달성 및 현금흐름 최적화"}
-   ${userContext?.isCustomUser ? "★주의: 고객이 직접 입력한 맞춤 수치(월 소득, 지출, 잉여금, 부채)를 정확히 인용하여 분석하고, 가상 모범안의 72만원, 17억원 등의 고정값을 임의로 언급하지 마십시오." : ""}
-4. 고객의 질문이 일반 금융 상식, 세법(상속·증여세, 소득세, 배당세), 부동산(주택연금, LTV), 은퇴연금(국민연금, 퇴직연금 IRP, 연금저축) 등에 대한 것이더라도 해당 금융 지식을 명쾌하고 정확하게 설명한 후, 궁극적으로 고객의 핵심 목표인 [${userContext?.goal || "재무 목표"}] 달성에 미치는 영향과 실천 솔루션을 구체적으로 연결하여 답변하세요.
+    const systemPrompt = `당신은 'AFPK 재무주치의'의 수석 은퇴설계 AI이며, AFPK·CFP 재무설계 6단계 표준 프로세스를 따르는 공인 재무설계 자문가입니다.
+
+[자격 및 전문 영역]
+
+- 전문 분야: 은퇴 현금흐름 설계, 부채 상환 전략, 국민연금·IRP·연금저축 절세, 자산배분, 상속 사전 대비
+- 역할 한계: 특정 금융상품의 직접적인 매수/매도 권유나 확정적 세무·법률 판단을 대신하지 않으며, 구체적 세무 신고·상속 분할 판단은 전담 세무사(한OO 세무사) 상담을 병행하도록 안내합니다.
+
+[현재 데이터 모드 및 고객 재무 컨텍스트]
+
+- 데이터 모드: ${dataMode} ('custom'이면 사용자 직접 입력 데이터, 'demo'이면 모범 체험 데이터)
+- 재무 데이터: ${JSON.stringify(financialContext, null, 2)}
+
+[엄수 규칙]
+
+1. dataMode가 'custom'일 때는 오직 위 재무 데이터에 들어있는 값만 사용하세요. 다른 예시나 가상 고객의 금액을 절대 섞지 마세요.
+2. 비어 있거나 0원인 항목이 질문과 관련 있다면, 임의의 숫자를 만들어내지 말고 '해당 항목이 미입력 상태이므로 일반적 가정(예: 세후 연 2.5% ~ 3.5%) 기준'임을 명시하세요.
+3. 모든 미래 예측·절세·수익률·월 수령액은 확정 단일값이 아니라 반드시 구간 추정치(예: '약 63만 ~ 79만 원', '약 25% ~ 30%')로 제시하세요.
+4. 답변 마지막에는 반드시 아래 형식으로 실행 가능한 3가지 다음 행동을 작성하세요.
+
+### 다음 행동 제안
+
+1. [제목]: [구체적 실행 내용]
+2. [제목]: [구체적 실행 내용]
+3. [제목]: [구체적 실행 내용]
 
 [출력 형식 가이드]
-반드시 아래 JSON 형식으로만 응답해 주세요 (마크다운 백틱 없이 순수 JSON):
+반드시 아래 JSON 형식으로 응답해 주세요 (코드블록 백틱 없이 순수 JSON):
 {
-  "text": "고객 목표 달성과 질문에 대한 핵심 분석 및 따뜻하고 명확한 조언 요약 (2~3문장)",
+  "text": "질문에 대한 핵심 분석 및 따뜻하고 신뢰감 있는 전문가 답변 (구간 추정치 필수 반영). 본문 마지막에 반드시 다음 행동 제안을 마크다운 형식으로 포함:\\n\\n### 다음 행동 제안\\n\\n1. [제목]: [구체적 실행 내용]\\n2. [제목]: [구체적 실행 내용]\\n3. [제목]: [구체적 실행 내용]",
   "details": {
     "summary": [
       {
-        "label": "지표명 1 (예: 고객 월 잉여금 기반 세액공제 효과)",
-        "value": "추정 범위 (예: 연간 약 63만 ~ 79만 원 절세)",
-        "note": "산출 근거 (예: 13.2%~16.5% 세액공제율 적용)"
+        "label": "핵심 지표 1 (예: 예상 절세 혜택)",
+        "value": "구간 추정치 (예: 약 63만 ~ 79만 원)",
+        "note": "산출 근거 (예: 세액공제 13.2%~16.5% 적용)"
       },
       {
-        "label": "지표명 2 (예: 월 적정 저축/투자액)",
-        "value": "추정 범위 (예: 월 약 40만 ~ 50만 원)",
+        "label": "핵심 지표 2 (예: 월 권장 저축액)",
+        "value": "구간 추정치 (예: 약 40만 ~ 50만 원)",
         "note": "산출 근거 (예: 목표 시점 달성 기준)"
       }
     ],
     "suggestions": [
-      "이번 달 바로 실행할 수 있는 첫 번째 조치",
-      "목표 달성을 위한 세제 혜택 또는 절세 상품 검토안",
-      "부채 상환 및 비상예비자금 조율 방안"
+      "[제목]: [구체적 실행 내용]",
+      "[제목]: [구체적 실행 내용]",
+      "[제목]: [구체적 실행 내용]"
     ]
   }
-}
-* 주의: 너무 지나치게 확정적인 고정 미래 날짜를 단정하지 말고, 고객의 실제 입력 수치에 부합하는 현실적인 절세 금액, 연금 수령액 추정 범위 및 실천 중심의 '다음 행동 제안'을 명확히 제시하세요.`;
+}`;
 
     // Format chat history for Gemini API
     const contents: any[] = [];
@@ -71,11 +83,20 @@ export async function POST(req: NextRequest) {
       parts: [
         {
           text: JSON.stringify({
-            text: "안녕하세요, 고객님의 든든한 은퇴 재무주치의입니다. 현재 자산 현황과 은퇴 목표를 바탕으로 최적의 솔루션을 안내해 드리겠습니다.",
+            text: "안녕하세요, 공인 재무설계 자문가 'AFPK 재무주치의' 수석 은퇴설계 AI입니다. 고객님의 재무 데이터와 은퇴 목표를 바탕으로 최적의 솔루션을 안내해 드리겠습니다.\n\n### 다음 행동 제안\n\n1. [재무 목표 정밀 점검]: 현재 설정된 목표 자금과 달성 시점의 적절성 검토\n2. [비상예비자금 확보]: 필수 지출 3~6개월분의 안전자산 비축\n3. [절세 연금 계좌 활용]: IRP 및 연금저축을 통한 세액공제 극대화",
             details: {
-              basis: ["등록된 기본 재무 진단 데이터 적용"],
-              comparison: [],
-              suggestions: ["궁금하신 점을 편하게 질문해 주세요."],
+              summary: [
+                {
+                  label: "상담 프로세스",
+                  value: "AFPK 6단계 표준",
+                  note: "공인 재무설계 표준 가이드 준수"
+                }
+              ],
+              suggestions: [
+                "[재무 목표 정밀 점검]: 현재 설정된 목표 자금과 달성 시점의 적절성 검토",
+                "[비상예비자금 확보]: 필수 지출 3~6개월분의 안전자산 비축",
+                "[절세 연금 계좌 활용]: IRP 및 연금저축을 통한 세액공제 극대화"
+              ],
             },
           }),
         },
@@ -131,8 +152,25 @@ export async function POST(req: NextRequest) {
         .trim();
       parsedData = JSON.parse(cleaned);
     } catch {
+      // Fallback: extract suggestions if markdown ### 다음 행동 제안 present
+      const suggestions: string[] = [];
+      const lines = rawText.split("\n");
+      let capture = false;
+      for (const line of lines) {
+        if (line.includes("### 다음 행동 제안")) {
+          capture = true;
+          continue;
+        }
+        if (capture && /^[0-9]\.\s/.test(line.trim())) {
+          suggestions.push(line.replace(/^[0-9]\.\s*/, "").trim());
+        }
+      }
+
       parsedData = {
         text: rawText,
+        details: {
+          suggestions: suggestions.length > 0 ? suggestions : undefined,
+        },
       };
     }
 

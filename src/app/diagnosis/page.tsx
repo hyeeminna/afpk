@@ -570,6 +570,40 @@ export default function DiagnosisPage() {
     setIsAiTyping(true);
 
     try {
+      const dataMode = isTemplateBlank ? "custom" : "demo";
+      const financialContext = {
+        dataMode,
+        goal: goalName || (isTemplateBlank ? "은퇴 재무목표" : "은퇴 후 월 생활비 300만원 마련"),
+        goalAmount: goalAmount ? `${goalAmount}원` : (isTemplateBlank ? "0원" : "6억 8,800만 원"),
+        goalDate: goalDate || (isTemplateBlank ? "시점 미정" : "60세 은퇴 시점"),
+        totalAsset: totalAsset ? `${totalAsset}원` : "0원",
+        totalDebt: totalDebt ? `${totalDebt}원` : "0원",
+        netWorth: `${calcNetWorth.toLocaleString()}원`,
+        monthlyIncome: monthlyIncome ? `${monthlyIncome}원` : "0원",
+        monthlyExpense: monthlyExpense ? `${monthlyExpense}원` : "0원",
+        monthlySurplus: `${calcSurplus.toLocaleString()}원`,
+        emergencyFund: emergencyFund ? `${emergencyFund}원` : "0원",
+        emergencyMonths: parsedExpense > 0 ? (parsedEmergency / parsedExpense).toFixed(1) : "0",
+        retirementDeficit: isTemplateBlank ? `-${parsedExpense.toLocaleString()}원` : "-592만 원",
+        monthlyRecords: {
+          "10월": {
+            income: `${rec10.income}원`,
+            fixedExpense: `${rec10.fixedExpense}원`,
+            variableExpense: `${rec10.variableExpense}원`,
+            investment: `${rec10.investment}원`,
+            debtChange: `${rec10.debtChange}원`,
+          },
+          "9월": {
+            income: `${rec9.income}원`,
+            fixedExpense: `${rec9.fixedExpense}원`,
+            variableExpense: `${rec9.variableExpense}원`,
+            investment: `${rec9.investment}원`,
+            debtChange: `${rec9.debtChange}원`,
+          },
+        },
+        concern: userConcern || `${goalName || "재무목표"} 달성 및 현금흐름 최적화`,
+      };
+
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -578,33 +612,9 @@ export default function DiagnosisPage() {
             sender: m.sender,
             text: m.text,
           })),
-          userContext: {
-            isCustomUser: isTemplateBlank,
-            goal: goalName || (isTemplateBlank ? "은퇴 재무목표" : "은퇴 후 월 생활비 300만원 마련"),
-            goalAmount: goalAmount ? `${goalAmount}원` : (isTemplateBlank ? "0원" : "6억 8,800만 원"),
-            goalDate: goalDate || (isTemplateBlank ? "시점 미정" : "60세 은퇴 시점"),
-            assets: `총자산: ${totalAsset || "0"}원, 총부채: ${totalDebt || "0"}원, 순자산: ${calcNetWorth.toLocaleString()}원`,
-            cashflow: `월 소득: ${monthlyIncome || "0"}원, 월 지출: ${monthlyExpense || "0"}원, 현재 월 잉여금: ${calcSurplus.toLocaleString()}원, 비상예비자금: ${emergencyFund || "0"}원`,
-            step2Monthly: {
-              rec10: {
-                income: rec10.income,
-                fixedExpense: rec10.fixedExpense,
-                variableExpense: rec10.variableExpense,
-                investment: rec10.investment,
-                debtChange: rec10.debtChange,
-              },
-              rec9: {
-                income: rec9.income,
-                fixedExpense: rec9.fixedExpense,
-                variableExpense: rec9.variableExpense,
-                investment: rec9.investment,
-                debtChange: rec9.debtChange,
-              },
-            },
-            retirementDeficit: isTemplateBlank ? `-${parsedExpense.toLocaleString()}원` : "-592만 원",
-            emergencyMonths: parsedExpense > 0 ? (parsedEmergency / parsedExpense).toFixed(1) : "0",
-            concern: userConcern || `${goalName || "재무목표"} 달성 및 현금흐름 최적화`,
-          },
+          dataMode,
+          financialContext,
+          userContext: financialContext,
         }),
       });
 
@@ -2181,9 +2191,11 @@ export default function DiagnosisPage() {
                               </div>
 
                               <div className="p-4 rounded-2xl rounded-tl-none bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60 text-xs text-slate-800 dark:text-slate-100 space-y-3 leading-relaxed">
-                                <p className="font-semibold text-slate-900 dark:text-white text-[13px]">
-                                  {msg.text}
-                                </p>
+                                <div className="font-semibold text-slate-900 dark:text-white text-[13px] whitespace-pre-line leading-relaxed">
+                                  {msg.details?.suggestions?.length
+                                    ? msg.text.split("### 다음 행동 제안")[0].trim()
+                                    : msg.text}
+                                </div>
 
                                 {msg.details && (
                                   <div className="space-y-3 pt-1">
