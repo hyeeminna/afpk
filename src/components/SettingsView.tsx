@@ -59,8 +59,20 @@ export default function SettingsView({
     setTotalDebt(editDebt);
     setMonthlyIncome(editIncome);
     setMonthlyExpense(editExpense);
-    setSyncStatus("재무 데이터가 성공적으로 저장되었습니다.");
-    setTimeout(() => setSyncStatus(null), 3000);
+    try {
+      const saved = localStorage.getItem("afpk_custom_client_data_v2") || "{}";
+      const parsed = JSON.parse(saved);
+      parsed.totalAsset = editAsset;
+      parsed.totalDebt = editDebt;
+      parsed.monthlyIncome = editIncome;
+      parsed.monthlyExpense = editExpense;
+      parsed.isTemplateBlank = isTemplateBlank;
+      localStorage.setItem("afpk_custom_client_data_v2", JSON.stringify(parsed));
+    } catch (e) {
+      console.error(e);
+    }
+    setSyncStatus("재무 데이터가 성공적으로 저장되었습니다. 시스템 전반(진단·리포트·목표)에 실시간 반영되었습니다.");
+    setTimeout(() => setSyncStatus(null), 3500);
   };
 
   const handleRefresh = () => {

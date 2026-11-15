@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth-context";
+import { evaluateFinancialGoals } from "@/lib/goalEvaluation";
 
 interface ReportViewProps {
-  onNavigateStep?: (step: "step1" | "step2" | "step3" | "financial_status" | "goals" | "report" | "settings") => void;
+  onNavigateStep?: (step: "step1" | "step2" | "step3" | "financial_status" | "goals" | "report") => void;
   onOpenTaxModal?: () => void;
   isTemplateBlank?: boolean;
   onLoadSupabaseData?: () => void;
@@ -12,6 +13,10 @@ interface ReportViewProps {
   totalDebt?: string;
   monthlyIncome?: string;
   monthlyExpense?: string;
+  emergencyFund?: string;
+  goalName?: string;
+  goalAmount?: string;
+  goalDate?: string;
 }
 
 export interface GoalItem {
@@ -21,7 +26,7 @@ export interface GoalItem {
   needed: string;
   prep: string;
   shortage: string;
-  status: "달성 가능 🟢" | "사전 합의 🟡" | "위험 경보 🔴";
+  status: "달성 가능 🟢" | "사전 합의 🟡" | "위험 경보 🔴" | "진단 대기 ⚪";
 }
 
 export interface ReportData {
@@ -244,6 +249,10 @@ export default function ReportView({
   totalDebt = "",
   monthlyIncome = "",
   monthlyExpense = "",
+  emergencyFund = "",
+  goalName = "",
+  goalAmount = "",
+  goalDate = "",
 }: ReportViewProps) {
   const { user, profile } = useAuth();
 
@@ -269,9 +278,32 @@ export default function ReportView({
   // 상위의 isTemplateBlank 변경 시 동기화
   useEffect(() => {
     if (isTemplateBlank) {
+      const evalResult = evaluateFinancialGoals({
+        isTemplateBlank: true,
+        totalAsset,
+        totalDebt,
+        monthlyIncome,
+        monthlyExpense,
+        emergencyFund,
+        goalName,
+        goalAmount,
+        goalDate,
+      });
+
+      const convertedGoals: GoalItem[] = evalResult.goals.map((g) => ({
+        rank: g.rank.split(":")[0].trim() || "-",
+        name: g.name,
+        period: g.period,
+        needed: g.needed,
+        prep: g.prep,
+        shortage: g.shortage,
+        status: g.status as any,
+      }));
+
       setReportData((prev) => ({
         ...BLANK_REPORT_DATA,
         customClientName: prev.customClientName,
+        goals: convertedGoals,
       }));
     } else {
       setReportData(DEFAULT_REPORT_DATA);
@@ -286,20 +318,41 @@ export default function ReportView({
       const parsedInc = parseInt(monthlyIncome.replace(/[^0-9]/g, ""), 10) || 0;
       const parsedExp = parseInt(monthlyExpense.replace(/[^0-9]/g, ""), 10) || 0;
 
-      if (parsedAsset > 0 || parsedDebt > 0 || parsedInc > 0 || parsedExp > 0) {
-        setReportData((prev) => ({
-          ...prev,
-          cashAmount: prev.cashAmount || Math.round(parsedAsset * 0.15),
-          investAmount: prev.investAmount || Math.round(parsedAsset * 0.15),
-          pensionAmount: prev.pensionAmount || Math.round(parsedAsset * 0.2),
-          realEstateAmount: prev.realEstateAmount || Math.round(parsedAsset * 0.5),
-          debtAmount: parsedDebt || prev.debtAmount,
-          currentIncome: parsedInc || prev.currentIncome,
-          currentExpense: parsedExp || prev.currentExpense,
-        }));
-      }
+      const evalResult = evaluateFinancialGoals({
+        isTemplateBlank: true,
+        totalAsset,
+        totalDebt,
+        monthlyIncome,
+        monthlyExpense,
+        emergencyFund,
+        goalName,
+        goalAmount,
+        goalDate,
+      });
+
+      const convertedGoals: GoalItem[] = evalResult.goals.map((g) => ({
+        rank: g.rank.split(":")[0].trim() || "-",
+        name: g.name,
+        period: g.period,
+        needed: g.needed,
+        prep: g.prep,
+        shortage: g.shortage,
+        status: g.status as any,
+      }));
+
+      setReportData((prev) => ({
+        ...prev,
+        cashAmount: prev.cashAmount || Math.round(parsedAsset * 0.15),
+        investAmount: prev.investAmount || Math.round(parsedAsset * 0.15),
+        pensionAmount: prev.pensionAmount || Math.round(parsedAsset * 0.2),
+        realEstateAmount: prev.realEstateAmount || Math.round(parsedAsset * 0.5),
+        debtAmount: parsedDebt || prev.debtAmount,
+        currentIncome: parsedInc || prev.currentIncome,
+        currentExpense: parsedExp || prev.currentExpense,
+        goals: convertedGoals,
+      }));
     }
-  }, [isTemplateBlank, totalAsset, totalDebt, monthlyIncome, monthlyExpense]);
+  }, [isTemplateBlank, totalAsset, totalDebt, monthlyIncome, monthlyExpense, emergencyFund, goalName, goalAmount, goalDate]);
 
   // 로컬 스토리지에 저장된 리포트 데이터 복원 (초기 1회)
   useEffect(() => {
@@ -645,7 +698,9 @@ export default function ReportView({
               <span className="w-1.5 h-4 bg-purple-600 rounded-sm"></span>
               <span>3. 재무목표 상세 및 순위·기한·금액 진단</span>
             </h3>
-            <span className="text-xs text-slate-400">Supabase 재무목표(순위, 기한, 금액)</span>
+            <span className="text-xs text-slate-400">
+              {isTemplateBlank ? "AFPK AI 페르소나 실시간 진단" : "Supabase 재무목표(순위, 기한, 금액)"}
+            </span>
           </div>
 
           <div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-xl">

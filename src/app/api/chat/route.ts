@@ -113,26 +113,44 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          contents,
-          generationConfig: {
-            temperature: 0.7,
-            topP: 0.95,
-          },
-        }),
-      }
-    );
+    const candidateModels = ["gemini-2.5-flash", "gemini-3.5-flash-lite", "gemini-1.5-flash"];
+    let response: Response | null = null;
+    let lastErrorText = "";
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Gemini API error:", errorText);
+    for (const modelName of candidateModels) {
+      try {
+        const res = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              contents,
+              generationConfig: {
+                temperature: 0.7,
+                topP: 0.95,
+              },
+            }),
+          }
+        );
+
+        if (res.ok) {
+          response = res;
+          break;
+        } else {
+          lastErrorText = await res.text();
+          console.warn(`Model ${modelName} returned status ${res.status}:`, lastErrorText);
+        }
+      } catch (fetchErr: any) {
+        lastErrorText = fetchErr?.message || String(fetchErr);
+        console.warn(`Model ${modelName} fetch exception:`, lastErrorText);
+      }
+    }
+
+    if (!response || !response.ok) {
+      console.error("All Gemini candidate models failed. Last error:", lastErrorText);
       return NextResponse.json(
         { error: "Gemini API 호출 중 오류가 발생했습니다." },
         { status: 500 }

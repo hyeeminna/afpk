@@ -2382,11 +2382,14 @@ export default function DiagnosisPage() {
               totalDebt={totalDebt}
               monthlyIncome={monthlyIncome}
               monthlyExpense={monthlyExpense}
+              emergencyFund={emergencyFund}
               goalName={goalName}
+              goalAmount={goalAmount}
+              goalDate={goalDate}
             />
           )}
 
-          {/* 리포트(PDF) (재무상태표, 현금흐름표, 재무목표 기반 종합 진단서) */}
+          {/* 리포트 (재무상태표, 현금흐름표, 재무목표 기반 종합 진단서) */}
           {currentStep === "report" && (
             <ReportView
               onNavigateStep={(step) => setCurrentStep(step)}
@@ -2397,6 +2400,10 @@ export default function DiagnosisPage() {
               totalDebt={totalDebt}
               monthlyIncome={monthlyIncome}
               monthlyExpense={monthlyExpense}
+              emergencyFund={emergencyFund}
+              goalName={goalName}
+              goalAmount={goalAmount}
+              goalDate={goalDate}
             />
           )}
         </main>
