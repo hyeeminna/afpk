@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuth } from "@/contexts/auth-context";
@@ -92,7 +93,17 @@ function formatKoreanCurrency(amount: number): string {
 }
 
 export default function DiagnosisPage() {
+  const router = useRouter();
   const { user, profile, signInWithGoogle, isLoading: isAuthLoading } = useAuth();
+
+  // 비로그인 사용자 진단 페이지 직접 접근 차단
+  useEffect(() => {
+    if (!isAuthLoading && !user) {
+      alert("진단 페이지는 로그인 후 이용하실 수 있습니다.\nGoogle 계정 로그인 화면으로 이동합니다.");
+      router.replace("/#login");
+    }
+  }, [user, isAuthLoading, router]);
+
   const [currentStep, setCurrentStep] = useState<StepType>("step1");
   const [userConcern, setUserConcern] = useState<string>("");
 
@@ -485,6 +496,27 @@ export default function DiagnosisPage() {
       setIsAiTyping(false);
     }
   };
+
+  if (!isAuthLoading && !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#070D1E] p-6 text-center">
+        <div className="max-w-md p-8 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl space-y-4">
+          <div className="w-14 h-14 rounded-2xl bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center mx-auto">
+            <span className="material-symbols-outlined text-[32px]">lock</span>
+          </div>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white">로그인이 필요합니다</h2>
+          <p className="text-sm text-slate-500">진단 페이지는 로그인 후 안전하게 재무계획을 저장하고 관리하실 수 있습니다.</p>
+          <button
+            type="button"
+            onClick={() => router.replace("/#login")}
+            className="w-full py-3 rounded-xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-700 transition-all cursor-pointer"
+          >
+            로그인 화면으로 이동하기
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen w-full bg-[#F4F6FB] dark:bg-[#0B1120] text-slate-800 dark:text-slate-100 overflow-hidden font-sans">

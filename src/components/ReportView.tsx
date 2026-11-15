@@ -190,7 +190,7 @@ const BLANK_REPORT_DATA: ReportData = {
 
   goals: [
     {
-      rank: "🥇 1",
+      rank: "-",
       name: "부채 상환 / 비상금 확보",
       period: "1년 내",
       needed: "0원",
@@ -199,7 +199,7 @@ const BLANK_REPORT_DATA: ReportData = {
       status: "달성 가능 🟢",
     },
     {
-      rank: "🥈 2",
+      rank: "-",
       name: "자녀 교육 / 결혼자금 지원",
       period: "2년 ~ 3년 내",
       needed: "0원",
@@ -208,7 +208,7 @@ const BLANK_REPORT_DATA: ReportData = {
       status: "달성 가능 🟢",
     },
     {
-      rank: "🥉 3",
+      rank: "-",
       name: "은퇴 생활비 마련",
       period: "은퇴 시점",
       needed: "0원",
@@ -217,7 +217,7 @@ const BLANK_REPORT_DATA: ReportData = {
       status: "위험 경보 🔴",
     },
     {
-      rank: "🏅 4",
+      rank: "-",
       name: "상속 및 증여 플랜",
       period: "5년 내",
       needed: "0원",
@@ -1163,7 +1163,7 @@ export default function ReportView({
                         className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 space-y-2"
                       >
                         <div className="flex items-center justify-between font-bold text-slate-800 dark:text-white">
-                          <span>{g.rank}순위 목표</span>
+                          <span>{g.rank && g.rank !== "-" ? `${g.rank}순위 목표` : `재무목표 ${idx + 1}`}</span>
                           <select
                             value={g.status}
                             onChange={(e) => {

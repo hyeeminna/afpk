@@ -9,8 +9,8 @@ import { UserProfilePopover } from "@/components/user-profile-popover";
 
 export interface CoreConcernItem {
   id: string;
-  rankBadge: string;
-  rankBadgeColor: string;
+  badge: string;
+  badgeColor: string;
   title: string;
   quote: string;
   solutionBrief: string;
@@ -22,8 +22,8 @@ export interface CoreConcernItem {
 export const CORE_CONCERNS: CoreConcernItem[] = [
   {
     id: "debt",
-    rankBadge: "🥇 1순위 목표",
-    rankBadgeColor: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700",
+    badge: "💳 부채 상환",
+    badgeColor: "bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300 border-blue-200 dark:border-blue-800",
     title: "은퇴 전 대출 2.5억 전액 상환",
     quote: "“퇴직 전에 남아있는 아파트 담보대출 원리금(월 185만 원) 부담을 말끔히 없애고 싶어요.”",
     solutionBrief: "현금 1억 + 퇴직금 1.5억 상환으로 월 원리금 지출 0원화",
@@ -33,8 +33,8 @@ export const CORE_CONCERNS: CoreConcernItem[] = [
   },
   {
     id: "wedding",
-    rankBadge: "🥈 2순위 목표",
-    rankBadgeColor: "bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300 border-blue-300 dark:border-blue-700",
+    badge: "💍 목돈 마련",
+    badgeColor: "bg-purple-100 text-purple-800 dark:bg-purple-950/80 dark:text-purple-300 border-purple-200 dark:border-purple-800",
     title: "자녀(장남) 결혼자금 7,000만 원 지원",
     quote: "“자녀 독립과 결혼 시점에 맞춰 7,000만 원 목돈을 노후자금 훼손 없이 안전하게 지원하고 싶어요.”",
     solutionBrief: "보유 정기예금 2억 원 중 분할 집행으로 부채 없는 자녀 지원 플랜",
@@ -44,8 +44,8 @@ export const CORE_CONCERNS: CoreConcernItem[] = [
   },
   {
     id: "living",
-    rankBadge: "🥉 3순위 목표",
-    rankBadgeColor: "bg-red-100 text-red-800 dark:bg-red-950/80 dark:text-red-300 border-red-300 dark:border-red-700",
+    badge: "🛡️ 은퇴 생활비",
+    badgeColor: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800",
     title: "은퇴 후 생활비 월 300만 원 평생 확보",
     quote: "“퇴직 후 소득 공백기(61~64세)를 버티고, 100세 종신까지 월 300만 원 생활비를 만들고 싶어요.”",
     solutionBrief: "부족액 3.2억 원을 IRP 연금수령 절세(30%) + 71세 주택연금 연계로 완벽 보장",
@@ -55,8 +55,8 @@ export const CORE_CONCERNS: CoreConcernItem[] = [
   },
   {
     id: "inheritance",
-    rankBadge: "🏅 4순위 목표",
-    rankBadgeColor: "bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border-amber-300 dark:border-amber-700",
+    badge: "🏢 상속 및 절세",
+    badgeColor: "bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border-amber-200 dark:border-amber-800",
     title: "상가주택 상속 대비 및 절세 플랜",
     quote: "“보유 상가주택 상속세(예상 7,760만 원)에 대해 사전 절세 플랜과 가족 간 합의를 마치고 싶어요.”",
     solutionBrief: "상속세 연부연납 제도 + 상가 임대수익 활용 사전 협의 및 절세 솔루션",
@@ -109,6 +109,14 @@ export default function HomePage() {
     } catch {
       // safe fallback
     }
+
+    // 비로그인 시 로그인 CTA 화면으로 이동
+    if (!user) {
+      alert("맞춤 재무설계를 시작하려면 먼저 로그인이 필요합니다.\nGoogle 계정 로그인 화면으로 이동합니다.");
+      document.getElementById("login")?.scrollIntoView({ behavior: "smooth" });
+      return;
+    }
+
     router.push("/diagnosis");
   };
 
@@ -174,8 +182,8 @@ export default function HomePage() {
                 onClick={(e) => {
                   if (!user) {
                     e.preventDefault();
-                    alert("진단 페이지는 로그인 후 이용하실 수 있습니다. Google 계정으로 시작하기로 연결합니다.");
-                    handleGoogleLogin();
+                    alert("진단 페이지는 로그인 후 이용하실 수 있습니다.\nGoogle 계정 로그인 화면으로 이동합니다.");
+                    document.getElementById("login")?.scrollIntoView({ behavior: "smooth" });
                   }
                 }}
                 className="hidden lg:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 transition-colors"
@@ -450,9 +458,9 @@ export default function HomePage() {
                     {/* Top Row: Badge & Custom Radio indicator */}
                     <div className="flex items-center justify-between">
                       <span
-                        className={`px-2.5 py-1 rounded-full text-xs font-extrabold border ${item.rankBadgeColor}`}
+                        className={`px-3 py-1 rounded-full text-xs font-bold border ${item.badgeColor}`}
                       >
-                        {item.rankBadge}
+                        {item.badge}
                       </span>
 
                       {/* Custom Radio Circle */}
@@ -653,8 +661,8 @@ export default function HomePage() {
                 onClick={(e) => {
                   if (!user) {
                     e.preventDefault();
-                    alert("진단 페이지는 로그인 후 이용하실 수 있습니다. Google 계정으로 시작하기로 연결합니다.");
-                    handleGoogleLogin();
+                    alert("진단 페이지는 로그인 후 이용하실 수 있습니다.\nGoogle 계정 로그인 화면으로 이동합니다.");
+                    document.getElementById("login")?.scrollIntoView({ behavior: "smooth" });
                   }
                 }}
                 className="hover:text-blue-600 transition-colors"
