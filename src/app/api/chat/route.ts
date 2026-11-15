@@ -6,7 +6,8 @@ export async function POST(req: NextRequest) {
 
     const apiKey =
       process.env.GEMINI_API_KEY ||
-      process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+      process.env.NEXT_PUBLIC_GEMINI_API_KEY ||
+      process.env.API_KEY;
 
     if (!apiKey) {
       return NextResponse.json(
