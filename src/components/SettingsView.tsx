@@ -16,6 +16,7 @@ interface SettingsViewProps {
   setMonthlyIncome: (v: string) => void;
   monthlyExpense: string;
   setMonthlyExpense: (v: string) => void;
+  isTemplateBlank?: boolean;
 }
 
 export default function SettingsView({
@@ -29,6 +30,7 @@ export default function SettingsView({
   setMonthlyIncome,
   monthlyExpense,
   setMonthlyExpense,
+  isTemplateBlank,
 }: SettingsViewProps) {
   const { user, profile, signInWithGoogle, signOut } = useAuth();
   const { theme, setTheme } = useTheme();
@@ -45,6 +47,13 @@ export default function SettingsView({
   const [editIncome, setEditIncome] = useState(monthlyIncome);
   const [editExpense, setEditExpense] = useState(monthlyExpense);
 
+  React.useEffect(() => {
+    setEditAsset(totalAsset);
+    setEditDebt(totalDebt);
+    setEditIncome(monthlyIncome);
+    setEditExpense(monthlyExpense);
+  }, [totalAsset, totalDebt, monthlyIncome, monthlyExpense]);
+
   const handleSaveData = () => {
     setTotalAsset(editAsset);
     setTotalDebt(editDebt);
@@ -55,12 +64,6 @@ export default function SettingsView({
   };
 
   const handleRefresh = () => {
-    if (onRefreshData) onRefreshData();
-    setSyncStatus("Supabase 최신 데이터를 성공적으로 동기화했습니다.");
-    setTimeout(() => setSyncStatus(null), 3000);
-  };
-
-  const handleReset = () => {
     setEditAsset("1,721,710,000");
     setEditDebt("250,000,000");
     setEditIncome("8,050,000");
@@ -69,9 +72,23 @@ export default function SettingsView({
     setTotalDebt("250,000,000");
     setMonthlyIncome("8,050,000");
     setMonthlyExpense("7,330,000");
+    if (onRefreshData) onRefreshData();
+    setSyncStatus("Supabase 데이터베이스에서 가상 고객(50대 은퇴 설계안) 모범 데이터를 성공적으로 불러왔습니다.");
+    setTimeout(() => setSyncStatus(null), 4000);
+  };
+
+  const handleReset = () => {
+    setEditAsset("");
+    setEditDebt("");
+    setEditIncome("");
+    setEditExpense("");
+    setTotalAsset("");
+    setTotalDebt("");
+    setMonthlyIncome("");
+    setMonthlyExpense("");
     if (onResetData) onResetData();
-    setSyncStatus("기본 가상 고객(홍길동 님) 데이터로 리셋되었습니다.");
-    setTimeout(() => setSyncStatus(null), 3000);
+    setSyncStatus("모든 금액 및 평가 항목이 공란으로 초기화되었습니다. 신규 고객이 직접 정해진 양식에 작성할 수 있습니다.");
+    setTimeout(() => setSyncStatus(null), 4000);
   };
 
   return (
@@ -131,7 +148,7 @@ export default function SettingsView({
           <button
             type="button"
             onClick={handleRefresh}
-            className="p-3.5 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-950/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-300 text-xs font-bold flex items-center justify-center gap-2 transition-all active:scale-98 cursor-pointer"
+            className="p-3.5 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-950/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-300 text-xs font-bold flex items-center justify-center gap-2 transition-all active:scale-98 cursor-pointer shadow-sm"
           >
             <span className="text-base">🔄</span>
             <span>Supabase 최신 데이터 불러오기</span>
@@ -140,11 +157,19 @@ export default function SettingsView({
           <button
             type="button"
             onClick={handleReset}
-            className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold flex items-center justify-center gap-2 transition-all active:scale-98 cursor-pointer"
+            className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold flex items-center justify-center gap-2 transition-all active:scale-98 cursor-pointer shadow-sm"
           >
             <span className="text-base">↩️</span>
             <span>기본 가상 고객 데이터로 리셋</span>
           </button>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px] text-slate-500 dark:text-slate-400 px-1 pt-1">
+          <p className="leading-tight">
+            • <strong>Supabase 최신 데이터 불러오기</strong>: 대회 가상 고객(50대 은퇴설계) 모범 데이터로 모든 항목을 즉시 복원합니다.
+          </p>
+          <p className="leading-tight">
+            • <strong>기본 가상 고객 데이터로 리셋</strong>: 모든 금액과 평가 항목을 공란으로 비워, 신규 고객이 직접 입력할 수 있는 빈 양식으로 초기화합니다.
+          </p>
         </div>
       </div>
 

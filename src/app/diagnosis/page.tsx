@@ -106,7 +106,7 @@ export default function DiagnosisPage() {
   const [goalAmount, setGoalAmount] = useState("");
   const [goalDate, setGoalDate] = useState("");
 
-  // 세무사 상담 모달 상태 (한영호 세무사 카카오톡 QR)
+  // 세무사 상담 모달 상태 (한OO 세무사 카카오톡 QR)
   const [showTaxModal, setShowTaxModal] = useState(false);
   const [copiedKakaoId, setCopiedKakaoId] = useState(false);
 
@@ -163,6 +163,88 @@ export default function DiagnosisPage() {
   };
 
   const [selectedMonth, setSelectedMonth] = useState<"2026-09" | "2026-10">("2026-10");
+
+  // 공란 양식 모드 여부 (true: 신규 고객 작성용 공란, false: Supabase 가상 고객 데이터 모드)
+  const [isTemplateBlank, setIsTemplateBlank] = useState(false);
+
+  // 대회 가상 고객 모범 데이터 (Supabase 저장 데이터 원본)
+  const DEFAULT_SUPABASE_DATA = {
+    totalAsset: "1,721,710,000",
+    totalDebt: "250,000,000",
+    monthlyIncome: "8,050,000",
+    monthlyExpense: "7,330,000",
+    emergencyFund: "22,000,000",
+    goalName: "은퇴 후 생활비 마련",
+    goalAmount: "688,000,000",
+    goalDate: "60세 은퇴 시점",
+    userConcern: "은퇴 후 월 생활비 300만원 마련",
+    monthlyRecords: {
+      "2026-10": {
+        income: "8,050,000",
+        fixedExpense: "2,850,000",
+        variableExpense: "4,150,000",
+        investment: "330,000",
+        assetChange: "0",
+        debtChange: "-1,016,667",
+      },
+      "2026-09": {
+        income: "8,040,000",
+        fixedExpense: "2,820,000",
+        variableExpense: "3,850,000",
+        investment: "330,000",
+        assetChange: "0",
+        debtChange: "-1,016,667",
+      },
+    },
+  };
+
+  // 1. Supabase 데이터 불러오기 (지금의 완성 화면 복원)
+  const handleLoadSupabaseData = () => {
+    setTotalAsset(DEFAULT_SUPABASE_DATA.totalAsset);
+    setTotalDebt(DEFAULT_SUPABASE_DATA.totalDebt);
+    setMonthlyIncome(DEFAULT_SUPABASE_DATA.monthlyIncome);
+    setMonthlyExpense(DEFAULT_SUPABASE_DATA.monthlyExpense);
+    setEmergencyFund(DEFAULT_SUPABASE_DATA.emergencyFund);
+    setGoalName(DEFAULT_SUPABASE_DATA.goalName);
+    setGoalAmount(DEFAULT_SUPABASE_DATA.goalAmount);
+    setGoalDate(DEFAULT_SUPABASE_DATA.goalDate);
+    setUserConcern(DEFAULT_SUPABASE_DATA.userConcern);
+    setMonthlyRecords(DEFAULT_SUPABASE_DATA.monthlyRecords);
+    setIsTemplateBlank(false);
+  };
+
+  // 2. 모든 항목 공란으로 초기화 (위 사진의 버튼 클릭 시 실행: 신규 고객 작성용)
+  const handleResetToBlank = () => {
+    setTotalAsset("");
+    setTotalDebt("");
+    setMonthlyIncome("");
+    setMonthlyExpense("");
+    setEmergencyFund("");
+    setGoalName("");
+    setGoalAmount("");
+    setGoalDate("");
+    setUserConcern("");
+    setMonthlyRecords({
+      "2026-10": {
+        income: "",
+        fixedExpense: "",
+        variableExpense: "",
+        investment: "",
+        assetChange: "",
+        debtChange: "",
+      },
+      "2026-09": {
+        income: "",
+        fixedExpense: "",
+        variableExpense: "",
+        investment: "",
+        assetChange: "",
+        debtChange: "",
+      },
+    });
+    setIsTemplateBlank(true);
+  };
+
   const [monthlyRecords, setMonthlyRecords] = useState({
     "2026-10": {
       income: "8,050,000",
@@ -546,20 +628,51 @@ export default function DiagnosisPage() {
       {/* Main Container */}
       <div className="flex-1 flex flex-col h-full overflow-y-auto">
         {/* Top Header */}
-        <header className="h-16 px-6 bg-white dark:bg-[#11192E] border-b border-slate-200 dark:border-slate-800 flex items-center justify-between flex-shrink-0 z-10">
-          {/* Breadcrumb */}
-          <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
-            <span>재무설계</span>
-            <span className="text-slate-400">›</span>
-            <span className="text-slate-800 dark:text-white font-bold">
-              {currentStep === "step1" && "STEP 01 설계안 등록"}
-              {currentStep === "step2" && "STEP 02 월별 변동 입력"}
-              {currentStep === "step3" && "STEP 03 Gemini AI 재무상담"}
-              {currentStep === "financial_status" && "내 재무현황 (재무상태표 & 현금흐름표)"}
-              {currentStep === "goals" && "재무목표 관리 (4대 목표 진단 & 솔루션)"}
-              {currentStep === "report" && "공인 은퇴설계 종합 진단 리포트"}
-              {currentStep === "settings" && "환경설정 및 데이터 관리"}
-            </span>
+        <header className="h-16 px-6 bg-white dark:bg-[#11192E] border-b border-slate-200 dark:border-slate-800 flex items-center justify-between flex-shrink-0 z-10 gap-3">
+          {/* Breadcrumb + Mode Status Switcher */}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
+              <span>재무설계</span>
+              <span className="text-slate-400">›</span>
+              <span className="text-slate-800 dark:text-white font-bold">
+                {currentStep === "step1" && "STEP 01 설계안 등록"}
+                {currentStep === "step2" && "STEP 02 월별 변동 입력"}
+                {currentStep === "step3" && "STEP 03 Gemini AI 재무상담"}
+                {currentStep === "financial_status" && "내 재무현황 (재무상태표 & 현금흐름표)"}
+                {currentStep === "goals" && "재무목표 관리 (4대 목표 진단 & 솔루션)"}
+                {currentStep === "report" && "공인 은퇴설계 종합 진단 리포트"}
+                {currentStep === "settings" && "환경설정 및 데이터 관리"}
+              </span>
+            </div>
+
+            {/* Quick Mode Status & Switcher */}
+            <div className="hidden md:flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-700">
+              {isTemplateBlank ? (
+                <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700 px-2.5 py-1 rounded-full text-[11px] font-bold text-amber-800 dark:text-amber-200">
+                  <span>📝 신규 고객 작성 모드 (공란)</span>
+                  <button
+                    type="button"
+                    onClick={handleLoadSupabaseData}
+                    className="px-2 py-0.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold transition-all shadow-xs cursor-pointer"
+                    title="대회 가상 고객 모범 데이터로 복원"
+                  >
+                    🔄 Supabase 데이터 불러오기
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 px-2.5 py-1 rounded-full text-[11px] font-bold text-blue-700 dark:text-blue-300">
+                  <span>✦ Supabase 가상 고객 데이터 모드</span>
+                  <button
+                    type="button"
+                    onClick={handleResetToBlank}
+                    className="px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 text-[10px] font-bold transition-all shadow-xs cursor-pointer"
+                    title="모든 항목을 공란으로 비워 신규 고객 양식으로 전환"
+                  >
+                    ↩️ 공란 양식으로 리셋
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Right Header items: Theme toggle + Profile */}
@@ -599,6 +712,30 @@ export default function DiagnosisPage() {
                   </p>
                 </div>
               </div>
+
+              {/* Blank Mode Guidance Banner */}
+              {isTemplateBlank && (
+                <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700 text-slate-800 dark:text-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs animate-fadeIn">
+                  <div className="flex items-center gap-2.5 text-xs">
+                    <span className="text-xl">📝</span>
+                    <div>
+                      <span className="font-bold text-amber-900 dark:text-amber-200">
+                        신규 고객 직접 입력 양식:{" "}
+                      </span>
+                      <span className="text-slate-600 dark:text-slate-300">
+                        모든 항목이 공란으로 준비되었습니다. 고객의 실제 자산, 부채, 소득, 지출을 입력하시면 실시간 맞춤 재무설계안이 완성됩니다.
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleLoadSupabaseData}
+                    className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex-shrink-0 transition-all cursor-pointer whitespace-nowrap shadow-xs"
+                  >
+                    🔄 Supabase 데이터 불러오기
+                  </button>
+                </div>
+              )}
 
               {/* Concern-based guidance banner */}
               {userConcern && (
@@ -2011,6 +2148,12 @@ export default function DiagnosisPage() {
             <FinancialStatusView
               onNavigateStep={(step) => setCurrentStep(step)}
               onOpenTaxModal={() => setShowTaxModal(true)}
+              isTemplateBlank={isTemplateBlank}
+              onLoadSupabaseData={handleLoadSupabaseData}
+              totalAsset={totalAsset}
+              totalDebt={totalDebt}
+              monthlyIncome={monthlyIncome}
+              monthlyExpense={monthlyExpense}
             />
           )}
 
@@ -2019,6 +2162,13 @@ export default function DiagnosisPage() {
             <GoalsView
               onNavigateStep={(step) => setCurrentStep(step)}
               onOpenTaxModal={() => setShowTaxModal(true)}
+              isTemplateBlank={isTemplateBlank}
+              onLoadSupabaseData={handleLoadSupabaseData}
+              totalAsset={totalAsset}
+              totalDebt={totalDebt}
+              monthlyIncome={monthlyIncome}
+              monthlyExpense={monthlyExpense}
+              goalName={goalName}
             />
           )}
 
@@ -2027,6 +2177,12 @@ export default function DiagnosisPage() {
             <ReportView
               onNavigateStep={(step) => setCurrentStep(step)}
               onOpenTaxModal={() => setShowTaxModal(true)}
+              isTemplateBlank={isTemplateBlank}
+              onLoadSupabaseData={handleLoadSupabaseData}
+              totalAsset={totalAsset}
+              totalDebt={totalDebt}
+              monthlyIncome={monthlyIncome}
+              monthlyExpense={monthlyExpense}
             />
           )}
 
@@ -2041,18 +2197,15 @@ export default function DiagnosisPage() {
               setMonthlyIncome={setMonthlyIncome}
               monthlyExpense={monthlyExpense}
               setMonthlyExpense={setMonthlyExpense}
-              onRefreshData={() => {
-                alert("Supabase 최신 데이터를 성공적으로 동기화했습니다.");
-              }}
-              onResetData={() => {
-                alert("가상 고객 기본 데이터로 리셋되었습니다.");
-              }}
+              isTemplateBlank={isTemplateBlank}
+              onRefreshData={handleLoadSupabaseData}
+              onResetData={handleResetToBlank}
             />
           )}
         </main>
       </div>
 
-      {/* 한영호 세무사 카카오톡 QR 상담 모달 (Image 2 기반) */}
+      {/* 한OO 세무사 카카오톡 QR 상담 모달 (Image 2 기반) */}
       {showTaxModal && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fadeIn"
@@ -2065,7 +2218,7 @@ export default function DiagnosisPage() {
             {/* Header: Title & Close Button */}
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-base font-bold text-white tracking-tight">
-                한영호 세무사
+                한OO 세무사
               </h3>
               <button
                 type="button"
@@ -2083,7 +2236,7 @@ export default function DiagnosisPage() {
             <div className="bg-white rounded-2xl p-3 my-4 flex items-center justify-center shadow-md">
               <img
                 src="/images/tax_qr.png"
-                alt="한영호 세무사 카카오톡 QR코드"
+                alt="한OO 세무사 카카오톡 QR코드"
                 className="w-48 h-48 object-contain rounded-lg"
               />
             </div>
@@ -2107,7 +2260,7 @@ export default function DiagnosisPage() {
               onClick={handleCopyKakaoId}
               className="w-full text-center text-[11px] text-slate-400 hover:text-white mt-3 py-1 transition-colors cursor-pointer"
             >
-              {copiedKakaoId ? "✓ 카카오톡 ID(hyh1908) 복사 완료!" : "카카오톡 ID 복사"}
+              {copiedKakaoId ? "✓ 세무사 카카오톡 ID 복사 완료!" : "카카오톡 ID 복사"}
             </button>
           </div>
         </div>

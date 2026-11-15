@@ -5,13 +5,45 @@ import React, { useState } from "react";
 interface FinancialStatusViewProps {
   onNavigateStep?: (step: "step1" | "step2" | "step3" | "financial_status") => void;
   onOpenTaxModal?: () => void;
+  isTemplateBlank?: boolean;
+  onLoadSupabaseData?: () => void;
+  totalAsset?: string;
+  totalDebt?: string;
+  monthlyIncome?: string;
+  monthlyExpense?: string;
 }
 
 export default function FinancialStatusView({
   onNavigateStep,
   onOpenTaxModal,
+  isTemplateBlank = false,
+  onLoadSupabaseData,
+  totalAsset = "",
+  totalDebt = "",
+  monthlyIncome = "",
+  monthlyExpense = "",
 }: FinancialStatusViewProps) {
   const [activeTab, setActiveTab] = useState<"balance" | "cashflow" | "diagnosis">("balance");
+
+  const cleanAsset = totalAsset ? parseInt(totalAsset.replace(/[^0-9]/g, ""), 10) || 0 : 0;
+  const cleanDebt = totalDebt ? parseInt(totalDebt.replace(/[^0-9]/g, ""), 10) || 0 : 0;
+  const cleanNetWorth = cleanAsset - cleanDebt;
+  const cleanIncome = monthlyIncome ? parseInt(monthlyIncome.replace(/[^0-9]/g, ""), 10) || 0 : 0;
+  const cleanExpense = monthlyExpense ? parseInt(monthlyExpense.replace(/[^0-9]/g, ""), 10) || 0 : 0;
+  const cleanSurplus = cleanIncome - cleanExpense;
+
+  const displayAsset = isTemplateBlank
+    ? (cleanAsset > 0 ? `${(cleanAsset / 100000000).toFixed(1)}억 원` : "0원 (입력 대기)")
+    : "17억 2,171만 원";
+  const displayDebt = isTemplateBlank
+    ? (cleanDebt > 0 ? `${(cleanDebt / 100000000).toFixed(1)}억 원` : "0원 (입력 대기)")
+    : "2억 5,000만 원";
+  const displayNetWorth = isTemplateBlank
+    ? (cleanNetWorth !== 0 ? `${(cleanNetWorth / 100000000).toFixed(1)}억 원` : "0원 (입력 대기)")
+    : "14억 7,171만 원";
+  const displaySurplus = isTemplateBlank
+    ? (cleanSurplus !== 0 ? `${(cleanSurplus / 10000).toFixed(0)}만 원` : "0원 (입력 대기)")
+    : "+72만 원";
 
   return (
     <div className="space-y-6 animate-fadeIn pb-12">
@@ -55,6 +87,32 @@ export default function FinancialStatusView({
         </div>
       </div>
 
+      {/* Blank Mode Guidance Banner */}
+      {isTemplateBlank && (
+        <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700 text-slate-800 dark:text-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs animate-fadeIn">
+          <div className="flex items-center gap-2.5 text-xs">
+            <span className="text-xl">📝</span>
+            <div>
+              <span className="font-bold text-amber-900 dark:text-amber-200">
+                신규 고객 상담용 양식 모드 (모든 항목 공란 초기화):{" "}
+              </span>
+              <span className="text-slate-600 dark:text-slate-300">
+                고객이 직접 정해진 양식(STEP 01, STEP 02)에 숫자를 입력하면, 해당 실시간 입력값을 바탕으로 재무상태표 및 현금흐름표가 자동 생성됩니다.
+              </span>
+            </div>
+          </div>
+          {onLoadSupabaseData && (
+            <button
+              type="button"
+              onClick={onLoadSupabaseData}
+              className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex-shrink-0 transition-all cursor-pointer whitespace-nowrap shadow-xs"
+            >
+              🔄 Supabase 데이터 불러오기
+            </button>
+          )}
+        </div>
+      )}
+
       {/* 2. Top Executive KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         {/* 총 자산 */}
@@ -64,10 +122,10 @@ export default function FinancialStatusView({
             <span>총 자산</span>
           </div>
           <div className="text-lg font-extrabold text-slate-800 dark:text-white mt-1">
-            17억 2,171만 원
+            {displayAsset}
           </div>
           <div className="text-[10px] text-blue-600 dark:text-blue-400 mt-1 font-semibold">
-            부동산 58% • 은퇴 28%
+            {isTemplateBlank ? "고객 입력 기준" : "부동산 58% • 은퇴 28%"}
           </div>
         </div>
 
@@ -78,10 +136,10 @@ export default function FinancialStatusView({
             <span>총 부채</span>
           </div>
           <div className="text-lg font-extrabold text-slate-800 dark:text-white mt-1">
-            2억 5,000만 원
+            {displayDebt}
           </div>
           <div className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-1 font-semibold">
-            담보대출 (LTV 25%)
+            {isTemplateBlank ? "고객 입력 기준" : "담보대출 (LTV 25%)"}
           </div>
         </div>
 
@@ -92,10 +150,10 @@ export default function FinancialStatusView({
             <span>순자산 (Net Worth)</span>
           </div>
           <div className="text-lg font-extrabold text-blue-600 dark:text-blue-400 mt-1">
-            14억 7,171만 원
+            {displayNetWorth}
           </div>
           <div className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-1 font-semibold">
-            부채비율 14.5% (안전)
+            {isTemplateBlank ? "자산 - 부채 실시간" : "부채비율 14.5% (안전)"}
           </div>
         </div>
 
@@ -106,10 +164,10 @@ export default function FinancialStatusView({
             <span>현재 월 잉여금</span>
           </div>
           <div className="text-lg font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">
-            +72만 원
+            {displaySurplus}
           </div>
           <div className="text-[10px] text-slate-400 mt-1">
-            수입 805만 / 지출 733만
+            {isTemplateBlank ? "월 소득 - 월 지출" : "수입 805만 / 지출 733만"}
           </div>
         </div>
 
@@ -899,7 +957,7 @@ export default function FinancialStatusView({
             onClick={onOpenTaxModal}
             className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-900 text-xs font-bold shadow-sm transition-all active:scale-95 flex-1 sm:flex-initial"
           >
-            🏛️ 한영호 세무사 1:1 상담 (QR)
+            🏛️ 한OO 세무사 1:1 상담 (QR)
           </button>
           <button
             type="button"

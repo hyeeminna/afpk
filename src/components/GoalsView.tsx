@@ -5,11 +5,25 @@ import React, { useState } from "react";
 interface GoalsViewProps {
   onNavigateStep?: (step: "step1" | "step2" | "step3" | "financial_status" | "goals" | "report" | "settings") => void;
   onOpenTaxModal?: () => void;
+  isTemplateBlank?: boolean;
+  onLoadSupabaseData?: () => void;
+  totalAsset?: string;
+  totalDebt?: string;
+  monthlyIncome?: string;
+  monthlyExpense?: string;
+  goalName?: string;
 }
 
 export default function GoalsView({
   onNavigateStep,
   onOpenTaxModal,
+  isTemplateBlank = false,
+  onLoadSupabaseData,
+  totalAsset = "",
+  totalDebt = "",
+  monthlyIncome = "",
+  monthlyExpense = "",
+  goalName = "",
 }: GoalsViewProps) {
   // 고객 실천사항 체크리스트 상태
   const [checklist, setChecklist] = useState({
@@ -66,6 +80,32 @@ export default function GoalsView({
           )}
         </div>
       </div>
+
+      {/* Blank Mode Guidance Banner */}
+      {isTemplateBlank && (
+        <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700 text-slate-800 dark:text-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs animate-fadeIn">
+          <div className="flex items-center gap-2.5 text-xs">
+            <span className="text-xl">📝</span>
+            <div>
+              <span className="font-bold text-amber-900 dark:text-amber-200">
+                신규 고객 재무목표 설계 모드 (공란 초기화 상태):{" "}
+              </span>
+              <span className="text-slate-600 dark:text-slate-300">
+                고객이 STEP 01에서 희망 재무목표{goalName ? `('${goalName}')` : ""}와 자산·부채 정보를 입력하면, 4대 목표 달성 타임라인(신호등 카드)과 AFPK 솔루션이 자동 연동됩니다.
+              </span>
+            </div>
+          </div>
+          {onLoadSupabaseData && (
+            <button
+              type="button"
+              onClick={onLoadSupabaseData}
+              className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex-shrink-0 transition-all cursor-pointer whitespace-nowrap shadow-xs"
+            >
+              🔄 Supabase 데이터 불러오기
+            </button>
+          )}
+        </div>
+      )}
 
       {/* 2. 4대 재무목표 타임라인 & 신호등 카드 (요청 명세 정확 반영) */}
       <div className="space-y-4">

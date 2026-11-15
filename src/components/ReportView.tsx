@@ -6,11 +6,23 @@ import { useAuth } from "@/contexts/auth-context";
 interface ReportViewProps {
   onNavigateStep?: (step: "step1" | "step2" | "step3" | "financial_status" | "goals" | "report" | "settings") => void;
   onOpenTaxModal?: () => void;
+  isTemplateBlank?: boolean;
+  onLoadSupabaseData?: () => void;
+  totalAsset?: string;
+  totalDebt?: string;
+  monthlyIncome?: string;
+  monthlyExpense?: string;
 }
 
 export default function ReportView({
   onNavigateStep,
   onOpenTaxModal,
+  isTemplateBlank = false,
+  onLoadSupabaseData,
+  totalAsset = "",
+  totalDebt = "",
+  monthlyIncome = "",
+  monthlyExpense = "",
 }: ReportViewProps) {
   const { user, profile } = useAuth();
 
@@ -57,6 +69,32 @@ export default function ReportView({
           </button>
         </div>
       </div>
+
+      {/* Blank Mode Guidance Banner */}
+      {isTemplateBlank && (
+        <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700 text-slate-800 dark:text-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs animate-fadeIn max-w-4xl mx-auto">
+          <div className="flex items-center gap-2.5 text-xs">
+            <span className="text-xl">📝</span>
+            <div>
+              <span className="font-bold text-amber-900 dark:text-amber-200">
+                신규 고객 공인 리포트 작성 모드:{" "}
+              </span>
+              <span className="text-slate-600 dark:text-slate-300">
+                고객이 직접 정해진 양식에 입력한 재무 데이터에 따라 종합 진단 리포트가 실시간으로 편성됩니다.
+              </span>
+            </div>
+          </div>
+          {onLoadSupabaseData && (
+            <button
+              type="button"
+              onClick={onLoadSupabaseData}
+              className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex-shrink-0 transition-all cursor-pointer whitespace-nowrap shadow-xs"
+            >
+              🔄 Supabase 데이터 불러오기
+            </button>
+          )}
+        </div>
+      )}
 
       {/* 2. Official Report Document Container (Paper style) */}
       <div className="bg-white dark:bg-[#11192E] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-md p-6 sm:p-10 space-y-8 max-w-4xl mx-auto">
