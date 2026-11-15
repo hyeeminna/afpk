@@ -9,7 +9,6 @@ import { UserProfilePopover } from "@/components/user-profile-popover";
 import FinancialStatusView from "@/components/FinancialStatusView";
 import GoalsView from "@/components/GoalsView";
 import ReportView from "@/components/ReportView";
-import SettingsView from "@/components/SettingsView";
 
 type StepType =
   | "step1"
@@ -17,8 +16,7 @@ type StepType =
   | "step3"
   | "financial_status"
   | "goals"
-  | "report"
-  | "settings";
+  | "report";
 
 interface ChatMessage {
   id: string;
@@ -209,6 +207,107 @@ export default function DiagnosisPage() {
     },
   };
 
+  // 로컬 스토리지 키 및 저장 함수
+  const STORAGE_KEY = "afpk_custom_client_data_v2";
+  const USER_PERSISTENT_KEY = "afpk_user_typed_data_persistent_v3";
+
+  // 사용자가 직접 입력한 재무 데이터 실시간 자동 저장
+  const saveUserCustomData = (field: string, value: any) => {
+    try {
+      const existing = localStorage.getItem(USER_PERSISTENT_KEY);
+      const data = existing ? JSON.parse(existing) : {
+        totalAsset,
+        totalDebt,
+        monthlyIncome,
+        monthlyExpense,
+        emergencyFund,
+        goalName,
+        goalAmount,
+        goalDate,
+        monthlyRecords,
+      };
+      data[field] = value;
+      data.hasUserData = true;
+      localStorage.setItem(USER_PERSISTENT_KEY, JSON.stringify(data));
+    } catch (e) {
+      console.error("Failed to save user custom data", e);
+    }
+  };
+
+  const saveCurrentDataToStorage = (overrides?: any) => {
+    try {
+      const payload = {
+        isTemplateBlank,
+        totalAsset,
+        totalDebt,
+        monthlyIncome,
+        monthlyExpense,
+        emergencyFund,
+        goalName,
+        goalAmount,
+        goalDate,
+        userConcern,
+        monthlyRecords,
+        ...overrides,
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    } catch (e) {
+      console.error("Failed to save to localStorage", e);
+    }
+  };
+
+  // 내가 직접 작성했던 재무 데이터 즉시 불러오기 (언제든 복원)
+  const handleRestoreUserCustomData = () => {
+    try {
+      const userSaved = localStorage.getItem(USER_PERSISTENT_KEY);
+      if (userSaved) {
+        const data = JSON.parse(userSaved);
+        if (data.totalAsset !== undefined) setTotalAsset(data.totalAsset);
+        if (data.totalDebt !== undefined) setTotalDebt(data.totalDebt);
+        if (data.monthlyIncome !== undefined) setMonthlyIncome(data.monthlyIncome);
+        if (data.monthlyExpense !== undefined) setMonthlyExpense(data.monthlyExpense);
+        if (data.emergencyFund !== undefined) setEmergencyFund(data.emergencyFund);
+        if (data.goalName !== undefined) setGoalName(data.goalName);
+        if (data.goalAmount !== undefined) setGoalAmount(data.goalAmount);
+        if (data.goalDate !== undefined) setGoalDate(data.goalDate);
+        if (data.monthlyRecords !== undefined) setMonthlyRecords(data.monthlyRecords);
+        setIsTemplateBlank(true);
+        saveCurrentDataToStorage({
+          isTemplateBlank: true,
+          ...data,
+        });
+        alert("고객님께서 직접 입력하셨던 재무 데이터로 성공적으로 복원되었습니다.");
+        return;
+      }
+    } catch (e) {
+      console.error("Failed to restore user custom data", e);
+    }
+    alert("이전에 직접 작성하여 저장된 재무 데이터가 없습니다. 현재 양식에 숫자를 입력하시면 실시간으로 안전하게 자동 보존됩니다.");
+  };
+
+  // 컴포넌트 마운트 시 저장된 데이터 복원 (초기 1회)
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const data = JSON.parse(saved);
+        if (typeof data.isTemplateBlank === "boolean") setIsTemplateBlank(data.isTemplateBlank);
+        if (data.totalAsset !== undefined) setTotalAsset(data.totalAsset);
+        if (data.totalDebt !== undefined) setTotalDebt(data.totalDebt);
+        if (data.monthlyIncome !== undefined) setMonthlyIncome(data.monthlyIncome);
+        if (data.monthlyExpense !== undefined) setMonthlyExpense(data.monthlyExpense);
+        if (data.emergencyFund !== undefined) setEmergencyFund(data.emergencyFund);
+        if (data.goalName !== undefined) setGoalName(data.goalName);
+        if (data.goalAmount !== undefined) setGoalAmount(data.goalAmount);
+        if (data.goalDate !== undefined) setGoalDate(data.goalDate);
+        if (data.userConcern !== undefined) setUserConcern(data.userConcern);
+        if (data.monthlyRecords !== undefined) setMonthlyRecords(data.monthlyRecords);
+      }
+    } catch (e) {
+      console.error("Failed to load saved data from localStorage", e);
+    }
+  }, []);
+
   // 1. Supabase 데이터 불러오기 (지금의 완성 화면 복원)
   const handleLoadSupabaseData = () => {
     setTotalAsset(DEFAULT_SUPABASE_DATA.totalAsset);
@@ -222,20 +321,15 @@ export default function DiagnosisPage() {
     setUserConcern(DEFAULT_SUPABASE_DATA.userConcern);
     setMonthlyRecords(DEFAULT_SUPABASE_DATA.monthlyRecords);
     setIsTemplateBlank(false);
+    saveCurrentDataToStorage({
+      isTemplateBlank: false,
+      ...DEFAULT_SUPABASE_DATA,
+    });
   };
 
   // 2. 모든 항목 공란으로 초기화 (위 사진의 버튼 클릭 시 실행: 신규 고객 작성용)
   const handleResetToBlank = () => {
-    setTotalAsset("");
-    setTotalDebt("");
-    setMonthlyIncome("");
-    setMonthlyExpense("");
-    setEmergencyFund("");
-    setGoalName("");
-    setGoalAmount("");
-    setGoalDate("");
-    setUserConcern("");
-    setMonthlyRecords({
+    const blankRecords = {
       "2026-10": {
         income: "",
         fixedExpense: "",
@@ -252,8 +346,31 @@ export default function DiagnosisPage() {
         assetChange: "",
         debtChange: "",
       },
-    });
+    };
+    setTotalAsset("");
+    setTotalDebt("");
+    setMonthlyIncome("");
+    setMonthlyExpense("");
+    setEmergencyFund("");
+    setGoalName("");
+    setGoalAmount("");
+    setGoalDate("");
+    setUserConcern("");
+    setMonthlyRecords(blankRecords);
     setIsTemplateBlank(true);
+    saveCurrentDataToStorage({
+      isTemplateBlank: true,
+      totalAsset: "",
+      totalDebt: "",
+      monthlyIncome: "",
+      monthlyExpense: "",
+      emergencyFund: "",
+      goalName: "",
+      goalAmount: "",
+      goalDate: "",
+      userConcern: "",
+      monthlyRecords: blankRecords,
+    });
   };
 
   const [monthlyRecords, setMonthlyRecords] = useState({
@@ -279,13 +396,17 @@ export default function DiagnosisPage() {
     field: "income" | "fixedExpense" | "variableExpense" | "investment" | "assetChange" | "debtChange",
     value: string
   ) => {
-    setMonthlyRecords((prev) => ({
-      ...prev,
-      [selectedMonth]: {
-        ...prev[selectedMonth],
-        [field]: value,
-      },
-    }));
+    setMonthlyRecords((prev) => {
+      const nextRecords = {
+        ...prev,
+        [selectedMonth]: {
+          ...prev[selectedMonth],
+          [field]: value,
+        },
+      };
+      saveUserCustomData("monthlyRecords", nextRecords);
+      return nextRecords;
+    });
   };
 
   const handleSelectMonth = (month: "2026-09" | "2026-10") => {
@@ -457,9 +578,12 @@ export default function DiagnosisPage() {
             text: m.text,
           })),
           userContext: {
-            assets: `총자산: ${totalAsset}원, 총부채: ${totalDebt}원, 월소득: ${monthlyIncome}원, 월지출: ${monthlyExpense}원, 비상자금: ${emergencyFund}원`,
-            goal: `목표: ${goalName} (${goalAmount}원, 목표시점: ${goalDate})`,
-            concern: userConcern || "은퇴 후 생활비 및 연금 절세 전략",
+            goal: goalName || "은퇴 후 안정적 노후 생활비 마련",
+            goalAmount: goalAmount ? `${goalAmount}원` : "미지정",
+            goalDate: goalDate || "은퇴 시점",
+            assets: `총자산: ${totalAsset}원, 총부채: ${totalDebt}원, 순자산: ${calcNetWorth}원`,
+            cashflow: `월소득: ${monthlyIncome}원, 월지출: ${monthlyExpense}원, 월잉여금: ${calcSurplus}원, 비상자금: ${emergencyFund}원`,
+            concern: userConcern || `${goalName || "핵심 재무목표"} 달성 전략`,
           },
         }),
       });
@@ -637,19 +761,7 @@ export default function DiagnosisPage() {
               <span className="material-symbols-outlined text-[20px]">
                 description
               </span>
-              <span>리포트(PDF)</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setCurrentStep("settings")}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                currentStep === "settings"
-                  ? "bg-blue-600 text-white font-bold shadow-sm"
-                  : "text-slate-400 hover:text-white hover:bg-slate-800/60"
-              }`}
-            >
-              <span className="material-symbols-outlined text-[20px]">settings</span>
-              <span>설정</span>
+              <span>리포트</span>
             </button>
           </nav>
         </div>
@@ -676,7 +788,7 @@ export default function DiagnosisPage() {
       {/* Main Container */}
       <div className="flex-1 flex flex-col h-full overflow-y-auto">
         {/* Top Header */}
-        <header className="h-16 px-6 bg-white dark:bg-[#11192E] border-b border-slate-200 dark:border-slate-800 flex items-center justify-between flex-shrink-0 z-10 gap-3">
+        <header className="h-16 px-6 bg-white dark:bg-[#11192E] border-b border-slate-200 dark:border-slate-800 flex items-center justify-between flex-shrink-0 relative z-50 gap-3">
           {/* Breadcrumb + Mode Status Switcher */}
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
@@ -689,37 +801,41 @@ export default function DiagnosisPage() {
                 {currentStep === "financial_status" && "내 재무현황 (재무상태표 & 현금흐름표)"}
                 {currentStep === "goals" && "재무목표 관리 (4대 목표 진단 & 솔루션)"}
                 {currentStep === "report" && "공인 은퇴설계 종합 진단 리포트"}
-                {currentStep === "settings" && "환경설정 및 데이터 관리"}
               </span>
             </div>
 
             {/* Quick Mode Status & Switcher */}
             <div className="hidden md:flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-700">
-              {isTemplateBlank ? (
-                <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700 px-2.5 py-1 rounded-full text-[11px] font-bold text-amber-800 dark:text-amber-200">
-                  <span>📝 신규 고객 작성 모드 (공란)</span>
-                  <button
-                    type="button"
-                    onClick={handleLoadSupabaseData}
-                    className="px-2 py-0.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold transition-all shadow-xs cursor-pointer"
-                    title="대회 가상 고객 모범 데이터로 복원"
-                  >
-                    🔄 Supabase 데이터 불러오기
-                  </button>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2 bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 px-2.5 py-1 rounded-full text-[11px] font-bold text-blue-700 dark:text-blue-300">
-                  <span>✦ Supabase 가상 고객 데이터 모드</span>
-                  <button
-                    type="button"
-                    onClick={handleResetToBlank}
-                    className="px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 text-[10px] font-bold transition-all shadow-xs cursor-pointer"
-                    title="모든 항목을 공란으로 비워 신규 고객 양식으로 전환"
-                  >
-                    ↩️ 공란 양식으로 리셋
-                  </button>
-                </div>
-              )}
+              <button
+                type="button"
+                onClick={handleRestoreUserCustomData}
+                className="px-2.5 py-1 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold transition-all shadow-xs cursor-pointer flex items-center gap-1 active:scale-95"
+                title="내가 직접 입력했던 재무 데이터로 즉시 복원"
+              >
+                <span>✍️ 내가 쓴 재무 데이터 불러오기</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleLoadSupabaseData}
+                className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-all shadow-xs cursor-pointer flex items-center gap-1 active:scale-95 ${
+                  !isTemplateBlank
+                    ? "bg-blue-600 text-white shadow-xs"
+                    : "bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200"
+                }`}
+                title="대회 가상 고객(50대 은퇴설계) 모범 데이터 조회"
+              >
+                <span>✦ 가상 고객 모범안</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleResetToBlank}
+                className="px-2.5 py-1 rounded-full bg-amber-500 hover:bg-amber-600 text-white text-[11px] font-bold transition-all shadow-xs cursor-pointer flex items-center gap-1 active:scale-95"
+                title="모든 항목을 공란으로 비워 신규 고객 작성 시작"
+              >
+                <span>↩️ 공란 초기화</span>
+              </button>
             </div>
           </div>
 
@@ -821,9 +937,24 @@ export default function DiagnosisPage() {
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                 {/* Left Form: 기본 재무정보 입력 */}
                 <div className="lg:col-span-8 bg-white dark:bg-[#11192E] p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
-                  <h3 className="text-base font-bold text-slate-800 dark:text-white">
-                    기본 재무정보 입력
-                  </h3>
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 gap-3">
+                    <div>
+                      <h3 className="text-base font-bold text-slate-800 dark:text-white">
+                        기본 재무정보 입력
+                      </h3>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        자산·부채·월 수지 및 핵심 목표를 입력하시면 실시간으로 자동 연산되고 안전하게 보존됩니다
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleRestoreUserCustomData}
+                      className="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 text-xs font-bold flex items-center gap-1.5 hover:bg-emerald-100 transition-all cursor-pointer whitespace-nowrap shadow-xs active:scale-95"
+                    >
+                      <span>✍️</span>
+                      <span>내가 쓴 데이터 불러오기</span>
+                    </button>
+                  </div>
 
                   {/* 자산 / 부채 */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -840,7 +971,11 @@ export default function DiagnosisPage() {
                           type="text"
                           inputMode="numeric"
                           value={totalAsset}
-                          onChange={(e) => setTotalAsset(formatCalculatorNumber(e.target.value))}
+                          onChange={(e) => {
+                            const val = formatCalculatorNumber(e.target.value);
+                            setTotalAsset(val);
+                            saveUserCustomData("totalAsset", val);
+                          }}
                           placeholder="0"
                           className="w-full text-right text-xs font-bold bg-transparent text-slate-800 dark:text-white focus:outline-none"
                         />
@@ -861,7 +996,11 @@ export default function DiagnosisPage() {
                           type="text"
                           inputMode="numeric"
                           value={totalDebt}
-                          onChange={(e) => setTotalDebt(formatCalculatorNumber(e.target.value))}
+                          onChange={(e) => {
+                            const val = formatCalculatorNumber(e.target.value);
+                            setTotalDebt(val);
+                            saveUserCustomData("totalDebt", val);
+                          }}
                           placeholder="0"
                           className="w-full text-right text-xs font-bold bg-transparent text-slate-800 dark:text-white focus:outline-none"
                         />
@@ -885,7 +1024,11 @@ export default function DiagnosisPage() {
                           type="text"
                           inputMode="numeric"
                           value={monthlyIncome}
-                          onChange={(e) => setMonthlyIncome(formatCalculatorNumber(e.target.value))}
+                          onChange={(e) => {
+                            const val = formatCalculatorNumber(e.target.value);
+                            setMonthlyIncome(val);
+                            saveUserCustomData("monthlyIncome", val);
+                          }}
                           placeholder="0"
                           className="w-full text-right text-xs font-bold bg-transparent text-slate-800 dark:text-white focus:outline-none"
                         />
@@ -899,7 +1042,11 @@ export default function DiagnosisPage() {
                           type="text"
                           inputMode="numeric"
                           value={monthlyExpense}
-                          onChange={(e) => setMonthlyExpense(formatCalculatorNumber(e.target.value))}
+                          onChange={(e) => {
+                            const val = formatCalculatorNumber(e.target.value);
+                            setMonthlyExpense(val);
+                            saveUserCustomData("monthlyExpense", val);
+                          }}
                           placeholder="0"
                           className="w-full text-right text-xs font-bold bg-transparent text-slate-800 dark:text-white focus:outline-none"
                         />
@@ -923,7 +1070,11 @@ export default function DiagnosisPage() {
                           type="text"
                           inputMode="numeric"
                           value={emergencyFund}
-                          onChange={(e) => setEmergencyFund(formatCalculatorNumber(e.target.value))}
+                          onChange={(e) => {
+                            const val = formatCalculatorNumber(e.target.value);
+                            setEmergencyFund(val);
+                            saveUserCustomData("emergencyFund", val);
+                          }}
                           placeholder="0"
                           className="w-full text-right text-xs font-bold bg-transparent text-slate-800 dark:text-white focus:outline-none"
                         />
@@ -949,7 +1100,10 @@ export default function DiagnosisPage() {
                         <input
                           type="text"
                           value={goalName}
-                          onChange={(e) => setGoalName(e.target.value)}
+                          onChange={(e) => {
+                            setGoalName(e.target.value);
+                            saveUserCustomData("goalName", e.target.value);
+                          }}
                           className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-white"
                         />
                       </div>
@@ -962,7 +1116,11 @@ export default function DiagnosisPage() {
                             type="text"
                             inputMode="numeric"
                             value={goalAmount}
-                            onChange={(e) => setGoalAmount(formatCalculatorNumber(e.target.value))}
+                            onChange={(e) => {
+                              const val = formatCalculatorNumber(e.target.value);
+                              setGoalAmount(val);
+                              saveUserCustomData("goalAmount", val);
+                            }}
                             placeholder="0"
                             className="w-full text-right text-xs font-bold bg-transparent text-slate-800 dark:text-white focus:outline-none"
                           />
@@ -976,7 +1134,10 @@ export default function DiagnosisPage() {
                         <input
                           type="date"
                           value={goalDate}
-                          onChange={(e) => setGoalDate(e.target.value)}
+                          onChange={(e) => {
+                            setGoalDate(e.target.value);
+                            saveUserCustomData("goalDate", e.target.value);
+                          }}
                           className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-white"
                         />
                       </div>
@@ -993,8 +1154,29 @@ export default function DiagnosisPage() {
                     </Link>
                     <button
                       type="button"
-                      onClick={() => setCurrentStep("step2")}
-                      className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md transition-all flex items-center gap-2 active:scale-95"
+                      onClick={() => {
+                        const payload = {
+                          totalAsset,
+                          totalDebt,
+                          monthlyIncome,
+                          monthlyExpense,
+                          emergencyFund,
+                          goalName,
+                          goalAmount,
+                          goalDate,
+                          monthlyRecords,
+                          hasUserData: true,
+                        };
+                        try {
+                          localStorage.setItem(USER_PERSISTENT_KEY, JSON.stringify(payload));
+                          localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...payload, isTemplateBlank }));
+                        } catch (e) {
+                          console.error(e);
+                        }
+                        alert("STEP 01 재무설계안이 안전하게 저장되었습니다.\n상단의 [내가 쓴 재무 데이터 불러오기]를 누르면 언제든 즉시 복원됩니다.");
+                        setCurrentStep("step2");
+                      }}
+                      className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md transition-all flex items-center gap-2 active:scale-95 cursor-pointer"
                     >
                       <span>저장하고 다음 단계로</span>
                       <span>→</span>
@@ -1400,7 +1582,17 @@ export default function DiagnosisPage() {
                   <button
                     type="button"
                     onClick={() => {
-                      alert(`${MONTHLY_FINANCE_DATA[selectedMonth].label} 재무 데이터가 성공적으로 저장되었습니다.`);
+                      try {
+                        const existing = localStorage.getItem(USER_PERSISTENT_KEY);
+                        const data = existing ? JSON.parse(existing) : {};
+                        data.monthlyRecords = monthlyRecords;
+                        data.hasUserData = true;
+                        localStorage.setItem(USER_PERSISTENT_KEY, JSON.stringify(data));
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...data, isTemplateBlank }));
+                      } catch (e) {
+                        console.error(e);
+                      }
+                      alert(`${MONTHLY_FINANCE_DATA[selectedMonth].label} 재무 데이터가 안전하게 저장되었습니다.\n상단의 [내가 쓴 재무 데이터 불러오기]를 누르면 언제든 즉시 복원됩니다.`);
                     }}
                     className="w-full py-3 rounded-xl bg-[#1B3574] hover:bg-[#142857] text-white text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.99] cursor-pointer"
                   >
@@ -1412,14 +1604,25 @@ export default function DiagnosisPage() {
                     <button
                       type="button"
                       onClick={() => setCurrentStep("step1")}
-                      className="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                      className="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                     >
                       이전 단계
                     </button>
                     <button
                       type="button"
-                      onClick={() => setCurrentStep("step3")}
-                      className="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1 shadow-sm transition-all"
+                      onClick={() => {
+                        try {
+                          const existing = localStorage.getItem(USER_PERSISTENT_KEY);
+                          const data = existing ? JSON.parse(existing) : {};
+                          data.monthlyRecords = monthlyRecords;
+                          data.hasUserData = true;
+                          localStorage.setItem(USER_PERSISTENT_KEY, JSON.stringify(data));
+                        } catch (e) {
+                          console.error(e);
+                        }
+                        setCurrentStep("step3");
+                      }}
+                      className="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1 shadow-sm transition-all cursor-pointer"
                     >
                       <span>AI 상담 가기</span>
                       <span>→</span>
@@ -1693,8 +1896,55 @@ export default function DiagnosisPage() {
 
               {/* Step 3 Two Columns */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                {/* Left Column: 현재 재무상태 요약 & AI 추천 질문 가이드 */}
+                {/* Left Column: AI 중점 상담 목표, 현재 재무상태 요약 & AI 추천 질문 가이드 */}
                 <div className="lg:col-span-5 space-y-4">
+                  {/* 🎯 AI 중점 상담 목표 카드 (STEP 01 재무 목표 연동) */}
+                  {(() => {
+                    const effGoalName = goalName ? goalName : (isTemplateBlank ? "목표 설정 대기" : "은퇴 후 생활비 300만원 마련");
+                    const effGoalAmount = goalAmount ? formatKoreanCurrency(parseRawNumber(goalAmount)) : (isTemplateBlank ? "0원" : "6억 8,800만 원");
+                    const effGoalDate = goalDate ? goalDate : (isTemplateBlank ? "시점 미정" : "60세 은퇴 시점");
+                    return (
+                      <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50/50 dark:from-amber-950/40 dark:to-orange-950/20 border border-amber-200/80 dark:border-amber-800/60 shadow-sm space-y-2.5">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-700 dark:text-amber-300 flex items-center justify-center text-xs font-bold">
+                              🎯
+                            </span>
+                            <h4 className="text-xs font-bold text-amber-900 dark:text-amber-200">
+                              AI 중점 상담 목표 (STEP 01 연동)
+                            </h4>
+                          </div>
+                          <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/60 px-2 py-0.5 rounded-full">
+                            최우선 분석
+                          </span>
+                        </div>
+
+                        <div className="p-3 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-amber-100 dark:border-amber-900/40 space-y-1.5">
+                          <div className="text-sm font-extrabold text-slate-800 dark:text-white flex items-center gap-1.5">
+                            <span>{effGoalName}</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 text-[11px] pt-1.5 border-t border-amber-100/60 dark:border-slate-800">
+                            <div>
+                              <span className="text-slate-400">필요 자금: </span>
+                              <span className="font-bold text-amber-700 dark:text-amber-400">
+                                {effGoalAmount}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-slate-400">달성 시점: </span>
+                              <span className="font-bold text-slate-700 dark:text-slate-300">
+                                {effGoalDate}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <p className="text-[10px] text-amber-800/80 dark:text-amber-300/80 leading-relaxed">
+                          💡 Gemini 재무주치의는 고객님의 이 재무 목표를 최우선으로 달성하기 위한 구체적인 저축·투자·상환 전략을 안내합니다.
+                        </p>
+                      </div>
+                    );
+                  })()}
+
                   {/* 현재 재무상태 요약 (10월 실데이터 기준) */}
                   <div className="p-5 rounded-2xl bg-white dark:bg-[#11192E] border border-slate-200 dark:border-slate-800 shadow-sm space-y-3.5">
                     <div className="flex items-center justify-between">
@@ -1788,32 +2038,37 @@ export default function DiagnosisPage() {
                     </div>
 
                     <div className="space-y-2">
-                      {[
-                        {
-                          category: "대출 & 부채 전략",
-                          icon: "💳",
-                          question: "아파트 담보대출 조기 상환 vs 연금 추가 납입 중 무엇이 유리한가요?",
-                          desc: "연 4% 대출이자 절감과 연금 복리 수익 비교",
-                        },
-                        {
-                          category: "절세 & 연금 극대화",
-                          icon: "💰",
-                          question: "10월 잉여금(72만 원)으로 연말정산 세액공제를 극대화하려면?",
-                          desc: "IRP 및 연금저축 연간 900만 원 한도 활용법",
-                        },
-                        {
-                          category: "지출 최적화",
-                          icon: "📉",
-                          question: "10월에 늘어난 여가(골프·여행) 및 의료비 지출을 줄이는 실천 팁은?",
-                          desc: "가을철 변동지출 관리 및 생활비 리밸런싱",
-                        },
-                        {
-                          category: "은퇴 현금흐름",
-                          icon: "🎯",
-                          question: "은퇴 후 월 300만 원 생활비를 만들려면 연금을 어떻게 수령해야 하나요?",
-                          desc: "국민연금 개시 전 5년 소득 공백기 브릿지 대책",
-                        },
-                      ].map((item, idx) => (
+                      {(() => {
+                        const effGoal = goalName || (isTemplateBlank ? "재무 목표" : "은퇴 생활비 300만 원");
+                        const effAmt = goalAmount ? formatKoreanCurrency(parseRawNumber(goalAmount)) : (isTemplateBlank ? "" : "6억 8,800만 원");
+                        const effDt = goalDate || (isTemplateBlank ? "" : "60세 은퇴");
+                        return [
+                          {
+                            category: `🎯 [${effGoal}] 달성 자금 전략`,
+                            icon: "🎯",
+                            question: `"${effGoal}" 목표를 달성하려면 매월 얼마씩 어떤 포트폴리오(IRP·연금저축·ISA)로 모아야 하나요?`,
+                            desc: effAmt ? `목표 자금 ${effAmt} (${effDt}) 맞춤 자금 솔루션` : "목표 자금 마련을 위한 저축·투자 포트폴리오",
+                          },
+                          {
+                            category: "💳 부채 상환 vs 목표 저축",
+                            icon: "💳",
+                            question: `현재 부채 상환과 "${effGoal}" 자금 마련 중 어떤 것에 우선순위를 두어야 유리한가요?`,
+                            desc: "대출이자 절감과 복리 투자수익 기회비용 종합 분석",
+                          },
+                          {
+                            category: "💰 절세 혜택 극대화",
+                            icon: "💰",
+                            question: `연말정산 세액공제(IRP·연금저축 연 900만원)와 ISA 비과세를 활용해 목표 자금을 불리는 법은?`,
+                            desc: "합법적 절세와 과세이연을 통한 실질 수익률 극대화",
+                          },
+                          {
+                            category: "📉 지출 최적화 및 잉여금 확대",
+                            icon: "📉",
+                            question: `현재 월 지출에서 줄일 수 있는 고정·변동 비용과 목표 달성을 위한 잉여금 확대 팁은?`,
+                            desc: `불필요한 지출 축소로 "${effGoal}" 준비금 추가 확보`,
+                          },
+                        ];
+                      })().map((item, idx) => (
                         <button
                           key={idx}
                           type="button"
@@ -2022,36 +2277,6 @@ export default function DiagnosisPage() {
                     )}
                   </div>
 
-                  {/* Quick Question Chips (추천 질문 바) */}
-                  <div className="px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border-t border-slate-200/80 dark:border-slate-800">
-                    <div className="flex items-center gap-1.5 mb-1.5">
-                      <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
-                        <span>✨</span> 추천 질문
-                      </span>
-                      <span className="text-[10px] text-slate-400">
-                        (클릭하면 입력창에 바로 입력돼요)
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-[11px]">
-                      {[
-                        "월 잉여금 72만 원, 어디에 먼저 넣어야 할까요?",
-                        "담보대출 조기 상환 vs 연금 추가 납입 중 유리한 것은?",
-                        "은퇴 후 월 300만 원 생활비를 만들려면 연금을 어떻게 수령해야 하나요?",
-                        "10월에 늘어난 변동지출(여가/의료)을 줄이는 방법은?",
-                        "연말정산 세액공제 900만 원을 채우려면 IRP에 얼마나 더 넣어야 하나요?",
-                      ].map((promptText, idx) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => setInputMessage(promptText)}
-                          className="px-3 py-1.5 rounded-full bg-white dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950/60 text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 border border-slate-200 dark:border-slate-700 text-[11px] font-medium whitespace-nowrap transition-all shadow-xs active:scale-95"
-                        >
-                          💬 {promptText}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
                   {/* Input Box: 파일칸 제거 & 명확한 플레이스홀더 제공 */}
                   <div className="p-3 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center gap-2">
                     <input
@@ -2126,23 +2351,6 @@ export default function DiagnosisPage() {
               totalDebt={totalDebt}
               monthlyIncome={monthlyIncome}
               monthlyExpense={monthlyExpense}
-            />
-          )}
-
-          {/* 설정 (Supabase 연동 관리 & 재무 데이터 직접 입력·저장) */}
-          {currentStep === "settings" && (
-            <SettingsView
-              totalAsset={totalAsset}
-              setTotalAsset={setTotalAsset}
-              totalDebt={totalDebt}
-              setTotalDebt={setTotalDebt}
-              monthlyIncome={monthlyIncome}
-              setMonthlyIncome={setMonthlyIncome}
-              monthlyExpense={monthlyExpense}
-              setMonthlyExpense={setMonthlyExpense}
-              isTemplateBlank={isTemplateBlank}
-              onRefreshData={handleLoadSupabaseData}
-              onResetData={handleResetToBlank}
             />
           )}
         </main>

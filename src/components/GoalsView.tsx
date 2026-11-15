@@ -25,21 +25,6 @@ export default function GoalsView({
   monthlyExpense = "",
   goalName = "",
 }: GoalsViewProps) {
-  // 고객 실천사항 체크리스트 상태
-  const [checklist, setChecklist] = useState({
-    irp: true,
-    loan: false,
-    isa: true,
-    inheritance: false,
-    review: false,
-  });
-
-  const toggleCheck = (key: keyof typeof checklist) => {
-    setChecklist((prev) => ({ ...prev, [key]: !prev[key] }));
-  };
-
-  const completedCount = Object.values(checklist).filter(Boolean).length;
-
   return (
     <div className="space-y-6 animate-fadeIn pb-12">
       {/* 1. Header Banner */}
@@ -478,111 +463,6 @@ export default function GoalsView({
               </tr>
             </tbody>
           </table>
-        </div>
-      </div>
-
-      {/* 4. 고객 실천사항 Action Plan 체크리스트 (Supabase ⑧번 항목) */}
-      <div className="p-5 rounded-2xl bg-white dark:bg-[#11192E] border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-2">
-              <span>📋</span>
-              <span>은퇴 준비 고객 실천사항 (Action Plan)</span>
-            </h3>
-            <p className="text-[11px] text-slate-400 mt-0.5">
-              안전한 은퇴를 위해 순차적으로 완료해야 할 5대 실행 과제
-            </p>
-          </div>
-          <span className="text-xs font-bold text-blue-600 dark:text-blue-400">
-            진행률: {completedCount} / 5 완료 ({Math.round((completedCount / 5) * 100)}%)
-          </span>
-        </div>
-
-        <div className="space-y-2 text-xs">
-          <label className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors">
-            <input
-              type="checkbox"
-              checked={checklist.irp}
-              onChange={() => toggleCheck("irp")}
-              className="mt-0.5 w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
-            />
-            <div className="flex-1">
-              <span className={`font-semibold ${checklist.irp ? "line-through text-slate-400" : "text-slate-800 dark:text-white"}`}>
-                퇴직 전 IRP 계좌 개설 및 퇴직급여 이전 신청 (2.5억 원)
-              </span>
-              <p className="text-[11px] text-slate-400 mt-0.5">
-                퇴직소득세 30% 감면 혜택을 위해 주거래 은행/증권사에 IRP 계좌를 개설합니다.
-              </p>
-            </div>
-          </label>
-
-          <label className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors">
-            <input
-              type="checkbox"
-              checked={checklist.loan}
-              onChange={() => toggleCheck("loan")}
-              className="mt-0.5 w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
-            />
-            <div className="flex-1">
-              <span className={`font-semibold ${checklist.loan ? "line-through text-slate-400" : "text-slate-800 dark:text-white"}`}>
-                아파트 담보대출 중도상환수수료 면제 시점 확인 후 상환일 확정
-              </span>
-              <p className="text-[11px] text-slate-400 mt-0.5">
-                현금 1억 + 퇴직금 1.5억으로 2.5억 원 전액 상환 일정을 수립합니다.
-              </p>
-            </div>
-          </label>
-
-          <label className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors">
-            <input
-              type="checkbox"
-              checked={checklist.isa}
-              onChange={() => toggleCheck("isa")}
-              className="mt-0.5 w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
-            />
-            <div className="flex-1">
-              <span className={`font-semibold ${checklist.isa ? "line-through text-slate-400" : "text-slate-800 dark:text-white"}`}>
-                증권계좌의 주식(삼성전자) 및 미국 ETF를 중개형 ISA로 이전
-              </span>
-              <p className="text-[11px] text-slate-400 mt-0.5">
-                배당소득세 절세 및 비과세 한도 200만 원 적용을 위해 계좌를 이전합니다.
-              </p>
-            </div>
-          </label>
-
-          <label className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors">
-            <input
-              type="checkbox"
-              checked={checklist.inheritance}
-              onChange={() => toggleCheck("inheritance")}
-              className="mt-0.5 w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
-            />
-            <div className="flex-1">
-              <span className={`font-semibold ${checklist.inheritance ? "line-through text-slate-400" : "text-slate-800 dark:text-white"}`}>
-                형제와 지방 상가주택 상속 분할 비율 사전 합의 및 서면화
-              </span>
-              <p className="text-[11px] text-slate-400 mt-0.5">
-                상속세 연부연납 및 임대수익 배분 기준을 가족 간에 명문화합니다.
-              </p>
-            </div>
-          </label>
-
-          <label className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors">
-            <input
-              type="checkbox"
-              checked={checklist.review}
-              onChange={() => toggleCheck("review")}
-              className="mt-0.5 w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
-            />
-            <div className="flex-1">
-              <span className={`font-semibold ${checklist.review ? "line-through text-slate-400" : "text-slate-800 dark:text-white"}`}>
-                반기(6개월)당 1회 연금 수령액과 포트폴리오 정기 리밸런싱 점검
-              </span>
-              <p className="text-[11px] text-slate-400 mt-0.5">
-                은퇴 후 인플레이션과 지출 변동에 맞춰 세무사 및 AI 주치의와 정기 점검을 실시합니다.
-              </p>
-            </div>
-          </label>
         </div>
       </div>
     </div>

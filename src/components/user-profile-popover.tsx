@@ -61,7 +61,7 @@ export function UserProfilePopover() {
   return (
     <div
       ref={containerRef}
-      className="relative inline-block"
+      className="relative inline-block z-50"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
@@ -102,7 +102,7 @@ export function UserProfilePopover() {
       {/* Popover Card */}
       {isOpen && (
         <div
-          className="absolute right-0 top-full mt-2 w-64 p-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl z-50 animate-in fade-in zoom-in-95 duration-150"
+          className="absolute right-0 top-full mt-2 w-64 p-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl z-[100] animate-in fade-in zoom-in-95 duration-150 ring-1 ring-black/5"
           role="dialog"
           aria-label="사용자 프로필 세부 메뉴"
         >

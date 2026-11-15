@@ -32,17 +32,31 @@ export default function FinancialStatusView({
   const cleanExpense = monthlyExpense ? parseInt(monthlyExpense.replace(/[^0-9]/g, ""), 10) || 0 : 0;
   const cleanSurplus = cleanIncome - cleanExpense;
 
+  const formatKoreanAmount = (num: number) => {
+    if (num === 0) return "0원";
+    const sign = num < 0 ? "-" : "";
+    const abs = Math.abs(num);
+    const uk = Math.floor(abs / 100000000);
+    const man = Math.floor((abs % 100000000) / 10000);
+    const rest = abs % 10000;
+    let res = "";
+    if (uk > 0) res += `${uk}억 `;
+    if (man > 0) res += `${man.toLocaleString("ko-KR")}만 `;
+    if (rest > 0 && uk === 0) res += `${rest.toLocaleString("ko-KR")}`;
+    return `${sign}${res.trim()} 원`;
+  };
+
   const displayAsset = isTemplateBlank
-    ? (cleanAsset > 0 ? `${(cleanAsset / 100000000).toFixed(1)}억 원` : "0원 (입력 대기)")
+    ? (cleanAsset > 0 ? formatKoreanAmount(cleanAsset) : "0원 (입력 대기)")
     : "17억 2,171만 원";
   const displayDebt = isTemplateBlank
-    ? (cleanDebt > 0 ? `${(cleanDebt / 100000000).toFixed(1)}억 원` : "0원 (입력 대기)")
+    ? (cleanDebt > 0 ? formatKoreanAmount(cleanDebt) : "0원 (입력 대기)")
     : "2억 5,000만 원";
   const displayNetWorth = isTemplateBlank
-    ? (cleanNetWorth !== 0 ? `${(cleanNetWorth / 100000000).toFixed(1)}억 원` : "0원 (입력 대기)")
+    ? (cleanNetWorth !== 0 ? formatKoreanAmount(cleanNetWorth) : "0원 (입력 대기)")
     : "14억 7,171만 원";
   const displaySurplus = isTemplateBlank
-    ? (cleanSurplus !== 0 ? `${(cleanSurplus / 10000).toFixed(0)}만 원` : "0원 (입력 대기)")
+    ? (cleanSurplus !== 0 ? (cleanSurplus > 0 ? "+" : "") + formatKoreanAmount(cleanSurplus) : "0원 (입력 대기)")
     : "+72만 원";
 
   return (
@@ -787,7 +801,7 @@ export default function FinancialStatusView({
             <span className="text-xl">🚨</span>
             <div className="space-y-1">
               <h5 className="text-xs font-bold text-red-800 dark:text-red-300">
-                AFPK 수석 재무설계사의 진단: 은퇴 소득 공백기 긴급 대응 필요
+                AFPK 공인 재무설계사의 진단: 은퇴 소득 공백기 긴급 대응 필요
               </h5>
               <p className="text-xs text-red-700 dark:text-red-400 leading-relaxed">
                 현재 계획대로 1년 뒤 퇴직하면 근로소득(760만 원)이 끊기고, 국민연금 수령(64세)까지 <strong>4년간의 소득 공백기</strong>가 발생합니다.

@@ -71,7 +71,7 @@ export interface ReportData {
 
 // 50대 은퇴설계 가상 고객 모범 데이터셋
 const DEFAULT_REPORT_DATA: ReportData = {
-  institution: "ARPK 재무주치의",
+  institution: "AFPK 재무주치의",
   customClientName: "",
   issueDate: "",
   
@@ -149,12 +149,12 @@ const DEFAULT_REPORT_DATA: ReportData = {
     "퇴직급여 2.5억 원 IRP 이전: 일시금 인출을 지양하고, IRP로 이전하여 연금으로 수령 시 퇴직소득세 30%를 절감하고 소득 공백기(61~64세) 생활비를 확보하십시오.",
     "71세 주택연금 연계: 금융자산이 소진되는 70대 이후에는 수원 아파트(10억)를 주택연금(월 297만 원)으로 전환하여 부부 100세 종신까지 월 300만 원 생활비를 완벽히 보장할 수 있습니다.",
   ],
-  adviserTitle: "공인 자문위원: ARPK 재무주치의 수석 PB",
+  adviserTitle: "공인 자문위원: AFPK 재무주치의",
 };
 
 // 모든 항목 공란 데이터셋
 const BLANK_REPORT_DATA: ReportData = {
-  institution: "ARPK 재무주치의",
+  institution: "AFPK 재무주치의",
   customClientName: "",
   issueDate: "",
 
@@ -232,7 +232,7 @@ const BLANK_REPORT_DATA: ReportData = {
     "퇴직 전후 소득 공백기(Bridge Period) 대비를 위한 IRP 및 개인연금 수령 설계를 우선 권고합니다.",
     "고령기 안정적 현금흐름 확보를 위해 거주 주택을 활용한 주택연금 연계를 적극 검토하십시오.",
   ],
-  adviserTitle: "공인 자문위원: ARPK 재무주치의 수석 PB",
+  adviserTitle: "공인 자문위원: AFPK 재무주치의",
 };
 
 export default function ReportView({
@@ -301,13 +301,28 @@ export default function ReportView({
     }
   }, [isTemplateBlank, totalAsset, totalDebt, monthlyIncome, monthlyExpense]);
 
-  // 고객명 계산: 수기 입력값 우선 -> 로그인 사용자명 -> 익명
-  const displayClientName =
-    reportData.customClientName.trim() ||
-    user?.user_metadata?.full_name ||
-    profile?.full_name ||
-    user?.email?.split("@")[0] ||
-    "익명";
+  // 로컬 스토리지에 저장된 리포트 데이터 복원 (초기 1회)
+  useEffect(() => {
+    try {
+      const savedReport = localStorage.getItem("afpk_custom_report_data_v2");
+      if (savedReport) {
+        const parsed = JSON.parse(savedReport);
+        if (parsed) {
+          setReportData(parsed);
+          setTempData(parsed);
+        }
+      }
+    } catch (e) {
+      console.error("Failed to load report from localStorage", e);
+    }
+  }, []);
+
+  // 고객명 계산:
+  // - 공란 모드(isTemplateBlank): 수기 입력한 고객명 우선, 미입력 시 "고객명 미입력"
+  // - 가상 데이터 모드(!isTemplateBlank): 수기 입력한 고객명 우선, 미입력 시 "김한국" (구글 로그인 본인 이름 노출 방지)
+  const displayClientName = isTemplateBlank
+    ? (reportData.customClientName.trim() || "고객명 미입력")
+    : (reportData.customClientName.trim() || "김한국");
 
   // 계산 필드들
   const totalAssetsSum =
@@ -346,6 +361,11 @@ export default function ReportView({
   // 모달 저장 핸들러
   const handleSaveModal = () => {
     setReportData(tempData);
+    try {
+      localStorage.setItem("afpk_custom_report_data_v2", JSON.stringify(tempData));
+    } catch (e) {
+      console.error("Failed to save report to localStorage", e);
+    }
     setIsEditModalOpen(false);
   };
 
@@ -437,19 +457,19 @@ export default function ReportView({
           </div>
           <div className="text-right text-xs space-y-1">
             <div className="flex items-center justify-end gap-2">
+              <span className="text-slate-400">발행일자:</span>
+              <span className="font-medium text-slate-700 dark:text-slate-300">
+                {reportData.issueDate || todayStr}
+              </span>
+            </div>
+            <div className="flex items-center justify-end gap-2">
               <span className="text-slate-400">자문기관:</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">{reportData.institution}</span>
             </div>
             <div className="flex items-center justify-end gap-2">
               <span className="text-slate-400">고객명:</span>
               <span className="font-bold text-blue-600 dark:text-blue-400">
-                {displayClientName} {displayClientName === "익명" ? "" : "님"}
-              </span>
-            </div>
-            <div className="flex items-center justify-end gap-2">
-              <span className="text-slate-400">발행일자:</span>
-              <span className="font-medium text-slate-700 dark:text-slate-300">
-                {reportData.issueDate || todayStr}
+                {displayClientName} {displayClientName === "익명" || displayClientName === "고객명 미입력" ? "" : "님"}
               </span>
             </div>
           </div>
@@ -678,12 +698,12 @@ export default function ReportView({
           </div>
         </div>
 
-        {/* Section 4: ARPK 재무주치의 최종 종합 소견 */}
+        {/* Section 4: AFPK 재무주치의 최종 종합 소견 */}
         <div className="p-5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3">
           <div className="flex items-center gap-2">
             <span className="text-lg">📋</span>
             <h4 className="text-xs font-bold text-slate-900 dark:text-white">
-              ARPK 재무주치의 최종 종합 자문 소견
+              AFPK 재무주치의 최종 종합 자문 소견
             </h4>
           </div>
           <div className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed space-y-1.5">
@@ -1153,7 +1173,7 @@ export default function ReportView({
               {modalTab === "goals" && (
                 <div className="space-y-4">
                   <div className="p-3 bg-purple-50 dark:bg-purple-950/40 rounded-xl border border-purple-200 dark:border-purple-900 text-purple-800 dark:text-purple-200 text-[11px]">
-                    4대 재무목표의 명칭, 기한, 필요자금, 준비자금, 부족액 및 신호등 판정(달성 가능 🟢, 사전 합의 🟡, 위험 경보 🔴)을 편집합니다.
+                    4대 재무목표의 명칭, 기한, 필요자금, 준비자금, 부족액을 입력합니다. (신호등 평가는 AFPK 공인 재무설계사 고유 권한으로 자동 판정됩니다)
                   </div>
 
                   <div className="space-y-3">
@@ -1164,19 +1184,10 @@ export default function ReportView({
                       >
                         <div className="flex items-center justify-between font-bold text-slate-800 dark:text-white">
                           <span>{g.rank && g.rank !== "-" ? `${g.rank}순위 목표` : `재무목표 ${idx + 1}`}</span>
-                          <select
-                            value={g.status}
-                            onChange={(e) => {
-                              const newGoals = [...tempData.goals];
-                              newGoals[idx].status = e.target.value as any;
-                              setTempData({ ...tempData, goals: newGoals });
-                            }}
-                            className="px-2 py-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-[11px] font-bold"
-                          >
-                            <option value="달성 가능 🟢">달성 가능 🟢</option>
-                            <option value="사전 합의 🟡">사전 합의 🟡</option>
-                            <option value="위험 경보 🔴">위험 경보 🔴</option>
-                          </select>
+                          <span className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 shadow-2xs">
+                            <span className="text-xs">🛡️</span>
+                            <span>설계사 진단: {g.status}</span>
+                          </span>
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
@@ -1207,43 +1218,52 @@ export default function ReportView({
                             />
                           </div>
                           <div className="sm:col-span-2">
-                            <input
-                              type="text"
-                              value={g.needed}
-                              onChange={(e) => {
-                                const newGoals = [...tempData.goals];
-                                newGoals[idx].needed = e.target.value;
-                                setTempData({ ...tempData, goals: newGoals });
-                              }}
-                              placeholder="필요 자금"
-                              className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-right"
-                            />
+                            <div className="flex items-center border border-slate-300 dark:border-slate-700 rounded-lg px-2 bg-white dark:bg-slate-900 focus-within:ring-2 focus-within:ring-blue-500">
+                              <input
+                                type="text"
+                                value={g.needed}
+                                onChange={(e) => {
+                                  const newGoals = [...tempData.goals];
+                                  newGoals[idx].needed = e.target.value;
+                                  setTempData({ ...tempData, goals: newGoals });
+                                }}
+                                placeholder="필요 자금"
+                                className="w-full py-1.5 text-right font-bold focus:outline-none bg-transparent text-xs"
+                              />
+                              <span className="text-slate-400 ml-1 text-xs select-none">원</span>
+                            </div>
                           </div>
                           <div className="sm:col-span-2">
-                            <input
-                              type="text"
-                              value={g.prep}
-                              onChange={(e) => {
-                                const newGoals = [...tempData.goals];
-                                newGoals[idx].prep = e.target.value;
-                                setTempData({ ...tempData, goals: newGoals });
-                              }}
-                              placeholder="준비 자금"
-                              className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900"
-                            />
+                            <div className="flex items-center border border-slate-300 dark:border-slate-700 rounded-lg px-2 bg-white dark:bg-slate-900 focus-within:ring-2 focus-within:ring-blue-500">
+                              <input
+                                type="text"
+                                value={g.prep}
+                                onChange={(e) => {
+                                  const newGoals = [...tempData.goals];
+                                  newGoals[idx].prep = e.target.value;
+                                  setTempData({ ...tempData, goals: newGoals });
+                                }}
+                                placeholder="준비 자금"
+                                className="w-full py-1.5 text-right font-bold focus:outline-none bg-transparent text-xs"
+                              />
+                              <span className="text-slate-400 ml-1 text-xs select-none">원</span>
+                            </div>
                           </div>
                           <div className="sm:col-span-2">
-                            <input
-                              type="text"
-                              value={g.shortage}
-                              onChange={(e) => {
-                                const newGoals = [...tempData.goals];
-                                newGoals[idx].shortage = e.target.value;
-                                setTempData({ ...tempData, goals: newGoals });
-                              }}
-                              placeholder="부족액"
-                              className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-right"
-                            />
+                            <div className="flex items-center border border-slate-300 dark:border-slate-700 rounded-lg px-2 bg-white dark:bg-slate-900 focus-within:ring-2 focus-within:ring-blue-500">
+                              <input
+                                type="text"
+                                value={g.shortage}
+                                onChange={(e) => {
+                                  const newGoals = [...tempData.goals];
+                                  newGoals[idx].shortage = e.target.value;
+                                  setTempData({ ...tempData, goals: newGoals });
+                                }}
+                                placeholder="부족액"
+                                className="w-full py-1.5 text-right font-bold focus:outline-none bg-transparent text-xs text-red-500"
+                              />
+                              <span className="text-slate-400 ml-1 text-xs select-none">원</span>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -1256,7 +1276,7 @@ export default function ReportView({
               {modalTab === "opinions" && (
                 <div className="space-y-4">
                   <div className="p-3 bg-slate-100 dark:bg-slate-800 rounded-xl text-slate-700 dark:text-slate-300 text-[11px]">
-                    ARPK 재무주치의 공식 종합 자문 소견 3개 항목을 자유롭게 작성합니다.
+                    AFPK 재무주치의 공식 종합 자문 소견 3개 항목을 자유롭게 작성합니다.
                   </div>
 
                   <div className="space-y-3">
