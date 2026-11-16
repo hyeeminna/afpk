@@ -177,22 +177,6 @@ export default function HomePage() {
             <div className="flex items-center gap-3">
               {user && <UserProfilePopover />}
               <ThemeToggle />
-              <Link
-                href="/diagnosis"
-                onClick={(e) => {
-                  if (!user) {
-                    e.preventDefault();
-                    alert("진단 페이지는 로그인 후 이용하실 수 있습니다.\nGoogle 계정 로그인 화면으로 이동합니다.");
-                    document.getElementById("login")?.scrollIntoView({ behavior: "smooth" });
-                  }
-                }}
-                className="hidden lg:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 transition-colors"
-              >
-                <span>진단 페이지</span>
-                <span className="material-symbols-outlined text-[16px]">
-                  arrow_forward
-                </span>
-              </Link>
             </div>
           </div>
         </div>
@@ -650,19 +634,6 @@ export default function HomePage() {
               >
                 4대 고민 선택
               </a>
-              <Link
-                href="/diagnosis"
-                onClick={(e) => {
-                  if (!user) {
-                    e.preventDefault();
-                    alert("진단 페이지는 로그인 후 이용하실 수 있습니다.\nGoogle 계정 로그인 화면으로 이동합니다.");
-                    document.getElementById("login")?.scrollIntoView({ behavior: "smooth" });
-                  }
-                }}
-                className="hover:text-blue-600 transition-colors"
-              >
-                진단 페이지
-              </Link>
             </div>
           </div>
         </div>
