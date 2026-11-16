@@ -89,8 +89,24 @@ export function evaluateFinancialGoals(params: {
 
   // 2. Gemini AI 재무주치의 실시간 정밀 진단 결과가 있는 경우 최우선 반영하되, 실시간 사용자 입력값과 100% 동기화
   if (aiGoals && Array.isArray(aiGoals) && aiGoals.length > 0) {
-    const synchronizedAiGoals = aiGoals.map((g) => {
-      const copy = { ...g };
+    const defaultIds = ["debt", "custom_goal", "retirement", "emergency"];
+    const synchronizedAiGoals = aiGoals.map((g, idx) => {
+      const copy: EvaluatedGoalItem = {
+        ...g,
+        id: g?.id || defaultIds[idx] || `goal_${idx}`,
+        rank: typeof g?.rank === "string" && g.rank.trim() ? g.rank : `${idx + 1}순위`,
+        name: g?.name || (g as any)?.title || `재무목표 ${idx + 1}`,
+        period: g?.period || (g as any)?.timeline || "-",
+        needed: g?.needed || (g as any)?.targetAmount || "0원",
+        neededNum: typeof g?.neededNum === "number" ? g.neededNum : parseNum(g?.needed),
+        prep: g?.prep || (g as any)?.preparedAmount || "0원",
+        prepNum: typeof g?.prepNum === "number" ? g.prepNum : parseNum(g?.prep),
+        shortage: g?.shortage || (g as any)?.deficit || "0원",
+        shortageNum: typeof g?.shortageNum === "number" ? g.shortageNum : parseNum(g?.shortage),
+        status: (g?.status as any) || "진단 대기 ⚪",
+        statusCode: (g?.statusCode as any) || "gray",
+        expertOpinion: g?.expertOpinion || (g as any)?.opinion || "",
+      };
       if (copy.id === "debt") {
         if (cleanDebt === 0) {
           copy.needed = "0원";

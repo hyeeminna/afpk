@@ -302,14 +302,14 @@ export default function ReportView({
         aiSolutions,
       });
 
-      const convertedGoals: GoalItem[] = evalResult.goals.map((g) => ({
-        rank: g.rank.split(":")[0].trim() || "-",
-        name: g.name,
-        period: g.period,
-        needed: g.needed,
-        prep: g.prep,
-        shortage: g.shortage,
-        status: g.status as any,
+      const convertedGoals: GoalItem[] = (evalResult.goals || []).map((g, idx) => ({
+        rank: (typeof g?.rank === "string" && g.rank.trim() ? g.rank.split(":")[0].trim() : `${idx + 1}순위`) || "-",
+        name: g?.name || `재무목표 ${idx + 1}`,
+        period: g?.period || "-",
+        needed: g?.needed || "0원",
+        prep: g?.prep || "0원",
+        shortage: g?.shortage || "0원",
+        status: (g?.status as any) || "진단 대기 ⚪",
       }));
 
       setReportData((prev) => ({
@@ -338,14 +338,14 @@ export default function ReportView({
       aiSolutions,
     });
 
-    const convertedGoals: GoalItem[] = evalResult.goals.map((g) => ({
-      rank: g.rank.split(":")[0].trim() || "-",
-      name: g.name,
-      period: g.period,
-      needed: g.needed,
-      prep: g.prep,
-      shortage: g.shortage,
-      status: g.status as any,
+    const convertedGoals: GoalItem[] = (evalResult.goals || []).map((g, idx) => ({
+      rank: (typeof g?.rank === "string" && g.rank.trim() ? g.rank.split(":")[0].trim() : `${idx + 1}순위`) || "-",
+      name: g?.name || `재무목표 ${idx + 1}`,
+      period: g?.period || "-",
+      needed: g?.needed || "0원",
+      prep: g?.prep || "0원",
+      shortage: g?.shortage || "0원",
+      status: (g?.status as any) || "진단 대기 ⚪",
     }));
 
     if (isTemplateBlank) {
@@ -394,14 +394,14 @@ export default function ReportView({
   // - 가상 데이터 모드(!isTemplateBlank): "김한국"
   // - 그 외(직접 입력 모드): 구글 로그인 연동된 본인 이름 (사용자 요청 엄수)
   const loggedInUserName =
-    profile?.name ||
+    profile?.full_name ||
     user?.user_metadata?.full_name ||
     user?.user_metadata?.name ||
     (user?.email ? user.email.split("@")[0] : "") ||
     "고객";
 
   const displayClientName = isTemplateBlank
-    ? (reportData.customClientName.trim() || loggedInUserName)
+    ? ((reportData.customClientName || "").trim() || loggedInUserName)
     : "김한국";
 
   // 계산 필드들

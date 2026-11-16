@@ -295,6 +295,25 @@ AFPK·CFP 재무설계 6단계 표준 프로세스(고객 정보 수집 → 재�
     try {
       const parsed = JSON.parse(cleaned);
       if (parsed.goals && Array.isArray(parsed.goals)) {
+        parsed.goals = parsed.goals.map((g: any, idx: number) => {
+          const fb = fallbackResult.goals[idx] || fallbackResult.goals[0];
+          const merged = {
+            ...fb,
+            ...(g && typeof g === "object" ? g : {}),
+          };
+          merged.id = typeof merged.id === "string" && merged.id.trim() ? merged.id : fb.id;
+          merged.rank = typeof merged.rank === "string" && merged.rank.trim() ? merged.rank : fb.rank;
+          merged.name = typeof merged.name === "string" && merged.name.trim() ? merged.name : fb.name;
+          merged.period = typeof merged.period === "string" && merged.period.trim() ? merged.period : fb.period;
+          merged.needed = typeof merged.needed === "string" && merged.needed.trim() ? merged.needed : fb.needed;
+          merged.prep = typeof merged.prep === "string" && merged.prep.trim() ? merged.prep : fb.prep;
+          merged.shortage = typeof merged.shortage === "string" && merged.shortage.trim() ? merged.shortage : fb.shortage;
+          merged.status = typeof merged.status === "string" && merged.status.trim() ? merged.status : fb.status;
+          merged.statusCode = typeof merged.statusCode === "string" && merged.statusCode.trim() ? merged.statusCode : fb.statusCode;
+          merged.expertOpinion = typeof merged.expertOpinion === "string" && merged.expertOpinion.trim() ? merged.expertOpinion : fb.expertOpinion;
+          return merged;
+        });
+
         // dataMode가 custom일 때 핵심 수치 정합성 보장
         if (dataMode === "custom") {
           const userDebt = parseNum(financialContext.totalDebt);
