@@ -77,11 +77,11 @@ export default function FinancialStatusView({
     const uk = Math.floor(abs / 100000000);
     const man = Math.floor((abs % 100000000) / 10000);
     const rest = abs % 10000;
-    let res = "";
-    if (uk > 0) res += `${uk}억 `;
-    if (man > 0) res += `${man.toLocaleString("ko-KR")}만 `;
-    if (rest > 0 && uk === 0) res += `${rest.toLocaleString("ko-KR")}`;
-    return `${sign}${res.trim()} 원`;
+    const parts: string[] = [];
+    if (uk > 0) parts.push(`${uk}억`);
+    if (man > 0) parts.push(`${man.toLocaleString("ko-KR")}만`);
+    if (rest > 0) parts.push(`${rest.toLocaleString("ko-KR")}`);
+    return `${sign}${parts.join(" ").trim()} 원`;
   };
 
   // 상세 내역 커스텀 상태 (신규 고객 직접 편집용)
@@ -192,6 +192,8 @@ export default function FinancialStatusView({
     ? cleanExpense > 0
       ? `-${formatKoreanAmount(cleanExpense)}`
       : "0원 (지출 입력 대기)"
+    : cleanExpense > 0
+    ? `-${formatKoreanAmount(Math.max(0, cleanExpense - 450000))}`
     : "-592만 원";
 
   // 자산 구성 비중 계산 (신규 고객 모드 vs 가상 모드)

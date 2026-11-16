@@ -88,10 +88,176 @@ function formatKoreanCurrency(amount: number): string {
   if (jo > 0) parts.push(`${jo}조`);
   if (eok > 0) parts.push(`${eok}억`);
   if (man > 0) parts.push(`${man.toLocaleString("ko-KR")}만`);
-  if (remainder > 0 && parts.length === 0) parts.push(`${remainder.toLocaleString("ko-KR")}`);
+  if (remainder > 0) {
+    parts.push(`${remainder.toLocaleString("ko-KR")}`);
+  }
 
   const formatted = (parts.join(" ") + "원").trim();
   return isNegative ? `-${formatted}` : formatted;
+}
+
+// 4대 고객 유형별 5개 지정 질문 및 AFPK 초기 자문 매핑
+export const CONCERN_QUESTIONS_MAP: Record<string, {
+  title: string;
+  defaultGoal: string;
+  defaultAmount: string;
+  defaultDate: string;
+  questions: string[];
+  initialAnswer: (question: string) => {
+    text: string;
+    summary: { label: string; value: string; note: string }[];
+    suggestions: string[];
+  };
+}> = {
+  debt: {
+    title: "부채 상환 고객",
+    defaultGoal: "은퇴 전 대출 2.5억 전액 상환",
+    defaultAmount: "250000000",
+    defaultDate: "은퇴 전까지 (3년 내)",
+    questions: [
+      "은퇴까지 남은 기간 안에 2.5억을 다 갚으려면 매달 얼마씩 상환해야 하나요?",
+      "원리금균등, 원금균등, 중도상환 가운데 저한테 가장 유리한 방식은 무엇인가요?",
+      "여윳돈이 생기면 대출을 먼저 갚는 게 나을까요, 투자해서 불리는 게 나을까요?",
+      "금리가 오르거나 내리면 상환 계획이 어떻게 달라지나요?",
+      "대출을 갚느라 노후자금(연금, 저축)이 부족해지지는 않을까요?",
+    ],
+    initialAnswer: (q) => ({
+      text: `은퇴 전 부채 상환은 안정적인 노후 현금흐름 확보의 핵심 과제입니다. 질의하신 내용("${q}")을 종합 진단한 결과, 은퇴 후 근로소득 중단 시 고정 원리금 지출은 가계 현금흐름에 치명적 위험이 됩니다. 따라서 보유 가용자산 우선 상환과 퇴직금·월 잉여금을 결합한 단계적 조기 상환 플랜을 권장합니다. 🎯`,
+      summary: [
+        { label: "총 부채 규모", value: "2억 5,000만 원 (입력값)", note: "아파트 담보대출 기준" },
+        { label: "권장 상환 전략", value: "은퇴 전 전액 상환 (계산값)", note: "퇴직 직후 고정비용 영구 제거" },
+        { label: "월 이자 절감 효과", value: "월 약 83만 ~ 104만 원 [가정]", note: "대출금리 연 4~5% 가정 시" },
+      ],
+      suggestions: [
+        "원리금 상환 방식 최적화: 퇴직 전까지 원금균등 분할상환으로 총이자 부담을 최소화하세요.",
+        "여윳돈 배분 우선순위: 대출금리(4%)가 세후 안전자산 수익률보다 높으므로 중도상환수수료 면제 시점마다 원금 우선 상환을 권장합니다.",
+        "노후 연금 최소 납입 유지: 세액공제 혜택이 큰 IRP/연금저축(월 30~40만 원)은 유지하면서 나머지 잉여금을 대출 상환에 집중하세요.",
+      ],
+    }),
+  },
+  wedding: {
+    title: "목돈 마련 고객",
+    defaultGoal: "장남 결혼자금 7,000만 원 지원",
+    defaultAmount: "70000000",
+    defaultDate: "2년 내",
+    questions: [
+      "결혼 시점까지 7,000만 원(금액은 변동 가능)을 모으려면 매달 얼마를 저축하거나 투자해야 하나요?",
+      "자녀에게 7,000(금액은 변동 가능)만 원을 주면 증여세가 얼마나 나오나요? 결혼자금 증여공제를 받을 수 있나요?",
+      "한 번에 주는 것과 나눠서 주는 것 중 세금 면에서 어느 쪽이 유리한가요?",
+      "결혼자금을 지원하면 제 은퇴자금에 얼마나 영향이 있나요?",
+      "남은 기간을 생각하면 어떤 금융상품(예적금, ISA, 펀드 등)으로 준비하는 게 좋을까요?",
+    ],
+    initialAnswer: (q) => ({
+      text: `자녀 결혼자금 지원 질의("${q}")에 대한 AFPK 표준 진단입니다. 현행 세법상 '혼인 증여재산 공제'(최대 1억 원 추가 공제)를 활용하면 7,000만 원 전액을 증여세 없이 합법적으로 지원할 수 있습니다. 단기(2년 내) 목적 자금이므로 원금 손실 위험이 없는 안전자산 포트폴리오로 준비하시길 권장합니다. 🎯`,
+      summary: [
+        { label: "목표 지원 자금", value: "7,000만 원 (입력값)", note: "장남 결혼자금 지원 목표" },
+        { label: "혼인 증여세 공제", value: "최대 1억 5천만 원 공제 (계산값)", note: "기본공제 5천만 + 혼인공제 1억" },
+        { label: "예상 증여세액", value: "0원 (전액 비과세) [가정]", note: "혼인 전후 2년 내 증여 시" },
+      ],
+      suggestions: [
+        "혼인 증여공제 요건 확인: 혼인신고일 전후 2년 이내(총 4년) 증여 시 직계존속 1억 원 추가 공제가 적용되므로 세무 신고를 정확히 진행하세요.",
+        "단기 자금 포트폴리오 구축: 결혼 시점(2년 내)을 감안하여 변동성 높은 주식형 상품보다는 1~2년 만기 확정금리 상품(연 3.5~4.0%)에 배치하세요.",
+        "은퇴자금 안전선 확보: 본인의 20년 은퇴 생활비 재원을 침해하지 않도록 현재 보유 유동성 자산 한도 내에서 지원을 확정하세요.",
+      ],
+    }),
+  },
+  living: {
+    title: "은퇴 생활비 고객",
+    defaultGoal: "은퇴 후 생활비 월 300만 원 확보",
+    defaultAmount: "720000000",
+    defaultDate: "60세 은퇴 시점",
+    questions: [
+      "국민연금과 퇴직연금을 합치면 매달 얼마나 받을 수 있고, 300만 원(금액은 변동 가능)까지 얼마나 모자라나요?",
+      "물가상승을 반영하면 지금의 월 300만 원(금액은 변동 가능)은 은퇴 시점에 얼마가 되나요?",
+      "100세까지 산다고 가정하면 은퇴 시점에 총 얼마가 있어야 하나요?",
+      "연금저축, IRP, 즉시연금 가운데 평생 소득을 만들려면 무엇을 어떻게 조합해야 하나요?",
+      "국민연금을 앞당겨 받는 것과 늦춰 받는 것 중 저한테 어떤 게 유리한가요?",
+    ],
+    initialAnswer: (q) => ({
+      text: `은퇴 생활비 확보 질의("${q}")에 대한 AFPK 은퇴설계 진단입니다. 은퇴 후 월 300만 원의 평생 현금흐름을 확보하려면 국민연금, 퇴직연금·IRP, 주택연금의 '3층 연금 피라미드' 결합이 필수적입니다. 특히 60세 퇴직 후 국민연금 개시(65세)까지의 '5년 소득 공백기'를 메우는 브릿지 연금 플랜이 최우선 과제입니다. 🎯`,
+      summary: [
+        { label: "희망 월 생활비", value: "월 300만 원 (입력값)", note: "부부 기준 월 적정 생활비" },
+        { label: "20년간 총 필요 자금", value: "약 7억 2,000만 원 (계산값)", note: "물가상승 및 은퇴 20년 기준" },
+        { label: "연금 소득 목표", value: "월 약 280만 ~ 320만 원 [가정]", note: "국민연금+IRP+주택연금 결합 시" },
+      ],
+      suggestions: [
+        "5년 소득 공백기 대비: 60세부터 65세까지는 개인형 IRP 및 연금저축을 집중 분할 수령하여 공백기 생활비를 확보하세요.",
+        "국민연금 수령 시기 조율: 건강 상태와 소득 공백 여부에 따라 조기노령연금(연 6% 감액)보다는 정규 시점 수령 또는 1~2년 연기(연 7.2% 증액)를 검토하세요.",
+        "주택연금 종신 안전망: 자가 주택을 활용한 주택연금 가입 시 부부 평생 비과세 월 수령액을 확보할 수 있습니다.",
+      ],
+    }),
+  },
+  inheritance: {
+    title: "상가주택 상속 대비 절세 고객",
+    defaultGoal: "상가주택 상속 및 절세 대비",
+    defaultAmount: "77600000",
+    defaultDate: "향후 3년 ~ 5년 내",
+    questions: [
+      "지금 상가주택을 상속하면 상속세가 대략 얼마나 나오나요?",
+      "미리 증여하는 것과 상속하는 것 중 세금 면에서 어느 쪽이 유리한가요?",
+      "상가주택은 시가와 기준시가 가운데 어느 금액으로 평가되나요? 감정평가를 받는 게 유리한가요?",
+      "자녀 여러 명에게 어떻게 나눠야 세금도 줄이고 분쟁도 막을 수 있나요?",
+      "상속세 낼 현금이 부족하면 어떻게 준비해야 하나요? (종신보험, 연부연납, 물납 등)",
+    ],
+    initialAnswer: (q) => ({
+      text: `상가주택 상속·절세 질의("${q}")에 대한 전문 자문 소견입니다. 상가주택은 주거와 상가 면적 비율, 기준시가 및 감정평가 적용 여부에 따라 상속·증여세액 편차가 매우 큽니다. 특히 상속 발생 시 일시 현금 납부 재원이 부족하면 자산 급매나 가산세 위험이 있으므로, 종신보험 보장자산 마련 및 연부연납 제도를 사전 대비하셔야 합니다. 🎯`,
+      summary: [
+        { label: "상속 대상 자산", value: "상가주택 지분 (입력값)", note: "부동산 및 임대보증금 포함" },
+        { label: "상속세 평가 기준", value: "감정평가 vs 기준시가 (계산값)", note: "시가 인정 범위 정밀 검토" },
+        { label: "납부 재원 대책", value: "연부연납·종신보험 검토 [가정]", note: "현금 결손 위험 대비" },
+      ],
+      suggestions: [
+        "사전 증여 vs 상속 시뮬레이션: 10년 주기 증여재산공제(성년 자녀 5천만 원)를 활용해 지분을 미리 분산하는 것이 상속세율(최고 50%)을 낮추는 데 유리합니다.",
+        "상속세 현금 납부 재원 확보: 피상속인을 피보험자로 하는 종신보험에 가입하면 사망보험금으로 상속세를 즉시 납부할 수 있습니다.",
+        "전담 세무사 1:1 상담: 상가주택의 양도소득세·상속세는 복잡한 복합과세 대상이므로 전담 세무사(한OO 세무사)와의 정밀 상담을 반드시 병행하세요.",
+      ],
+    }),
+  },
+};
+
+export function detectConcernKey(concernStr: string, gName: string): "debt" | "wedding" | "living" | "inheritance" {
+  const combined = ((concernStr || "") + " " + (gName || "")).toLowerCase();
+  if (combined.includes("부채") || combined.includes("대출") || combined.includes("상환") || combined.includes("debt")) {
+    return "debt";
+  }
+  if (combined.includes("결혼") || combined.includes("목돈") || combined.includes("자녀") || combined.includes("wedding")) {
+    return "wedding";
+  }
+  if (combined.includes("상속") || combined.includes("증여") || combined.includes("상가") || combined.includes("절세") || combined.includes("inheritance")) {
+    return "inheritance";
+  }
+  return "living";
+}
+
+export function createInitialMessages(
+  concernKey: "debt" | "wedding" | "living" | "inheritance",
+  preferredIdx?: number
+): ChatMessage[] {
+  const config = CONCERN_QUESTIONS_MAP[concernKey] || CONCERN_QUESTIONS_MAP.living;
+  const idx = typeof preferredIdx === "number" && preferredIdx >= 0
+    ? preferredIdx % config.questions.length
+    : 0;
+  const selectedQuestion = config.questions[idx];
+  const answer = config.initialAnswer(selectedQuestion);
+
+  return [
+    {
+      id: "init-user-1",
+      sender: "user",
+      time: "오후 2:14",
+      text: selectedQuestion,
+    },
+    {
+      id: "init-gemini-2",
+      sender: "gemini",
+      time: "오후 2:14",
+      text: answer.text,
+      details: {
+        summary: answer.summary,
+        suggestions: answer.suggestions,
+      },
+    },
+  ];
 }
 
 export default function DiagnosisPage() {
@@ -484,13 +650,17 @@ export default function DiagnosisPage() {
         if (savedGoal) {
           setGoalName(savedGoal);
         }
+        const randIdx = Math.floor((Date.now() / 1000) % 5);
         if (savedConcern) {
           setUserConcern(savedConcern);
+          const detectedKey = detectConcernKey(savedConcern, savedGoal || "");
+          setMessages(createInitialMessages(detectedKey, randIdx));
+
           if (!savedGoal) {
-            if (savedConcern.includes("대출")) {
+            if (savedConcern.includes("대출") || savedConcern.includes("부채")) {
               setGoalName("은퇴 전 대출 2.5억 전액 상환");
             } else if (savedConcern.includes("결혼") || savedConcern.includes("자녀")) {
-              setGoalName("장남 결혼자금 7,000만 원 마련");
+              setGoalName("장남 결혼자금 7,000만 원 지원");
             } else if (savedConcern.includes("생활비")) {
               setGoalName("은퇴 후 생활비 월 300만 원 확보");
             } else if (savedConcern.includes("상속") || savedConcern.includes("절세")) {
@@ -513,7 +683,7 @@ export default function DiagnosisPage() {
   const [inputMessage, setInputMessage] = useState("");
   const [isAiTyping, setIsAiTyping] = useState(false);
 
-  // Gemini 1.5 Flash AI 재무주치의 실시간 목표 평가 상태
+  // Gemini Pro AI 재무주치의 실시간 목표 평가 상태
   const [aiEvaluatedGoals, setAiEvaluatedGoals] = useState<EvaluatedGoalItem[] | null>(() => {
     if (typeof window !== "undefined") {
       try {
@@ -535,8 +705,9 @@ export default function DiagnosisPage() {
   });
 
   const [isAiEvaluating, setIsAiEvaluating] = useState(false);
+  const [evaluatedModelName, setEvaluatedModelName] = useState<string>("gemini-flash-latest");
 
-  // Gemini 1.5 Flash AI 재무목표 정밀 진단 수동/자동 트리거
+  // Gemini 실제 활성 모델 기반 재무목표 정밀 진단 수동/자동 트리거
   const handleTriggerAiGoalEvaluation = async () => {
     setIsAiEvaluating(true);
     try {
@@ -567,6 +738,9 @@ export default function DiagnosisPage() {
 
       if (!res.ok) throw new Error("AI 목표 정밀 진단에 실패했습니다.");
       const data = await res.json();
+      if (data.usedModel) {
+        setEvaluatedModelName(data.usedModel);
+      }
       if (data.goals && Array.isArray(data.goals)) {
         setAiEvaluatedGoals(data.goals);
         try {
@@ -585,44 +759,12 @@ export default function DiagnosisPage() {
       setIsAiEvaluating(false);
     }
   };
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: "1",
-      sender: "user",
-      time: "오후 2:14",
-      text: "이번 달 남은 잉여금 72만 원 중 40만 원을 연금저축·IRP에 더 넣으면 은퇴 준비에 어떤 효과가 있나요?",
-    },
-    {
-      id: "2",
-      sender: "gemini",
-      time: "오후 2:14",
-      text: "월 40만 원(연 480만 원)을 개인형 IRP 및 연금저축에 추가 납입하시면, 연간 약 63만~79만 원의 세액공제(절세) 혜택과 함께 은퇴 시 매월 약 25만~35만 원 수준의 추가 생활비 재원을 안정적으로 확보할 수 있습니다. 🎯",
-      details: {
-        summary: [
-          {
-            label: "연간 절세 혜택 (세액공제)",
-            value: "약 63.3만 ~ 79.2만 원",
-            note: "소득 구간별 13.2%~16.5% 환급",
-          },
-          {
-            label: "10년 운용 시 자산 형성",
-            value: "약 5,800만 ~ 6,200만 원",
-            note: "연 4~5% 복리 수익률 가정",
-          },
-          {
-            label: "은퇴 후 연금 수령 추정",
-            value: "월 약 25만 ~ 35만 원",
-            note: "20년 분할 수령 기준",
-          },
-        ],
-        suggestions: [
-          "연말정산 세액공제 한도(900만 원) 우선 활용: 기존 연금 불입액에 480만 원 추가 시 100% 공제 혜택을 누릴 수 있습니다.",
-          "담보대출 분할상환과의 조율: 아파트 담보대출(연 4%) 원금 상환을 차질 없이 유지하면서 연금 복리 효과를 함께 챙기세요.",
-          "비상예비자금 30만 원 유지: 남은 월 잉여금(32만 원)은 수시입출금 파킹통장/CMA에 비축하여 유동성을 확보하세요.",
-        ],
-      },
-    },
-  ]);
+  // 4대 고객 유형 중 활성 고민 감지
+  const activeConcernKey = detectConcernKey(userConcern, goalName);
+
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    return createInitialMessages("living");
+  });
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isAiTyping) return;
@@ -647,6 +789,10 @@ export default function DiagnosisPage() {
 
     try {
       const dataMode = isTemplateBlank ? "custom" : "demo";
+      const cleanRetireExpense = parsedExpense > 0 ? parsedExpense : (isTemplateBlank ? 0 : 6370000);
+      const cleanRetireIncome = isTemplateBlank ? 0 : 450000;
+      const calcRetireDeficit = cleanRetireExpense - cleanRetireIncome;
+
       const financialContext = {
         dataMode,
         goal: goalName || (isTemplateBlank ? "은퇴 재무목표" : "은퇴 후 월 생활비 300만원 마련"),
@@ -660,7 +806,7 @@ export default function DiagnosisPage() {
         monthlySurplus: `${calcSurplus.toLocaleString()}원`,
         emergencyFund: emergencyFund ? `${emergencyFund}원` : "0원",
         emergencyMonths: parsedExpense > 0 ? (parsedEmergency / parsedExpense).toFixed(1) : "0",
-        retirementDeficit: isTemplateBlank ? `-${parsedExpense.toLocaleString()}원` : "-592만 원",
+        retirementDeficit: calcRetireDeficit > 0 ? `-${formatKoreanCurrency(calcRetireDeficit)}` : "0원",
         monthlyRecords: {
           "10월": {
             income: `${rec10.income}원`,
@@ -711,7 +857,7 @@ export default function DiagnosisPage() {
       };
       setMessages((prev) => [...prev, geminiMsg]);
 
-      // Gemini 1.5 Flash가 상담 결과에 따라 재무목표를 동적으로 재산출한 경우 자동 반영
+      // Gemini Pro가 상담 결과에 따라 재무목표를 동적으로 재산출한 경우 자동 반영
       if (data.details?.evaluatedGoals && Array.isArray(data.details.evaluatedGoals)) {
         setAiEvaluatedGoals(data.details.evaluatedGoals);
         try {
@@ -849,20 +995,7 @@ export default function DiagnosisPage() {
               </span>
               <span>내 재무현황</span>
             </button>
-            <button
-              type="button"
-              onClick={() => setCurrentStep("goals")}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                currentStep === "goals"
-                  ? "bg-blue-600 text-white font-bold shadow-sm"
-                  : "text-slate-400 hover:text-white hover:bg-slate-800/60"
-              }`}
-            >
-              <span className="material-symbols-outlined text-[20px]">
-                check_circle
-              </span>
-              <span>목표 관리</span>
-            </button>
+
             <button
               type="button"
               onClick={() => setCurrentStep("report")}
@@ -913,7 +1046,6 @@ export default function DiagnosisPage() {
                 {currentStep === "step2" && "STEP 02 월별 변동 입력"}
                 {currentStep === "step3" && "STEP 03 Gemini AI 재무상담"}
                 {currentStep === "financial_status" && "내 재무현황 (재무상태표 & 현금흐름표)"}
-                {currentStep === "goals" && "재무목표 관리 (4대 목표 진단 & 솔루션)"}
                 {currentStep === "report" && "공인 은퇴설계 종합 진단 리포트"}
               </span>
             </div>
@@ -1777,201 +1909,6 @@ export default function DiagnosisPage() {
                       </div>
                     </div>
                   </div>
-
-                  {/* 월별 재무 변동 비교 테이블 (Supabase 9월 vs 10월) */}
-                  <div className="p-5 rounded-2xl bg-white dark:bg-[#11192E] border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                      <div>
-                        <h4 className="text-xs font-bold text-slate-800 dark:text-white">
-                          월별 재무 변동 비교 (2026년 9월 vs 10월)
-                        </h4>
-                        <p className="text-[10px] text-slate-400 mt-0.5">
-                          {!isTemplateBlank ? "Supabase 실데이터 연동 (9월 가상 vs 10월 상세)" : "신규 고객 직접 입력 실데이터 비교"}
-                        </p>
-                      </div>
-                      <span className="text-[10px] text-slate-400 self-start sm:self-auto">
-                        단위: 원, 만 원
-                      </span>
-                    </div>
-
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left text-xs">
-                        <thead>
-                          <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-400 font-semibold bg-slate-50/60 dark:bg-slate-900/60">
-                            <th className="py-2.5 px-3">항목</th>
-                            <th className="py-2.5 px-3">9월 실적</th>
-                            <th className="py-2.5 px-3">10월 실적</th>
-                            <th className="py-2.5 px-3">전월비 증감 (MoM)</th>
-                            <th className="py-2.5 px-3">변동 내역 및 사유</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                          {/* 월 수입 */}
-                          <tr>
-                            <td className="py-2.5 px-3 font-semibold text-slate-800 dark:text-slate-200">
-                              월 수입 합계
-                            </td>
-                            <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400">
-                              {m9Income.toLocaleString("ko-KR")}원
-                            </td>
-                            <td className="py-2.5 px-3 font-bold text-slate-800 dark:text-white">
-                              {m10Income.toLocaleString("ko-KR")}원
-                            </td>
-                            <td className={`py-2.5 px-3 font-semibold ${m10Income >= m9Income ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
-                              {m10Income >= m9Income ? "▲ +" : "▼ "}
-                              {Math.abs(m10Income - m9Income).toLocaleString("ko-KR")}원
-                            </td>
-                            <td className="py-2.5 px-3 text-[11px] text-slate-500">
-                              {!isTemplateBlank ? "금융 배당소득 증가 (4만 → 5만 원)" : "-"}
-                            </td>
-                          </tr>
-
-                          {/* 고정지출 */}
-                          <tr>
-                            <td className="py-2.5 px-3 font-semibold text-slate-800 dark:text-slate-200">
-                              고정지출 합계
-                            </td>
-                            <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400">
-                              {m9Fixed.toLocaleString("ko-KR")}원
-                            </td>
-                            <td className="py-2.5 px-3 font-bold text-slate-800 dark:text-white">
-                              {m10Fixed.toLocaleString("ko-KR")}원
-                            </td>
-                            <td className={`py-2.5 px-3 font-semibold ${m10Fixed <= m9Fixed ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
-                              {m10Fixed >= m9Fixed ? "▲ +" : "▼ "}
-                              {Math.abs(m10Fixed - m9Fixed).toLocaleString("ko-KR")}원
-                            </td>
-                            <td className="py-2.5 px-3 text-[11px] text-slate-500">
-                              {!isTemplateBlank ? "아파트 관리비 증가 (32만 → 35만 원)" : "-"}
-                            </td>
-                          </tr>
-
-                          {/* 변동지출 */}
-                          <tr className="bg-amber-50/30 dark:bg-amber-950/20">
-                            <td className="py-2.5 px-3 font-semibold text-amber-900 dark:text-amber-200">
-                              변동지출 합계
-                            </td>
-                            <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400">
-                              {m9Variable.toLocaleString("ko-KR")}원
-                            </td>
-                            <td className="py-2.5 px-3 font-bold text-amber-700 dark:text-amber-300">
-                              {m10Variable.toLocaleString("ko-KR")}원
-                            </td>
-                            <td className={`py-2.5 px-3 font-semibold ${m10Variable <= m9Variable ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
-                              {m10Variable >= m9Variable ? "▲ +" : "▼ "}
-                              {Math.abs(m10Variable - m9Variable).toLocaleString("ko-KR")}원
-                            </td>
-                            <td className="py-2.5 px-3 text-[11px] text-amber-800 dark:text-amber-300">
-                              {!isTemplateBlank ? "여가·골프(+15만), 의료(+5만), 식비(+5만), 경조(+5만)" : "-"}
-                            </td>
-                          </tr>
-
-                          {/* 투자/저축 */}
-                          <tr>
-                            <td className="py-2.5 px-3 font-semibold text-slate-800 dark:text-slate-200">
-                              투자 및 저축
-                            </td>
-                            <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400">
-                              {m9Invest.toLocaleString("ko-KR")}원
-                            </td>
-                            <td className="py-2.5 px-3 font-bold text-slate-800 dark:text-white">
-                              {m10Invest.toLocaleString("ko-KR")}원
-                            </td>
-                            <td className="py-2.5 px-3 text-slate-400 font-medium">
-                              {m10Invest === m9Invest ? "- (동일)" : `${m10Invest > m9Invest ? "▲ +" : "▼ "}${Math.abs(m10Invest - m9Invest).toLocaleString("ko-KR")}원`}
-                            </td>
-                            <td className="py-2.5 px-3 text-[11px] text-slate-500">
-                              {!isTemplateBlank ? "연금저축 및 개인형IRP 정기 불입" : "-"}
-                            </td>
-                          </tr>
-
-                          {/* 총 지출 */}
-                          <tr className="bg-slate-50 dark:bg-slate-900/50">
-                            <td className="py-2.5 px-3 font-bold text-slate-800 dark:text-slate-200">
-                              총 지출 합계
-                            </td>
-                            <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400">
-                              {m9TotalExpense.toLocaleString("ko-KR")}원
-                            </td>
-                            <td className="py-2.5 px-3 font-extrabold text-slate-900 dark:text-white">
-                              {m10TotalExpense.toLocaleString("ko-KR")}원
-                            </td>
-                            <td className={`py-2.5 px-3 font-bold ${m10TotalExpense <= m9TotalExpense ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
-                              {m10TotalExpense >= m9TotalExpense ? "▲ +" : "▼ "}
-                              {Math.abs(m10TotalExpense - m9TotalExpense).toLocaleString("ko-KR")}원
-                            </td>
-                            <td className="py-2.5 px-3 text-[11px] text-slate-500">
-                              {!isTemplateBlank ? "변동지출 및 관리비 증가로 지출 확대" : "-"}
-                            </td>
-                          </tr>
-
-                          {/* 월 잉여금 */}
-                          <tr className="bg-emerald-50/40 dark:bg-emerald-950/20">
-                            <td className="py-2.5 px-3 font-bold text-emerald-800 dark:text-emerald-300">
-                              월 잉여금 (저축가능액)
-                            </td>
-                            <td className="py-2.5 px-3 font-semibold text-slate-700 dark:text-slate-300">
-                              {(m9Surplus >= 0 ? "+" : "") + m9Surplus.toLocaleString("ko-KR")}원
-                            </td>
-                            <td className="py-2.5 px-3 font-extrabold text-emerald-700 dark:text-emerald-300">
-                              {(m10Surplus >= 0 ? "+" : "") + m10Surplus.toLocaleString("ko-KR")}원
-                            </td>
-                            <td className={`py-2.5 px-3 font-bold ${m10Surplus >= m9Surplus ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}`}>
-                              {m10Surplus >= m9Surplus ? "▲ +" : "▼ "}
-                              {Math.abs(m10Surplus - m9Surplus).toLocaleString("ko-KR")}원
-                            </td>
-                            <td className="py-2.5 px-3 text-[11px] text-emerald-700 dark:text-emerald-300">
-                              {!isTemplateBlank ? "지출 증가로 잉여 감소 반영" : "-"}
-                            </td>
-                          </tr>
-
-                          {/* 부채 상환 */}
-                          <tr>
-                            <td className="py-2.5 px-3 font-semibold text-slate-800 dark:text-slate-200">
-                              부채 상환 (원금)
-                            </td>
-                            <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400">
-                              {rec9.debtChange || "0"}원
-                            </td>
-                            <td className="py-2.5 px-3 font-bold text-emerald-600 dark:text-emerald-400">
-                              {rec10.debtChange || "0"}원
-                            </td>
-                            <td className="py-2.5 px-3 text-emerald-600 dark:text-emerald-400 font-semibold">
-                              {!isTemplateBlank ? "✓ 정상 분할상환" : "-"}
-                            </td>
-                            <td className="py-2.5 px-3 text-[11px] text-slate-500">
-                              {!isTemplateBlank ? "아파트 담보대출 원금 매월 정기 상환" : "-"}
-                            </td>
-                          </tr>
-
-                          {/* 순자산 */}
-                          <tr className="bg-blue-50/50 dark:bg-blue-950/30">
-                            <td className="py-2.5 px-3 font-bold text-blue-900 dark:text-blue-200">
-                              순자산
-                            </td>
-                            <td className="py-2.5 px-3 font-semibold text-slate-700 dark:text-slate-300">
-                              {isTemplateBlank
-                                ? (calcNetWorth !== 0 ? formatKoreanCurrency(calcNetWorth) : "0원")
-                                : formatKoreanCurrency(m9NetWorth)}
-                            </td>
-                            <td className="py-2.5 px-3 font-extrabold text-blue-700 dark:text-blue-300">
-                              {isTemplateBlank
-                                ? (calcNetWorth !== 0 ? formatKoreanCurrency(calcNetWorth) : "0원")
-                                : formatKoreanCurrency(m10NetWorth)}
-                            </td>
-                            <td className="py-2.5 px-3 font-bold text-blue-600 dark:text-blue-400">
-                              {isTemplateBlank
-                                ? "- (동일)"
-                                : `▲ +${formatKoreanCurrency(m10NetWorth - m9NetWorth)}`}
-                            </td>
-                            <td className="py-2.5 px-3 text-[11px] text-blue-800 dark:text-blue-300 font-medium">
-                              {isTemplateBlank ? "직접 입력한 자산·부채 기준 순자산" : "대출원금 상환으로 순자산 지속 증가"}
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -2066,19 +2003,19 @@ export default function DiagnosisPage() {
                             {isAiEvaluating ? (
                               <>
                                 <span className="inline-block w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                <span>Gemini 1.5 Flash가 재무목표를 정밀 진단 중...</span>
+                                <span>{evaluatedModelName} 모델로 정밀 진단 중...</span>
                               </>
                             ) : (
                               <>
                                 <span>✨</span>
-                                <span>Gemini 1.5 Flash 재무목표 정밀 진단 실행</span>
+                                <span>{evaluatedModelName} 재무목표 정밀 진단 실행</span>
                               </>
                             )}
                           </button>
                           {aiEvaluatedGoals && (
                             <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold text-center flex items-center justify-center gap-1">
                               <span>✓</span>
-                              <span>Gemini 1.5 Flash AI 정밀 진단 결과 반영됨 (목표관리·리포트 연동)</span>
+                              <span>{evaluatedModelName} AI 정밀 진단 결과 반영됨 (리포트 연동)</span>
                             </span>
                           )}
                         </div>
@@ -2164,81 +2101,73 @@ export default function DiagnosisPage() {
                     </div>
                   </div>
 
-                  {/* AI 추천 질문 카테고리 가이드 */}
+                  {/* AI 추천 질문 카테고리 가이드 (4대 고객 유형별 5대 질문) */}
                   <div className="p-5 rounded-2xl bg-white dark:bg-[#11192E] border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div>
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center justify-between">
                         <h4 className="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
                           <span>💡</span>
-                          <span>추천 질문 가이드</span>
+                          <span>추천 질문 가이드 (5대 핵심 질문)</span>
                         </h4>
-                        <p className="text-[10px] text-slate-400 mt-0.5">
-                          클릭하시면 질문 내용이 채팅창에 바로 입력돼요
-                        </p>
+                        <span className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded">
+                          {CONCERN_QUESTIONS_MAP[activeConcernKey]?.title || "맞춤 질문"}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-slate-400">
+                        클릭하시면 질문 내용이 채팅창에 바로 입력돼요
+                      </p>
+
+                      {/* 4대 고민 유형 전환 탭 */}
+                      <div className="grid grid-cols-2 gap-1 pt-1">
+                        {[
+                          { key: "debt", label: "부채 상환", icon: "💳" },
+                          { key: "wedding", label: "결혼자금", icon: "🎁" },
+                          { key: "living", label: "은퇴생활비", icon: "🏖️" },
+                          { key: "inheritance", label: "상속·절세", icon: "🏛️" },
+                        ].map((t) => (
+                          <button
+                            key={t.key}
+                            type="button"
+                            onClick={() => {
+                              const k = t.key as "debt" | "wedding" | "living" | "inheritance";
+                              setUserConcern(CONCERN_QUESTIONS_MAP[k].title);
+                              setGoalName(CONCERN_QUESTIONS_MAP[k].defaultGoal);
+                              setGoalAmount(CONCERN_QUESTIONS_MAP[k].defaultAmount);
+                              setGoalDate(CONCERN_QUESTIONS_MAP[k].defaultDate);
+                              setMessages(createInitialMessages(k));
+                            }}
+                            className={`px-2 py-1.5 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1 transition-all ${
+                              activeConcernKey === t.key
+                                ? "bg-blue-600 text-white shadow-sm"
+                                : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
+                            }`}
+                          >
+                            <span>{t.icon}</span>
+                            <span>{t.label}</span>
+                          </button>
+                        ))}
                       </div>
                     </div>
 
-                    <div className="space-y-2">
-                      {(() => {
-                        const effGoal = goalName || (isTemplateBlank ? "재무 목표" : "은퇴 생활비 300만 원");
-                        const effAmt = goalAmount ? (parseNumber(goalAmount) >= 10000 ? formatKoreanCurrency(parseNumber(goalAmount)) : parseNumber(goalAmount).toLocaleString() + "원") : (isTemplateBlank ? "" : "6억 8,800만 원");
-                        const effDt = goalDate || (isTemplateBlank ? "" : "60세 은퇴");
-                        const surplusStr = calcSurplus >= 10000 ? formatKoreanCurrency(calcSurplus) : `${calcSurplus.toLocaleString()}원`;
-                        const debtStr = parsedDebt >= 10000 ? formatKoreanCurrency(parsedDebt) : `${parsedDebt.toLocaleString()}원`;
-
-                        return [
-                          {
-                            category: `🎯 [${effGoal}] 달성 자금 전략`,
-                            icon: "🎯",
-                            question: effAmt
-                              ? `목표 자금 ${effAmt} (${effDt})을 달성하기 위해 매월 얼마의 저축과 연 몇 %의 목표 수익률이 필요한가요?`
-                              : `"${effGoal}" 목표를 달성하려면 매월 얼마씩 어떤 포트폴리오(IRP·연금저축·ISA)로 모아야 하나요?`,
-                            desc: effAmt ? `목표 자금 ${effAmt} (${effDt}) 맞춤 자금 솔루션` : "목표 자금 마련을 위한 저축·투자 포트폴리오",
-                          },
-                          {
-                            category: "💰 잉여금 활용 & 연금 극대화",
-                            icon: "💰",
-                            question: calcSurplus > 0
-                              ? `이번 달 남은 잉여금 ${surplusStr} 중 ${(Math.round(calcSurplus * 0.5)).toLocaleString()}원을 IRP·연금저축에 더 넣으면 "${effGoal}" 준비에 어떤 효과가 있나요?`
-                              : `현재 월 잉여금이 부족한 상태인데, 월 지출을 줄여 "${effGoal}" 준비금을 마련하려면 어디서부터 줄여야 할까요?`,
-                            desc: calcSurplus > 0 ? `실시간 계산된 월 잉여금(${surplusStr}) 기반 절세 및 자산 형성 효과` : "지출 다이어트를 통한 목표 자금 확보안",
-                          },
-                          {
-                            category: "💳 부채 상환 vs 목표 저축",
-                            icon: "💳",
-                            question: parsedDebt > 0
-                              ? `현재 부채(${debtStr}) 원금 상환과 "${effGoal}" 자금 마련 중 어떤 것에 우선순위를 두어야 유리한가요?`
-                              : `부채가 없는 상태에서 매월 발생하는 잉여금을 "${effGoal}" 달성을 위해 어떻게 포트폴리오를 구성할까요?`,
-                            desc: parsedDebt > 0 ? `대출이자 절감과 복리 투자수익 기회비용 비교 (총부채: ${debtStr})` : "무부채 상태에서의 잉여금 최적 배분안",
-                          },
-                          {
-                            category: "📉 STEP 02 변동지출 관리 & 잉여금 확대",
-                            icon: "📉",
-                            question: `STEP 02의 월별 변동지출(식비·의료·여가)을 고려할 때, "${effGoal}" 달성을 위한 비상금 규모와 잉여금 확대 방안은?`,
-                            desc: `실제 월 지출 구조조정으로 "${effGoal}" 준비금 추가 확보`,
-                          },
-                        ];
-                      })().map((item, idx) => (
+                    <div className="space-y-2 pt-1">
+                      {(CONCERN_QUESTIONS_MAP[activeConcernKey]?.questions || CONCERN_QUESTIONS_MAP.living.questions).map((qText, idx) => (
                         <button
                           key={idx}
                           type="button"
-                          onClick={() => setInputMessage(item.question)}
+                          onClick={() => setInputMessage(qText)}
                           className="w-full text-left p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 hover:bg-blue-50 dark:hover:bg-blue-950/40 border border-slate-100 dark:border-slate-700/60 hover:border-blue-200 dark:hover:border-blue-800 transition-all group"
                         >
                           <div className="flex items-center justify-between mb-1">
                             <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1">
-                              <span>{item.icon}</span>
-                              <span>{item.category}</span>
+                              <span>Q{idx + 1}.</span>
+                              <span>질문 {idx + 1}</span>
                             </span>
                             <span className="text-[10px] text-slate-400 group-hover:text-blue-600 font-medium">
                               질문 채우기 ↵
                             </span>
                           </div>
                           <div className="text-xs font-bold text-slate-800 dark:text-white group-hover:text-blue-700 dark:group-hover:text-blue-300 leading-snug">
-                            {item.question}
-                          </div>
-                          <div className="text-[10px] text-slate-400 mt-0.5">
-                            {item.desc}
+                            {qText}
                           </div>
                         </button>
                       ))}
@@ -2482,27 +2411,7 @@ export default function DiagnosisPage() {
             />
           )}
 
-          {/* 목표 관리 (4대 재무목표 타임라인 & 신호등 카드 & 솔루션) */}
-          {currentStep === "goals" && (
-            <GoalsView
-              onNavigateStep={(step) => setCurrentStep(step)}
-              onOpenTaxModal={() => setShowTaxModal(true)}
-              isTemplateBlank={isTemplateBlank}
-              onLoadSupabaseData={handleLoadSupabaseData}
-              totalAsset={totalAsset}
-              totalDebt={totalDebt}
-              monthlyIncome={monthlyIncome}
-              monthlyExpense={monthlyExpense}
-              emergencyFund={emergencyFund}
-              goalName={goalName}
-              goalAmount={goalAmount}
-              goalDate={goalDate}
-              aiGoals={aiEvaluatedGoals || undefined}
-              aiSolutions={aiEvaluatedSolutions || undefined}
-              isAiEvaluating={isAiEvaluating}
-              onTriggerAiEvaluation={handleTriggerAiGoalEvaluation}
-            />
-          )}
+
 
           {/* 리포트 (재무상태표, 현금흐름표, 재무목표 기반 종합 진단서) */}
           {currentStep === "report" && (
@@ -2523,6 +2432,7 @@ export default function DiagnosisPage() {
               aiSolutions={aiEvaluatedSolutions || undefined}
               isAiEvaluating={isAiEvaluating}
               onTriggerAiEvaluation={handleTriggerAiGoalEvaluation}
+              evaluatedModelName={evaluatedModelName}
             />
           )}
         </main>

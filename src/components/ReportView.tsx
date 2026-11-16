@@ -21,6 +21,7 @@ interface ReportViewProps {
   aiSolutions?: SolutionComparisonItem[];
   isAiEvaluating?: boolean;
   onTriggerAiEvaluation?: () => void;
+  evaluatedModelName?: string;
 }
 
 export interface GoalItem {
@@ -261,6 +262,7 @@ export default function ReportView({
   aiSolutions,
   isAiEvaluating = false,
   onTriggerAiEvaluation,
+  evaluatedModelName = "gemini-flash-latest",
 }: ReportViewProps) {
   const { user, profile } = useAuth();
 
@@ -320,7 +322,7 @@ export default function ReportView({
     }
   }, [isTemplateBlank]);
 
-  // 상위에서 전달된 입력값 및 AI 실시간 정밀 진단(Gemini 1.5 Flash) 결과 바인딩
+  // 상위에서 전달된 입력값 및 AI 실시간 정밀 진단(Gemini Pro) 결과 바인딩
   useEffect(() => {
     const evalResult = evaluateFinancialGoals({
       isTemplateBlank,
@@ -389,11 +391,18 @@ export default function ReportView({
   }, []);
 
   // 고객명 계산:
-  // - 공란 모드(isTemplateBlank): 수기 입력한 고객명 우선, 미입력 시 "고객명 미입력"
-  // - 가상 데이터 모드(!isTemplateBlank): 수기 입력한 고객명 우선, 미입력 시 "김한국" (구글 로그인 본인 이름 노출 방지)
+  // - 가상 데이터 모드(!isTemplateBlank): "김한국"
+  // - 그 외(직접 입력 모드): 구글 로그인 연동된 본인 이름 (사용자 요청 엄수)
+  const loggedInUserName =
+    profile?.name ||
+    user?.user_metadata?.full_name ||
+    user?.user_metadata?.name ||
+    (user?.email ? user.email.split("@")[0] : "") ||
+    "고객";
+
   const displayClientName = isTemplateBlank
-    ? (reportData.customClientName.trim() || "고객명 미입력")
-    : (reportData.customClientName.trim() || "김한국");
+    ? (reportData.customClientName.trim() || loggedInUserName)
+    : "김한국";
 
   // 계산 필드들
   const totalAssetsSum =
@@ -479,12 +488,12 @@ export default function ReportView({
               {isAiEvaluating ? (
                 <>
                   <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>Gemini 1.5 Flash 진단 중...</span>
+                  <span>{evaluatedModelName} 진단 중...</span>
                 </>
               ) : (
                 <>
                   <span>✨</span>
-                  <span>Gemini 1.5 Flash AI 목표 재진단</span>
+                  <span>{evaluatedModelName} AI 목표 재진단</span>
                 </>
               )}
             </button>
@@ -738,7 +747,7 @@ export default function ReportView({
             </h3>
             <span className="text-xs text-slate-400">
               {aiGoals && aiGoals.length > 0
-                ? "Gemini 1.5 Flash AI 정밀 진단 반영"
+                ? `${evaluatedModelName} AI 정밀 진단 반영`
                 : isTemplateBlank
                 ? "AFPK AI 페르소나 실시간 진단"
                 : "AFPK 공인 표준 실시간 진단"}

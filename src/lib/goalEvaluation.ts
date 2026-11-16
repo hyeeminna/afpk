@@ -42,11 +42,11 @@ export function formatKoreanAmount(num: number): string {
   const uk = Math.floor(abs / 100000000);
   const man = Math.floor((abs % 100000000) / 10000);
   const rest = abs % 10000;
-  let res = "";
-  if (uk > 0) res += `${uk}억 `;
-  if (man > 0) res += `${man.toLocaleString("ko-KR")}만 `;
-  if (rest > 0 && uk === 0) res += `${rest.toLocaleString("ko-KR")}`;
-  return `${sign}${res.trim()} 원`;
+  const parts: string[] = [];
+  if (uk > 0) parts.push(`${uk}억`);
+  if (man > 0) parts.push(`${man.toLocaleString("ko-KR")}만`);
+  if (rest > 0) parts.push(`${rest.toLocaleString("ko-KR")}`);
+  return `${sign}${parts.join(" ").trim()} 원`;
 }
 
 export function evaluateFinancialGoals(params: {
@@ -76,27 +76,109 @@ export function evaluateFinancialGoals(params: {
     aiSolutions,
   } = params;
 
-  // 1. Gemini 1.5 Flash AI 재무주치의 실시간 정밀 진단 결과가 있는 경우 최우선 반영
+  // 1. 동적 수치 산출 (가상 고객 모드인 경우에도 고정값이 아닌 유효 데이터를 기반으로 동적 산출)
+  const isDemo = !isTemplateBlank;
+  const cleanAsset = parseNum(totalAsset) || (isDemo ? 1721710000 : 0);
+  const cleanDebt = parseNum(totalDebt) || (isDemo ? 250000000 : 0);
+  const cleanIncome = parseNum(monthlyIncome) || (isDemo ? 8050000 : 0);
+  const cleanExpense = parseNum(monthlyExpense) || (isDemo ? 7330000 : 0);
+  const cleanEmergency = parseNum(emergencyFund) || (isDemo ? 22000000 : 0);
+  const cleanSurplus = cleanIncome - cleanExpense;
+  const cleanNetWorth = cleanAsset - cleanDebt;
+  const cleanGoalAmount = parseNum(goalAmount) || (isDemo ? 70000000 : 0);
+
+  // 2. Gemini AI 재무주치의 실시간 정밀 진단 결과가 있는 경우 최우선 반영하되, 실시간 사용자 입력값과 100% 동기화
   if (aiGoals && Array.isArray(aiGoals) && aiGoals.length > 0) {
+    const synchronizedAiGoals = aiGoals.map((g) => {
+      const copy = { ...g };
+      if (copy.id === "debt") {
+        if (cleanDebt === 0) {
+          copy.needed = "0원";
+          copy.neededNum = 0;
+          copy.shortage = "0원 (해결)";
+          copy.shortageNum = 0;
+          copy.status = "달성 가능 🟢";
+          copy.statusCode = "green";
+        } else {
+          copy.needed = formatKoreanAmount(cleanDebt);
+          copy.neededNum = cleanDebt;
+          const prep = Math.min(cleanAsset, cleanDebt);
+          const shortage = Math.max(0, cleanDebt - cleanAsset);
+          copy.prep = prep > 0 ? `${formatKoreanAmount(prep)}` : "0원";
+          copy.prepNum = prep;
+          copy.shortage = shortage === 0 ? "0원 (해결)" : `${formatKoreanAmount(shortage)}`;
+          copy.shortageNum = shortage;
+          copy.status = cleanAsset >= cleanDebt ? "달성 가능 🟢" : (cleanSurplus > 0 ? "사전 합의 🟡" : "위험 경보 🔴");
+          copy.statusCode = cleanAsset >= cleanDebt ? "green" : (cleanSurplus > 0 ? "yellow" : "red");
+        }
+      } else if (copy.id === "custom_goal") {
+        if (goalName) copy.name = goalName;
+        if (goalDate) copy.period = goalDate;
+        if (cleanGoalAmount > 0) {
+          copy.needed = formatKoreanAmount(cleanGoalAmount);
+          copy.neededNum = cleanGoalAmount;
+          const prep = Math.min(cleanGoalAmount, Math.max(0, cleanNetWorth));
+          const shortage = Math.max(0, cleanGoalAmount - prep);
+          copy.prep = prep > 0 ? formatKoreanAmount(prep) : "0원";
+          copy.prepNum = prep;
+          copy.shortage = shortage === 0 ? "0원 (달성)" : `${formatKoreanAmount(shortage)}`;
+          copy.shortageNum = shortage;
+          copy.status = shortage === 0 ? "달성 가능 🟢" : (cleanSurplus > 0 ? "사전 합의 🟡" : "위험 경보 🔴");
+          copy.statusCode = shortage === 0 ? "green" : (cleanSurplus > 0 ? "yellow" : "red");
+        } else if (isTemplateBlank) {
+          copy.needed = "0원 (입력 대기)";
+          copy.neededNum = 0;
+          copy.prep = "0원";
+          copy.prepNum = 0;
+          copy.shortage = "0원";
+          copy.shortageNum = 0;
+          copy.status = "진단 대기 ⚪";
+          copy.statusCode = "gray";
+        }
+      } else if (copy.id === "retirement") {
+        const retireNeeded = cleanExpense > 0 ? cleanExpense * 12 * 20 : (cleanIncome > 0 ? Math.round(cleanIncome * 0.7) * 12 * 20 : 0);
+        if (retireNeeded > 0) {
+          copy.needed = formatKoreanAmount(retireNeeded);
+          copy.neededNum = retireNeeded;
+          const prep = Math.min(retireNeeded, Math.max(0, Math.round(cleanNetWorth * 0.5)));
+          const shortage = Math.max(0, retireNeeded - prep);
+          copy.prep = prep > 0 ? formatKoreanAmount(prep) : "0원";
+          copy.prepNum = prep;
+          copy.shortage = shortage > 0 ? `${formatKoreanAmount(shortage)} ⚠️` : "0원 (해결)";
+          copy.shortageNum = shortage;
+        } else if (isTemplateBlank) {
+          copy.needed = "0원 (입력 대기)";
+          copy.neededNum = 0;
+          copy.prep = "0원";
+          copy.prepNum = 0;
+          copy.shortage = "0원";
+          copy.shortageNum = 0;
+          copy.status = "진단 대기 ⚪";
+          copy.statusCode = "gray";
+        }
+      }
+      return copy;
+    });
+
     return {
-      goals: aiGoals,
+      goals: synchronizedAiGoals,
       solutions: aiSolutions && aiSolutions.length > 0 ? aiSolutions : [
         {
           item: "아파트 담보대출",
-          before: "원리금 상환 부담",
+          before: cleanDebt > 0 ? formatKoreanAmount(cleanDebt) : "0원",
           after: "0원 (상환 플랜 수립)",
-          effect: "퇴직 직후 원리금 부담 영구 제거, 이자 절감",
+          effect: cleanDebt > 0 ? "퇴직 직후 원리금 부담 영구 제거, 이자 절감" : "건전한 무부채 구조 유지",
         },
         {
           item: "퇴직 후 월 지출",
-          before: "현재 지출 수준 유지 시 결손",
-          after: "지출 구조조정 (▼ 절감)",
+          before: cleanExpense > 0 ? `${formatKoreanAmount(cleanExpense)} / 월` : "현재 지출 수준 유지 시 결손",
+          after: cleanExpense > 0 ? `${formatKoreanAmount(Math.round(cleanExpense * 0.75))} / 월 (▼ 절감)` : "지출 구조조정 (▼ 절감)",
           effect: "은퇴 소득공백기 적자 최소화",
         },
         {
           item: "은퇴 후 월 수입",
-          before: "소득 절벽 위험",
-          after: "연금 분할 + 주택연금 결합",
+          before: cleanIncome > 0 ? "0원 (근로소득 중단, 소득 절벽)" : "소득 절벽 위험",
+          after: cleanExpense > 0 ? `${formatKoreanAmount(cleanExpense)} / 월` : "연금 분할 + 주택연금 결합",
           effect: "부부 종신 안정적 현금흐름 확보",
         },
         {
@@ -108,17 +190,6 @@ export function evaluateFinancialGoals(params: {
       ],
     };
   }
-
-  // 2. 동적 수치 산출 (가상 고객 모드인 경우에도 고정값이 아닌 유효 데이터를 기반으로 동적 산출)
-  const isDemo = !isTemplateBlank;
-  const cleanAsset = parseNum(totalAsset) || (isDemo ? 1721710000 : 0);
-  const cleanDebt = parseNum(totalDebt) || (isDemo ? 250000000 : 0);
-  const cleanIncome = parseNum(monthlyIncome) || (isDemo ? 8050000 : 0);
-  const cleanExpense = parseNum(monthlyExpense) || (isDemo ? 7330000 : 0);
-  const cleanEmergency = parseNum(emergencyFund) || (isDemo ? 22000000 : 0);
-  const cleanSurplus = cleanIncome - cleanExpense;
-  const cleanNetWorth = cleanAsset - cleanDebt;
-  const cleanGoalAmount = parseNum(goalAmount) || (isDemo ? 70000000 : 0);
 
   // 1) 목표 1: 부채 상환 / 건전성 관리
   let debtItem: EvaluatedGoalItem;
