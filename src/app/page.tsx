@@ -250,12 +250,6 @@ export default function HomePage() {
                     <span className="material-symbols-outlined text-emerald-600 text-[18px]">
                       check_circle
                     </span>
-                    로그인 없이 즉시 선택
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-emerald-600 text-[18px]">
-                      check_circle
-                    </span>
                     계좌 비밀번호 요구 없음
                   </span>
                   <span className="flex items-center gap-1.5">
@@ -615,7 +609,7 @@ export default function HomePage() {
             </div>
 
             <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 pt-2 font-medium">
-              ※ 고민 선택 및 기본 진단은 로그인 없이 언제든지 무료로 이용하실 수 있습니다.
+              ※ 고민 선택 및 진단 결과는 Google 로그인으로 안전하게 저장 및 관리됩니다.
             </p>
           </div>
         </section>
