@@ -9,6 +9,7 @@ import { UserProfilePopover } from "@/components/user-profile-popover";
 import FinancialStatusView from "@/components/FinancialStatusView";
 import GoalsView from "@/components/GoalsView";
 import ReportView from "@/components/ReportView";
+import { EvaluatedGoalItem, SolutionComparisonItem } from "@/lib/goalEvaluation";
 
 type StepType =
   | "step1"
@@ -37,6 +38,8 @@ interface ChatMessage {
       note?: string;
     }[];
     suggestions: string[];
+    evaluatedGoals?: EvaluatedGoalItem[];
+    solutions?: SolutionComparisonItem[];
   };
 }
 
@@ -509,6 +512,79 @@ export default function DiagnosisPage() {
   // Step 3 Chat State
   const [inputMessage, setInputMessage] = useState("");
   const [isAiTyping, setIsAiTyping] = useState(false);
+
+  // Gemini 1.5 Flash AI 재무주치의 실시간 목표 평가 상태
+  const [aiEvaluatedGoals, setAiEvaluatedGoals] = useState<EvaluatedGoalItem[] | null>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("afpk_ai_evaluated_goals_v1");
+        if (saved) return JSON.parse(saved);
+      } catch (e) {}
+    }
+    return null;
+  });
+
+  const [aiEvaluatedSolutions, setAiEvaluatedSolutions] = useState<SolutionComparisonItem[] | null>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("afpk_ai_evaluated_solutions_v1");
+        if (saved) return JSON.parse(saved);
+      } catch (e) {}
+    }
+    return null;
+  });
+
+  const [isAiEvaluating, setIsAiEvaluating] = useState(false);
+
+  // Gemini 1.5 Flash AI 재무목표 정밀 진단 수동/자동 트리거
+  const handleTriggerAiGoalEvaluation = async () => {
+    setIsAiEvaluating(true);
+    try {
+      const dataMode = isTemplateBlank ? "custom" : "demo";
+      const financialContext = {
+        dataMode,
+        totalAsset: totalAsset || (dataMode === "demo" ? "17억 2,171만 원" : "0원"),
+        totalDebt: totalDebt || (dataMode === "demo" ? "2억 5,000만 원" : "0원"),
+        netWorth: formatKoreanCurrency(calcNetWorth || 1471710000),
+        monthlyIncome: monthlyIncome || (dataMode === "demo" ? "805만 원" : "0원"),
+        monthlyExpense: monthlyExpense || (dataMode === "demo" ? "733만 원" : "0원"),
+        monthlySurplus: `${calcSurplus.toLocaleString()}원`,
+        emergencyFund: emergencyFund || (dataMode === "demo" ? "2,200만 원" : "0원"),
+        goalName: goalName || (dataMode === "demo" ? "장남 결혼자금 지원" : "은퇴 재무목표"),
+        goalAmount: goalAmount ? `${goalAmount}원` : (dataMode === "demo" ? "7,000만 원" : "0원"),
+        goalDate: goalDate || (dataMode === "demo" ? "2년 내" : "시점 미정"),
+      };
+
+      const res = await fetch("/api/evaluate-goals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          dataMode,
+          financialContext,
+          chatHistory: messages.map((m) => ({ sender: m.sender, text: m.text })),
+        }),
+      });
+
+      if (!res.ok) throw new Error("AI 목표 정밀 진단에 실패했습니다.");
+      const data = await res.json();
+      if (data.goals && Array.isArray(data.goals)) {
+        setAiEvaluatedGoals(data.goals);
+        try {
+          localStorage.setItem("afpk_ai_evaluated_goals_v1", JSON.stringify(data.goals));
+        } catch (e) {}
+      }
+      if (data.solutions && Array.isArray(data.solutions)) {
+        setAiEvaluatedSolutions(data.solutions);
+        try {
+          localStorage.setItem("afpk_ai_evaluated_solutions_v1", JSON.stringify(data.solutions));
+        } catch (e) {}
+      }
+    } catch (err) {
+      console.error("AI Goal Evaluation Error:", err);
+    } finally {
+      setIsAiEvaluating(false);
+    }
+  };
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "1",
@@ -634,6 +710,14 @@ export default function DiagnosisPage() {
         details: data.details,
       };
       setMessages((prev) => [...prev, geminiMsg]);
+
+      // Gemini 1.5 Flash가 상담 결과에 따라 재무목표를 동적으로 재산출한 경우 자동 반영
+      if (data.details?.evaluatedGoals && Array.isArray(data.details.evaluatedGoals)) {
+        setAiEvaluatedGoals(data.details.evaluatedGoals);
+        try {
+          localStorage.setItem("afpk_ai_evaluated_goals_v1", JSON.stringify(data.details.evaluatedGoals));
+        } catch (e) {}
+      }
     } catch (err: any) {
       console.error("Gemini 상담 에러:", err);
       const errorMsg: ChatMessage = {
@@ -1971,6 +2055,33 @@ export default function DiagnosisPage() {
                         <p className="text-[10px] text-amber-800/80 dark:text-amber-300/80 leading-relaxed">
                           💡 Gemini 재무주치의는 고객님의 이 재무 목표를 최우선으로 달성하기 위한 구체적인 저축·투자·상환 전략을 안내합니다.
                         </p>
+
+                        <div className="pt-1 flex flex-col gap-1.5">
+                          <button
+                            type="button"
+                            onClick={handleTriggerAiGoalEvaluation}
+                            disabled={isAiEvaluating}
+                            className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
+                          >
+                            {isAiEvaluating ? (
+                              <>
+                                <span className="inline-block w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                <span>Gemini 1.5 Flash가 재무목표를 정밀 진단 중...</span>
+                              </>
+                            ) : (
+                              <>
+                                <span>✨</span>
+                                <span>Gemini 1.5 Flash 재무목표 정밀 진단 실행</span>
+                              </>
+                            )}
+                          </button>
+                          {aiEvaluatedGoals && (
+                            <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold text-center flex items-center justify-center gap-1">
+                              <span>✓</span>
+                              <span>Gemini 1.5 Flash AI 정밀 진단 결과 반영됨 (목표관리·리포트 연동)</span>
+                            </span>
+                          )}
+                        </div>
                       </div>
                     );
                   })()}
@@ -2386,6 +2497,10 @@ export default function DiagnosisPage() {
               goalName={goalName}
               goalAmount={goalAmount}
               goalDate={goalDate}
+              aiGoals={aiEvaluatedGoals || undefined}
+              aiSolutions={aiEvaluatedSolutions || undefined}
+              isAiEvaluating={isAiEvaluating}
+              onTriggerAiEvaluation={handleTriggerAiGoalEvaluation}
             />
           )}
 
@@ -2404,6 +2519,10 @@ export default function DiagnosisPage() {
               goalName={goalName}
               goalAmount={goalAmount}
               goalDate={goalDate}
+              aiGoals={aiEvaluatedGoals || undefined}
+              aiSolutions={aiEvaluatedSolutions || undefined}
+              isAiEvaluating={isAiEvaluating}
+              onTriggerAiEvaluation={handleTriggerAiGoalEvaluation}
             />
           )}
         </main>

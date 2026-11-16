@@ -66,6 +66,20 @@ export async function POST(req: NextRequest) {
       "[제목]: [구체적 실행 내용]",
       "[제목]: [구체적 실행 내용]",
       "[제목]: [구체적 실행 내용]"
+    ],
+    "evaluatedGoals": [
+      {
+        "id": "debt",
+        "rank": "1순위: ...",
+        "name": "...",
+        "period": "...",
+        "needed": "...",
+        "prep": "...",
+        "shortage": "...",
+        "status": "달성 가능 🟢" ,
+        "statusCode": "green",
+        "expertOpinion": "..."
+      }
     ]
   }
 }`;
@@ -113,7 +127,8 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const candidateModels = ["gemini-2.5-flash", "gemini-3.5-flash-lite", "gemini-1.5-flash"];
+    // Primary model as requested: gemini-1.5-flash
+    const candidateModels = ["gemini-1.5-flash", "gemini-1.5-flash-latest", "gemini-2.5-flash", "gemini-3.5-flash-lite"];
     let response: Response | null = null;
     let lastErrorText = "";
 

@@ -59,6 +59,8 @@ export function evaluateFinancialGoals(params: {
   goalName?: string;
   goalAmount?: any;
   goalDate?: string;
+  aiGoals?: EvaluatedGoalItem[];
+  aiSolutions?: SolutionComparisonItem[];
 }): EvaluationResult {
   const {
     isTemplateBlank,
@@ -70,121 +72,53 @@ export function evaluateFinancialGoals(params: {
     goalName,
     goalAmount,
     goalDate,
+    aiGoals,
+    aiSolutions,
   } = params;
 
-  // 1. 가상 고객 모드인 경우 (Supabase 모범안 고정 데이터 반환)
-  if (!isTemplateBlank) {
+  // 1. Gemini 1.5 Flash AI 재무주치의 실시간 정밀 진단 결과가 있는 경우 최우선 반영
+  if (aiGoals && Array.isArray(aiGoals) && aiGoals.length > 0) {
     return {
-      goals: [
-        {
-          id: "debt",
-          rank: "1순위: 대출 전액 상환",
-          name: "대출 전액 상환",
-          period: "1년 내 (퇴직 시점)",
-          neededNum: 250000000,
-          needed: "2억 5,000만 원",
-          prepNum: 250000000,
-          prep: "현금 1억 + 퇴직금 1.5억",
-          shortageNum: 0,
-          shortage: "0원 (해결)",
-          status: "달성 가능 🟢",
-          statusCode: "green",
-          expertOpinion:
-            "전문가 평가: 대출금리(4~5%)가 세후 예금수익률(2.4%)보다 높으므로 퇴직 시 즉시 상환이 유리합니다. 상환 완료 시 매월 원리금 185만 원(이자 월 약 104만 원) 부담이 영구적으로 사라집니다.",
-        },
-        {
-          id: "wedding",
-          rank: "2순위: 장남 결혼자금 지원",
-          name: "장남 결혼자금 지원",
-          period: "2년 내",
-          neededNum: 70000000,
-          needed: "7,000만 원",
-          prepNum: 70000000,
-          prep: "보유 정기예금 2억 중 활용",
-          shortageNum: 0,
-          shortage: "0원 (해결)",
-          status: "달성 가능 🟢",
-          statusCode: "green",
-          expertOpinion:
-            "전문가 평가: 보유 정기예금 2억 원 중 7,000만 원을 결혼자금 전용 단기 정기예금으로 분리하여 안전하게 지원 가능합니다.",
-        },
-        {
-          id: "retirement",
-          rank: "3순위: 은퇴 생활비 월 300만 원 확보",
-          name: "은퇴 생활비 월 300만 원 확보",
-          period: "61세 ~ 80세 (20년간)",
-          neededNum: 688000000,
-          needed: "약 6억 8,800만 원",
-          prepNum: 370000000,
-          prep: "약 3억 7,000만 원",
-          shortageNum: 320000000,
-          shortage: "약 3억 2,000만 원 ⚠️",
-          status: "위험 경보 🔴",
-          statusCode: "red",
-          expertOpinion:
-            "긴급 진단: 대출 상환 및 결혼자금 지출 후 남은 금융자산만으로는 퇴직 후 소득 공백기(61~64세)와 70대 이후 생활비에 3.2억 원 결손이 발생합니다. 따라서 퇴직급여 IRP 연금 분할 수령과 71세 주택연금 연계 대안이 반드시 결합되어야 합니다.",
-        },
-        {
-          id: "inheritance",
-          rank: "4순위: 상가주택 상속 대비",
-          name: "상가주택 상속 대비",
-          period: "4년 내 (예상 시점)",
-          neededNum: 77600000,
-          needed: "상속세 약 7,760만 원",
-          prepNum: 77600000,
-          prep: "연부연납 + 임대수입",
-          shortageNum: 0,
-          shortage: "사전 합의 필요",
-          status: "사전 합의 🟡",
-          statusCode: "yellow",
-          expertOpinion:
-            "전문가 평가: 형제 3명과 분할 비율을 사전 합의하여 서면화해야 분쟁을 막을 수 있습니다. 본인 상속세 7,760만 원은 은퇴자금을 헐지 않고, 연부연납(5년 분할납부)과 상가 임대수입으로 충당하는 전략을 권장합니다.",
-        },
-      ],
-      solutions: [
+      goals: aiGoals,
+      solutions: aiSolutions && aiSolutions.length > 0 ? aiSolutions : [
         {
           item: "아파트 담보대출",
-          before: "2억 5,000만 원 (연 4%, 월 185만 원)",
-          after: "0원 (전액 상환 완료)",
-          effect: "퇴직 직후 원리금 부담 영구 제거, 이자 2,100만 원 절감",
+          before: "원리금 상환 부담",
+          after: "0원 (상환 플랜 수립)",
+          effect: "퇴직 직후 원리금 부담 영구 제거, 이자 절감",
         },
         {
           item: "퇴직 후 월 지출",
-          before: "637만 원 / 월 (대출 원리금 185만 포함)",
-          after: "452만 원 / 월 (▼ 185만 원 감소)",
-          effect: "대출 상환으로 고정지출 30% 대폭 절감",
+          before: "현재 지출 수준 유지 시 결손",
+          after: "지출 구조조정 (▼ 절감)",
+          effect: "은퇴 소득공백기 적자 최소화",
         },
         {
           item: "은퇴 후 월 수입",
-          before: "45만 원 (이자·배당만 발생, 소득 절벽)",
-          after: "300만 원 / 월 (안정적 연금 수령)",
-          effect: "IRP 250만 + 연금저축 50만 원 (64세부터 국민연금 85만 원 합산)",
+          before: "소득 절벽 위험",
+          after: "연금 분할 + 주택연금 결합",
+          effect: "부부 종신 안정적 현금흐름 확보",
         },
         {
-          item: "주식 · ETF (4,170만 원)",
-          before: "일반 증권위탁계좌 (과세)",
-          after: "중개형 ISA 계좌로 이전",
-          effect: "순이익 200만 원 비과세 및 초과분 9.9% 분리과세 혜택",
-        },
-        {
-          item: "71세 이후 은퇴 생활비",
-          before: "금융자산 고갈로 생활비 결손 위험",
-          after: "수원 아파트 주택연금 (월 297만 원)",
-          effect: "10억 아파트 유동화로 부부 종신까지 월 300만 수준 완벽 유지",
+          item: "금융투자 및 연금 자산",
+          before: "일반 과세 계좌 중심",
+          after: "중개형 ISA 및 IRP 활용",
+          effect: "순이익 비과세 및 저율 분리과세 극대화",
         },
       ],
     };
   }
 
-  // 2. 신규 고객 직접 입력 데이터 모드
-  const cleanAsset = parseNum(totalAsset);
-  const cleanDebt = parseNum(totalDebt);
-  const cleanIncome = parseNum(monthlyIncome);
-  const cleanExpense = parseNum(monthlyExpense);
+  // 2. 동적 수치 산출 (가상 고객 모드인 경우에도 고정값이 아닌 유효 데이터를 기반으로 동적 산출)
+  const isDemo = !isTemplateBlank;
+  const cleanAsset = parseNum(totalAsset) || (isDemo ? 1721710000 : 0);
+  const cleanDebt = parseNum(totalDebt) || (isDemo ? 250000000 : 0);
+  const cleanIncome = parseNum(monthlyIncome) || (isDemo ? 8050000 : 0);
+  const cleanExpense = parseNum(monthlyExpense) || (isDemo ? 7330000 : 0);
+  const cleanEmergency = parseNum(emergencyFund) || (isDemo ? 22000000 : 0);
   const cleanSurplus = cleanIncome - cleanExpense;
-  const cleanEmergency = parseNum(emergencyFund);
   const cleanNetWorth = cleanAsset - cleanDebt;
-  const cleanGoalAmount = parseNum(goalAmount);
+  const cleanGoalAmount = parseNum(goalAmount) || (isDemo ? 70000000 : 0);
 
   // 1) 목표 1: 부채 상환 / 건전성 관리
   let debtItem: EvaluatedGoalItem;
@@ -240,9 +174,9 @@ export function evaluateFinancialGoals(params: {
   }
 
   // 2) 목표 2: 고객 맞춤 핵심 목표
-  const effGoalName = goalName || "핵심 재무목표 준비";
+  const effGoalName = goalName || (isDemo ? "장남 결혼자금 지원" : "핵심 재무목표 준비");
   const effGoalAmt = cleanGoalAmount > 0 ? cleanGoalAmount : 0;
-  const effGoalPeriod = goalDate || (effGoalAmt > 0 ? "2년 ~ 3년 내" : "직접 설정 (입력 대기)");
+  const effGoalPeriod = goalDate || (effGoalAmt > 0 ? (isDemo ? "2년 내" : "2년 ~ 3년 내") : "직접 설정 (입력 대기)");
   const goalPrep = Math.min(effGoalAmt, Math.max(0, cleanNetWorth));
   const goalShortage = Math.max(0, effGoalAmt - goalPrep);
   let goalStatus: "달성 가능 🟢" | "사전 합의 🟡" | "위험 경보 🔴" | "진단 대기 ⚪" = "진단 대기 ⚪";

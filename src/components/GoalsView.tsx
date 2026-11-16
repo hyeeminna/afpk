@@ -16,6 +16,10 @@ interface GoalsViewProps {
   goalName?: string;
   goalAmount?: string;
   goalDate?: string;
+  aiGoals?: EvaluatedGoalItem[];
+  aiSolutions?: SolutionComparisonItem[];
+  isAiEvaluating?: boolean;
+  onTriggerAiEvaluation?: () => void;
 }
 
 export default function GoalsView({
@@ -31,6 +35,10 @@ export default function GoalsView({
   goalName = "",
   goalAmount = "",
   goalDate = "",
+  aiGoals,
+  aiSolutions,
+  isAiEvaluating = false,
+  onTriggerAiEvaluation,
 }: GoalsViewProps) {
   const todayStr = new Date().toLocaleDateString("ko-KR", {
     year: "numeric",
@@ -38,7 +46,7 @@ export default function GoalsView({
     day: "2-digit",
   }).replace(/\. /g, ". ").replace(/\.$/, "");
 
-  // AFPK 수석 은퇴설계 AI 페르소나 기반 4대 재무목표 평가 엔진 실행
+  // AFPK 수석 은퇴설계 AI (Gemini 1.5 Flash) 페르소나 기반 4대 재무목표 평가 엔진 실행
   const { goals, solutions } = evaluateFinancialGoals({
     isTemplateBlank,
     totalAsset,
@@ -49,6 +57,8 @@ export default function GoalsView({
     goalName,
     goalAmount,
     goalDate,
+    aiGoals,
+    aiSolutions,
   });
 
   return (
@@ -56,22 +66,44 @@ export default function GoalsView({
       {/* 1. Header Banner */}
       <div className="rounded-2xl bg-gradient-to-r from-[#0F224A] via-[#162D63] to-[#1E3A8A] text-white p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-xl relative overflow-hidden">
         <div className="space-y-2 z-10">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">
               재무목표 관리 및 맞춤형 솔루션
             </h2>
             <span className="px-2.5 py-0.5 rounded-full bg-blue-500/30 border border-blue-400/40 text-blue-200 text-xs font-semibold">
-              ✦ {isTemplateBlank ? "AFPK AI 페르소나 실시간 진단" : "Supabase 재무목표 상세 연동"}
+              ✦ {aiGoals && aiGoals.length > 0 ? "Gemini 1.5 Flash AI 정밀 진단 반영됨" : (isTemplateBlank ? "AFPK AI 페르소나 실시간 진단" : "AFPK 공인 표준 실시간 진단")}
             </span>
           </div>
           <p className="text-xs md:text-sm text-blue-100 max-w-2xl">
-            {isTemplateBlank
+            {aiGoals && aiGoals.length > 0
+              ? "Gemini 1.5 Flash AI 재무주치의가 고객님의 재무 데이터와 상담 맥락을 바탕으로 4대 재무목표와 달성 가능성을 정밀하게 재평가했습니다."
+              : isTemplateBlank
               ? "고객님께서 직접 입력하신 자산·부채·현금흐름을 바탕으로 AFPK 공인 재무설계 표준 프로세스에 따라 4대 재무목표 달성 가능성을 실시간 진단합니다."
-              : "가상 고객님의 4대 재무목표 타임라인과 달성 가능성을 신호등 카드로 진단하고, Supabase의 '실행후' 데이터에 기반한 최적의 은퇴 솔루션을 제시합니다."}
+              : "고객님의 자산·부채·현금흐름 데이터를 바탕으로 AFPK·CFP 6단계 표준 프로세스에 따라 최적의 은퇴 솔루션과 신호등 카드를 제시합니다."}
           </p>
         </div>
 
-        <div className="flex items-center gap-2 z-10 flex-shrink-0">
+        <div className="flex items-center gap-2 z-10 flex-shrink-0 flex-wrap">
+          {onTriggerAiEvaluation && (
+            <button
+              type="button"
+              onClick={onTriggerAiEvaluation}
+              disabled={isAiEvaluating}
+              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-md transition-all active:scale-95 disabled:opacity-75 cursor-pointer"
+            >
+              {isAiEvaluating ? (
+                <>
+                  <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span>Gemini 1.5 Flash 진단 중...</span>
+                </>
+              ) : (
+                <>
+                  <span>✨</span>
+                  <span>Gemini 1.5 Flash AI 재진단</span>
+                </>
+              )}
+            </button>
+          )}
           <button
             type="button"
             onClick={onOpenTaxModal}

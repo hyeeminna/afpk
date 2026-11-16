@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth-context";
-import { evaluateFinancialGoals } from "@/lib/goalEvaluation";
+import { evaluateFinancialGoals, EvaluatedGoalItem, SolutionComparisonItem } from "@/lib/goalEvaluation";
 
 interface ReportViewProps {
   onNavigateStep?: (step: "step1" | "step2" | "step3" | "financial_status" | "goals" | "report") => void;
@@ -17,6 +17,10 @@ interface ReportViewProps {
   goalName?: string;
   goalAmount?: string;
   goalDate?: string;
+  aiGoals?: EvaluatedGoalItem[];
+  aiSolutions?: SolutionComparisonItem[];
+  isAiEvaluating?: boolean;
+  onTriggerAiEvaluation?: () => void;
 }
 
 export interface GoalItem {
@@ -253,6 +257,10 @@ export default function ReportView({
   goalName = "",
   goalAmount = "",
   goalDate = "",
+  aiGoals,
+  aiSolutions,
+  isAiEvaluating = false,
+  onTriggerAiEvaluation,
 }: ReportViewProps) {
   const { user, profile } = useAuth();
 
@@ -288,6 +296,8 @@ export default function ReportView({
         goalName,
         goalAmount,
         goalDate,
+        aiGoals,
+        aiSolutions,
       });
 
       const convertedGoals: GoalItem[] = evalResult.goals.map((g) => ({
@@ -310,35 +320,37 @@ export default function ReportView({
     }
   }, [isTemplateBlank]);
 
-  // 상위에서 전달된 입력값이 있는 경우 (STEP 01 실시간 바인딩 지원)
+  // 상위에서 전달된 입력값 및 AI 실시간 정밀 진단(Gemini 1.5 Flash) 결과 바인딩
   useEffect(() => {
+    const evalResult = evaluateFinancialGoals({
+      isTemplateBlank,
+      totalAsset,
+      totalDebt,
+      monthlyIncome,
+      monthlyExpense,
+      emergencyFund,
+      goalName,
+      goalAmount,
+      goalDate,
+      aiGoals,
+      aiSolutions,
+    });
+
+    const convertedGoals: GoalItem[] = evalResult.goals.map((g) => ({
+      rank: g.rank.split(":")[0].trim() || "-",
+      name: g.name,
+      period: g.period,
+      needed: g.needed,
+      prep: g.prep,
+      shortage: g.shortage,
+      status: g.status as any,
+    }));
+
     if (isTemplateBlank) {
       const parsedAsset = parseInt(totalAsset.replace(/[^0-9]/g, ""), 10) || 0;
       const parsedDebt = parseInt(totalDebt.replace(/[^0-9]/g, ""), 10) || 0;
       const parsedInc = parseInt(monthlyIncome.replace(/[^0-9]/g, ""), 10) || 0;
       const parsedExp = parseInt(monthlyExpense.replace(/[^0-9]/g, ""), 10) || 0;
-
-      const evalResult = evaluateFinancialGoals({
-        isTemplateBlank: true,
-        totalAsset,
-        totalDebt,
-        monthlyIncome,
-        monthlyExpense,
-        emergencyFund,
-        goalName,
-        goalAmount,
-        goalDate,
-      });
-
-      const convertedGoals: GoalItem[] = evalResult.goals.map((g) => ({
-        rank: g.rank.split(":")[0].trim() || "-",
-        name: g.name,
-        period: g.period,
-        needed: g.needed,
-        prep: g.prep,
-        shortage: g.shortage,
-        status: g.status as any,
-      }));
 
       setReportData((prev) => ({
         ...prev,
@@ -351,8 +363,14 @@ export default function ReportView({
         currentExpense: parsedExp || prev.currentExpense,
         goals: convertedGoals,
       }));
+    } else {
+      // 가상 고객 모드라도 AI 재진단 결과나 입력값에 맞추어 goals 동적 동기화
+      setReportData((prev) => ({
+        ...prev,
+        goals: convertedGoals,
+      }));
     }
-  }, [isTemplateBlank, totalAsset, totalDebt, monthlyIncome, monthlyExpense, emergencyFund, goalName, goalAmount, goalDate]);
+  }, [isTemplateBlank, totalAsset, totalDebt, monthlyIncome, monthlyExpense, emergencyFund, goalName, goalAmount, goalDate, aiGoals, aiSolutions]);
 
   // 로컬 스토리지에 저장된 리포트 데이터 복원 (초기 1회)
   useEffect(() => {
@@ -451,6 +469,26 @@ export default function ReportView({
         </div>
 
         <div className="flex items-center gap-2 z-10 flex-shrink-0 flex-wrap">
+          {onTriggerAiEvaluation && (
+            <button
+              type="button"
+              onClick={onTriggerAiEvaluation}
+              disabled={isAiEvaluating}
+              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-md transition-all active:scale-95 disabled:opacity-75 cursor-pointer"
+            >
+              {isAiEvaluating ? (
+                <>
+                  <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span>Gemini 1.5 Flash 진단 중...</span>
+                </>
+              ) : (
+                <>
+                  <span>✨</span>
+                  <span>Gemini 1.5 Flash AI 목표 재진단</span>
+                </>
+              )}
+            </button>
+          )}
           <button
             type="button"
             onClick={handleOpenModal}
@@ -699,7 +737,11 @@ export default function ReportView({
               <span>3. 재무목표 상세 및 순위·기한·금액 진단</span>
             </h3>
             <span className="text-xs text-slate-400">
-              {isTemplateBlank ? "AFPK AI 페르소나 실시간 진단" : "Supabase 재무목표(순위, 기한, 금액)"}
+              {aiGoals && aiGoals.length > 0
+                ? "Gemini 1.5 Flash AI 정밀 진단 반영"
+                : isTemplateBlank
+                ? "AFPK AI 페르소나 실시간 진단"
+                : "AFPK 공인 표준 실시간 진단"}
             </span>
           </div>
 
